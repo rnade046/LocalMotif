@@ -1,5 +1,7 @@
 package graph;
 
+import java.util.ArrayList;
+
 public class Interaction {
 		
 	private final static double DEFAULT_WEIGHT = 1.0;
@@ -7,16 +9,16 @@ public class Interaction {
 		// fields
 		private String Protein1;
 		private String Protein2;
-		private int ID1;
-		private int ID2;
+		private ArrayList<String> ID1;
+		private ArrayList<String> ID2;
 		private double weight;
 
 		// constructors
-		public Interaction(String _Protein1, String _Protein2, int _ID1, int _ID2) {
+		public Interaction(String _Protein1, String _Protein2, ArrayList<String> _ID1, ArrayList<String> _ID2) {
 			this(_Protein1, _Protein2, _ID1, _ID2, DEFAULT_WEIGHT);
 		}
 		
-		public Interaction(String _Protein1, String _Protein2, int _ID1, int _ID2, double _w) {
+		public Interaction(String _Protein1, String _Protein2, ArrayList<String> _ID1, ArrayList<String> _ID2, double _w) {
 			Protein1 = _Protein1;
 			Protein2 = _Protein2;
 			ID1 = _ID1;
@@ -33,11 +35,11 @@ public class Interaction {
 			return Protein2;
 		}
 
-		public int getID1() {
+		public ArrayList<String> getID1() {
 			return ID1;
 		}
 
-		public int getID2() {
+		public ArrayList<String> getID2() {
 			return ID2;
 		}
 
