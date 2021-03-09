@@ -1,5 +1,6 @@
 package graph;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Protein {
 		
@@ -7,12 +8,12 @@ public class Protein {
 	
 		// fields
 		private String proteinName;
-		private int proteinId;
+		private List<String> proteinId;
 		private int numberOfInteractions;
 		private double fold_change;
 
 		// constructor
-		public Protein(String _name, int _id) {
+		public Protein(String _name, List<String> _id) {
 			proteinName = _name;
 			proteinId = _id;
 			fold_change = DEFAULT_FOLDCHANGE;
@@ -25,7 +26,7 @@ public class Protein {
 			return this.proteinName;
 		}
 		
-		public int getProteinId() {
+		public List<String> getProteinId() {
 			return this.proteinId;
 		}
 		

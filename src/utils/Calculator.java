@@ -28,14 +28,17 @@ public class Calculator {
 
         boolean[] proteinsToKeep = new boolean[count_MaxValue.length];
 
+        int countProtsToRemove = 0;
         for (int i = 0; i < count_MaxValue.length; i++) {
 
             if (count_MaxValue[i] < (count_MaxValue.length / 2)) {
                 proteinsToKeep[i] = true;
             } else {
                 proteinsToKeep[i] = false;
+                countProtsToRemove++;
             }
         }
+        System.out.println("Proteins to remove: " + countProtsToRemove);
         return proteinsToKeep;
     }
 

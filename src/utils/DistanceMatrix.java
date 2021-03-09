@@ -11,41 +11,39 @@ import graph.Protein;
 
 public class DistanceMatrix {
 
-	public static void computeDistanceMatrix(ArrayList<Interaction> networkInteractionsList, ArrayList<Protein> networkProteinsList, String outputFile) {
+	public static void computeDistanceMatrix(ArrayList<Interaction> interactionList, ArrayList<Protein> proteinList, String outputFile) {
 		/* Compute distance matrix using the list of proteins in the network and the list of known interactions in the network.
 		 * This distance matrix assumes a distance of 1 if proteins interact. Outputs file : ./IO_files/DistanceMatrix.txt */
 		/* Generate a weighted distance matrix based on the fold change of proteins in the network  */
 		
-		double[][] distance_matrix = new double[networkProteinsList.size()][networkProteinsList.size()];
+		double[][] distance_matrix = new double[proteinList.size()][proteinList.size()];
 		
-		for (int i=0; i<networkProteinsList.size(); i++) {
+		for (int i=0; i<proteinList.size(); i++) {
 			
-			HashMap<String, Double> interactingProteins = new HashMap<String, Double>(); // initialize Map to contain names of interacting proteins and their weight
-			Protein prot1 = networkProteinsList.get(i); // get protein object
+			HashMap<String, Double> proteinsInteractingWithProt1Map = new HashMap<String, Double>(); // initialize Map to contain names of interacting proteins and their weight
+			String prot1 = proteinList.get(i).getProteinName(); // get protein object
 			
-			
-			for (int h = 0; h < networkInteractionsList.size(); h++) {
-			/* find all proteins that protein(i) interacts with by going through all 
-			 * possible interactions stored in the interaction list and store in map */
-			 
-				Interaction inter = networkInteractionsList.get(h); // get interaction
+			/* Get all interacting proteins and their associated weight with prot1 > store in HashMap<String, Double> interacting protein : weight */ 
+			for (int h = 0; h < interactionList.size(); h++) {
+				Interaction ppi = interactionList.get(h); // get interaction
 				
-				if (inter.getProtein1().equals(prot1.getProteinName())) {
-					interactingProteins.put(inter.getProtein2(), inter.getWeight());
-				} else if (inter.getProtein2().equals(prot1.getProteinName())) {
-					interactingProteins.put(inter.getProtein1(), inter.getWeight());
+				if (ppi.getProtein1().equals(prot1)) {
+					proteinsInteractingWithProt1Map.put(ppi.getProtein2(), ppi.getWeight());
+				} else if (ppi.getProtein2().equals(prot1)) {
+					proteinsInteractingWithProt1Map.put(ppi.getProtein1(), ppi.getWeight());
 				}
 			}
 
+			/* Initialize distance matrix row for prot1*/
 			for (int j = 0; j < distance_matrix.length; j++) {
-			/* Initialize distance matrix */
+			
 				if (i == j) { // if it's the same proteins
 					distance_matrix[i][j] = 0;
 					continue;
 				}
 
-				if (interactingProteins.containsKey(networkProteinsList.get(j).getProteinName())) { // if protein i and j are connected
-					distance_matrix[i][j] = interactingProteins.get(networkProteinsList.get(j).getProteinName()); // set strength
+				if (proteinsInteractingWithProt1Map.containsKey(proteinList.get(j).getProteinName())) { // if protein i and j are connected
+					distance_matrix[i][j] = proteinsInteractingWithProt1Map.get(proteinList.get(j).getProteinName()); // set strength
 				} else { // otherwise set to max_value
 					distance_matrix[i][j] = Double.MAX_VALUE;
 				}

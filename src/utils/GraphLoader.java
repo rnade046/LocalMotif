@@ -22,8 +22,7 @@ public class GraphLoader {
 		HashMap<String, ArrayList<ArrayList<String>>> baitMap = loadBaitMapping(baitMapFile);
 		HashMap<String, ArrayList<ArrayList<String>>> preyMap = loadPreyMapping(preyMapFile);
 		
-		
-		System.out.println("Number of Interactions: " + interactionToSpectralCountMap.size());
+	
 		//printProteinsInNetwork(interactionToSpectralCountMap);
 		
 		ArrayList<Interaction> interactionList = formatInteractionList(interactionToSpectralCountMap, baitMap, preyMap);
@@ -231,6 +230,7 @@ public class GraphLoader {
 			for(String bait: missingBaitMapping) {
 				System.out.print(bait + "|");
 			}
+			System.out.println();
 		}
 		
 		if(missingPreyMapping.size() != 0) {
@@ -238,6 +238,8 @@ public class GraphLoader {
 			for(String prey: missingPreyMapping) {
 				System.out.print(prey + "|");
 			}
+			System.out.println("\n");
+			
 		}
 		return interactionList;
 	}

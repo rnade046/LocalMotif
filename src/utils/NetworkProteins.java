@@ -1,12 +1,7 @@
 package utils;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 
 import graph.Interaction;
 import graph.Protein;
@@ -20,29 +15,24 @@ public class NetworkProteins {
 
         /* Find all proteins involved in protein network and store in a HashSet.
          * HashSets can only contain unique values, we obtain a list of unique protein names */
-        HashSet<String> proteinNetworkSet = new HashSet<String>();
+        HashMap<String, ArrayList<String>> proteinNetworkSet = new HashMap<String, ArrayList<String>>();
 
         for (int i = 0; i < InteractionList.size(); i++) {
             Interaction inter = InteractionList.get(i);
 
-            proteinNetworkSet.add(inter.getProtein1());
-            proteinNetworkSet.add(inter.getProtein2());
+            proteinNetworkSet.put(inter.getProtein1(), inter.getID1());
+            proteinNetworkSet.put(inter.getProtein2(), inter.getID2());
         }
 
         /*  Store protein names and IDs from HashSet in the ArrayList */
-        Iterator<String> iterator = proteinNetworkSet.iterator(); //create an iterator for hash set
+        for(String protein: proteinNetworkSet.keySet()) {
 
-        while (iterator.hasNext()) {
-            String proteinName = iterator.next();
-
-            int protId = getProteinId(proteinName, InteractionList);
-            Protein protein1 = new Protein(proteinName, protId); // call Protein Class constructor, store protein name (iterator.next())
-
+            Protein protein1 = new Protein(protein, proteinNetworkSet.get(protein)); // call Protein Class constructor, store protein name (iterator.next())
             proteinList.add(protein1); // add protein object to protein list
         }
        
 		
-        try {
+      /*  try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File ("C://Users//Rachel//Documents//PIGNON//proteinsInStringNetwork2.tsv")));
 
 			for(String id: proteinNetworkSet ){
@@ -53,38 +43,11 @@ public class NetworkProteins {
 			out.close();		
 		}catch (Exception e) {
 			e.printStackTrace();
-		} 
+		} */
 
         return proteinList;
     } // close getProteinsInNetwork
-    
-    private static int getProteinId(String protName, ArrayList<Interaction> interactionList) {
-
-        int protId = 0;
-        int j = 0; // Initialize counter for interactions
-        boolean foundID = false; // condition to run through interactions of the InteractionList until the ID
-        // corresponding to the protein name is found
-
-        while (foundID == false) {
-            Interaction inter = interactionList.get(j); // get first interaction object of the list
-
-            // compare proteins of the Interaction to the query protein. If they match,
-            // reset counter & make while loop condition true. Otherwise, go to the next
-            // interaction.
-            if (inter.getProtein1() == protName) {
-                protId = inter.getID1();
-                j = 0;
-                foundID = true;
-            } else if (inter.getProtein2() == protName) {
-                protId = inter.getID2();
-                j = 0;
-                foundID = true;
-            } else {
-                j++;
-            }
-        }
-        return protId;
-    }
+   
     
 	/***
 	 * Modify the initial list of proteins in the network based on the number the MaxValue counts in the distance matrix. 
