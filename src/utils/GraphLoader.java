@@ -16,20 +16,23 @@ import graph.Interaction;
 
 public class GraphLoader {
 
-	public static ArrayList<Interaction> loadInteractionRepository(String repositoryFile, String baitMapFile, String preyMapFile, double fdr){
+	public static ArrayList<Interaction> loadInteractionRepository(String repositoryFile, String cellMapBaitMapFile, String bioMartBaitMapFile, String bioMartPreyMapFile, double fdr){
 
 		HashMap<String, Double> interactionToSpectralCountMap = loadSaintReport(repositoryFile, fdr);
-		HashMap<String, ArrayList<ArrayList<String>>> baitMap = loadBaitMapping(baitMapFile);
-		HashMap<String, ArrayList<ArrayList<String>>> preyMap = loadPreyMapping(preyMapFile);
-		
-	
-		//printProteinsInNetwork(interactionToSpectralCountMap);
-		
-		ArrayList<Interaction> interactionList = formatInteractionList(interactionToSpectralCountMap, baitMap, preyMap);
-		
+		HashMap<String,String> cellMapBaitMap = loadCellMapBaitMapping(cellMapBaitMapFile);
+		HashMap<String,String> cellMapPreyMap = loadCellMapPreytMapping(repositoryFile, fdr);
+
+		HashMap<String, ArrayList<String>> bioMartBaitMap = loadBioMartMapping(bioMartBaitMapFile);
+		HashMap<String, ArrayList<String>> bioMartPreyMap = loadBioMartMapping(bioMartPreyMapFile);
+
+
+		//printProteinsInNetwork(cellMapPreyMap);
+
+		ArrayList<Interaction> interactionList = formatInteractionList(interactionToSpectralCountMap, cellMapBaitMap, bioMartBaitMap, cellMapPreyMap, bioMartPreyMap);
+
 		return interactionList;
 	}
-	
+
 	/**
 	 * Loads the significant PPIs from the saint express report from cell-map.org as a mapping of the 
 	 * interaction and the average spectral counts. PPIs are deemed significant if their BFDR is <= to
@@ -51,16 +54,17 @@ public class GraphLoader {
 
 			String line = input.readLine(); // header
 			line = input.readLine();
-			
+
 			while (line != null) { // stops when there are no more lines in file (in)
 
 				String[] col = line.split("\t"); // split line by tabs; obtain individual columns
 
 				if(Double.parseDouble(col[15]) <= fdr) { // col[15] = BFDR
 					/* Keep interactions that pass FDR thresholds */ 
-					String interactor1 = col[0]; // get name of bait 
+					String interactor1 = col[0]; // get name of bait (SAINT report bait name)
 					String interactor2 = col[1].split("\\.")[0]; // get RefSeq Protein Accession of prey & remove .version
-					
+
+
 					interactionToSpectralCountMap.put(interactor1+"\t"+interactor2, Double.parseDouble(col[5])); //col[5] = Average Spectral count
 				} 
 				line = input.readLine(); // read next line
@@ -71,53 +75,66 @@ public class GraphLoader {
 		}
 		return interactionToSpectralCountMap;
 	}
-	
+
 	/**
-	 * Load bait mapping file which contains various accession IDs for the baits used to generate de human cell map. 
+	 * Load prey mapping file which contains various accession IDs for the baits used to generate the human cell map. 
 	 * The loaded file is an accessory file on cell-map.org. The information is stored in a HashMap and maps the 
-	 * bait name as decided by the Gingras lab to its RefSeq mRNA accession and its conventional gene name (HGNC symbol).
-	 * 
-	 * Note: allow multiple RefSeq mRNA accessions but will only have one gene symbol
+	 * bait name as decided by the Gingras lab to its conventional gene name (HGNC symbol).
 	 * 
 	 * @param inputFile	String - file path to bait map
 	 * 
-	 * @return baitMap	HashMap<String, ArrayList<String>> {bait name} : {RefSeq mRNA accession List | gene symbol List}
+	 * @return baitMap	HashMap<String, String> {proteinRefSeq} : {gene symbol List}
 	 */
-	private static HashMap<String, ArrayList<ArrayList<String>>> loadBaitMapping(String inputFile){
-		HashMap<String, ArrayList<ArrayList<String>>> baitMap = new HashMap<>();
-		
+	private static HashMap<String, String> loadCellMapPreytMapping(String inputFile, double fdr){
+		HashMap<String, String> preyMap = new HashMap<>();
+
 		InputStream in;
 		try {
 			in = new FileInputStream(new File(inputFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-			
+
 			String line = input.readLine(); //header
 			line = input.readLine();
-			
+
 			while(line != null) {
 				String[] col = line.split("\t");
-				
-				/* update RefSeqIDs if bait has already been seen*/ 
-				if(baitMap.containsKey(col[1])) {
-					ArrayList<ArrayList<String>> map = baitMap.get(col[1]);
-					ArrayList<String> refSeq = map.get(0);
-					refSeq.add(col[9]);
-				/* create new mapping if bait hasn't been seen */	
-				} else { 
-					ArrayList<ArrayList<String>> map = new ArrayList<ArrayList<String>>(); // map: RefSeq mRNA accession | gene symbol
-					ArrayList<String> refSeq = new ArrayList<>();
-					ArrayList<String> symbol = new ArrayList<>();
-					
-					if(col.length > 9 && col[9] != null) {
-						refSeq.add(col[9]); //RefSeq mRNA accession
-					}
-					symbol.add(col[3]); //gene symbol
-					
-					map.add(0, refSeq);
-					map.add(1, symbol);
-					
-					baitMap.put(col[1], map); // col[1] = bait name as seen in 1st column of Saint Express file
-				} 
+				if(Double.parseDouble(col[15]) <= fdr) { // col[15] = BFDR
+					preyMap.put(col[1].split("\\.")[0], col[2]); // col[1] = prey RefSeqProtein ID
+				}												 // col[2] = prey HGNC symbol
+				line = input.readLine();
+			}
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return preyMap;
+	}
+
+	/**
+	 * Load bait mapping file which contains various accession IDs for the baits used to generate the human cell map. 
+	 * The loaded file is an accessory file on cell-map.org. The information is stored in a HashMap and maps the 
+	 * bait name as decided by the Gingras lab to its conventional gene name (HGNC symbol).
+	 * 
+	 * @param inputFile	String - file path to bait map
+	 * 
+	 * @return baitMap	HashMap<String, String> {bait name} : {gene symbol List}
+	 */
+	private static HashMap<String, String> loadCellMapBaitMapping(String inputFile){
+		HashMap<String, String> baitMap = new HashMap<>();
+
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(inputFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine(); //header
+			line = input.readLine();
+
+			while(line != null) {
+				String[] col = line.split("\t");
+
+				baitMap.put(col[1], col[3]); // col[1] = bait name as seen in 1st column of Saint Express file
+				// col[3] = baits HGNC symbol
 				line = input.readLine();
 			}
 			input.close();
@@ -126,105 +143,98 @@ public class GraphLoader {
 		}
 		return baitMap;
 	}
-	
+
 	/**
-	 * Load prey mapping file which contains accessions corresponding to preys in the Saint Express report. This mapping file was
-	 * generated using the biomaRt package in R. The information is stored in a HashMap and maps the RefSeq protein accession to 
-	 * the RefSeq mRNA accession and it's conventional gene name (HGNC symbol).
+	 * Load bait mapping file generated using the R package BioMart. It contains the RefSeq mRNA ID for a given HGNC symbol
 	 * 
-	 * Note: allow multiple RefSeq mRNA accessions but will only have one gene symbol
-	 * 
-	 * @param inputFile	String - file path to prey map
-	 * 
-	 * @return preyMap	HashMap<String, String[]> - map {RefSeq protein Accession} : [RefSeq mRNA Accession, HGNC symbol]
+	 * @param inputFile 	String - path to BioMart Bait mapping file
+	 * @return baitMap		HashMap<String, ArrayList<String>> - {HGNC symbol : List of RefSeq mRNA IDs} 
 	 */
-	private static HashMap<String,ArrayList<ArrayList<String>>> loadPreyMapping(String inputFile){
-		HashMap<String, ArrayList<ArrayList<String>>> preyMap = new HashMap<>();
-		
+	private static HashMap<String, ArrayList<String>> loadBioMartMapping(String inputFile){
+		HashMap<String, ArrayList<String>> baitMap = new HashMap<>();
+
 		InputStream in;
 		try {
 			in = new FileInputStream(new File(inputFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-			
-			String line = input.readLine(); //header
+
+			String line = input.readLine(); //no header
 			line = input.readLine();
-			
+
 			while(line != null) {
 				String[] col = line.split("\t");
-				
-				/* update RefSeqIDs if bait has already been seen*/ 
-				if(preyMap.containsKey(col[0])) {
-					ArrayList<ArrayList<String>> map = preyMap.get(col[0]);
-					ArrayList<String> refSeq = map.get(0);
-					refSeq.add(col[1]);
-				/* create new mapping if bait hasn't been seen */	
-				} else { 
-					ArrayList<ArrayList<String>> map = new ArrayList<ArrayList<String>>(); // map: RefSeq mRNA accession | gene symbol
-					ArrayList<String> refSeq = new ArrayList<>();
-					ArrayList<String> symbol = new ArrayList<>();
-					
-					refSeq.add(col[1]); //RefSeq mRNA accession
-					symbol.add(col[2]); //gene symbol
-					
-					map.add(0, refSeq);
-					map.add(1, symbol);
-					
-					preyMap.put(col[0], map); // col[0] = RefSeq protein accession which maps to info in SaintExpress report 
-				} 
-				
+
+				/* if map contains HGNC symbol, append new MRNA Seq ID to exisitng list */
+				if(baitMap.containsKey(col[0])) { // col[0] = baits HGNC symbol
+					ArrayList<String> refSeqList = baitMap.get(col[0]);
+					refSeqList.add(col[1]);
+					/* otherwise create new mapping */ 
+				}else { 
+					ArrayList<String> refSeqList = new ArrayList<>();
+					refSeqList.add(col[1]);		 //col[1] = RefSeq mRNA ID
+					baitMap.put(col[0], refSeqList); 
+				}
+
 				line = input.readLine();
 			}
 			input.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
-		return preyMap;
+		return baitMap;
 	}
-	
-	private static ArrayList<Interaction> formatInteractionList(HashMap<String, Double> interactionToSpectralCountMap, HashMap<String, ArrayList<ArrayList<String>>> baitMap, HashMap<String, ArrayList<ArrayList<String>>> preyMap){
-		
+
+	private static ArrayList<Interaction> formatInteractionList(HashMap<String, Double> interactionToSpectralCountMap, 
+			HashMap<String, String> cellMapBaitMap, HashMap<String, ArrayList<String>> bioMartBaitMap, HashMap<String, String> cellMapPreyMap,
+			HashMap<String, ArrayList<String>> bioMartPreyMap){
+
 		ArrayList<Interaction> interactionList = new ArrayList<>(); // list to contain formated interactions
-		
+
 		/* sets to contain missing mappings */ 
 		HashSet<String> missingBaitMapping = new HashSet<>();
 		HashSet<String> missingPreyMapping = new HashSet<>();
-		
+
 		for(String interaction: interactionToSpectralCountMap.keySet()) {
-			
+
 			/* bait and prey identifiers for significant saint PPI */
 			String bait_name = interaction.split("\t")[0];
 			String prey_RefSeqProtAcc = interaction.split("\t")[1];
-			
-			/* get accessions for bait [RefSeq mRNA Acc, HGNC symbol] */ 
-			ArrayList<ArrayList<String>> baitAcc = null;
-			if(baitMap.containsKey(bait_name)) {
-				baitAcc = baitMap.get(bait_name);
+
+			/* Identify bait HGNC symbol and it's RefSeq mRNA IDs  */ 
+			String baitHGNCsymbol = null;
+			ArrayList<String> baitRefSeqIds = null;
+			if(cellMapBaitMap.containsKey(bait_name)) {
+				baitHGNCsymbol = cellMapBaitMap.get(bait_name);
+				if(bioMartBaitMap.containsKey(baitHGNCsymbol)) {
+					baitRefSeqIds = bioMartBaitMap.get(baitHGNCsymbol);	
+				} else {
+					missingBaitMapping.add(baitHGNCsymbol);
+				}
 			} else { 
 				missingBaitMapping.add(bait_name);
 			}
-			
-			/* get accessions for prey [RefSeq mRNA Acc, HGNC symbol] */ 
-			ArrayList<ArrayList<String>> preyAcc = null;
-			if(preyMap.containsKey(prey_RefSeqProtAcc)) {
-				preyAcc = preyMap.get(prey_RefSeqProtAcc);
+
+			/* get RefSeq mRNA ids */ 
+			ArrayList<String> preyRefSeqRNAids = null;
+			String preyHGNCsymbol = cellMapPreyMap.get(prey_RefSeqProtAcc);
+			if(bioMartPreyMap.containsKey(prey_RefSeqProtAcc)) {
+				preyRefSeqRNAids = bioMartPreyMap.get(prey_RefSeqProtAcc);
 			} else { 
 				missingPreyMapping.add(prey_RefSeqProtAcc);
 			}
-			
+
 			/* Interaction constructor: 
-			 * Interaction(String _Protein1, String _Protein2, String _ID1, String _ID2, double _w)
+			 * Interaction(String _Protein1, String _Protein2, List<String> _ID1, List<String> _ID2, double _w)
 			 * Interaction(Bait-gene-symbol, Prey-gene-symbol, Bait-RefSeq-mRNA-Acc, Prey-RefSeq-mRNA-Acc, weight)*/
 			Interaction ppi = null;
-			if (preyAcc == null) {
-				ppi = new Interaction(baitAcc.get(1).get(0), prey_RefSeqProtAcc, baitAcc.get(0), null, 1/interactionToSpectralCountMap.get(interaction));
+			if (preyRefSeqRNAids == null) {
+				ppi = new Interaction(baitHGNCsymbol, preyHGNCsymbol, baitRefSeqIds, null, 1/interactionToSpectralCountMap.get(interaction));
 			} else { 
-				ppi = new Interaction(baitAcc.get(1).get(0), preyAcc.get(1).get(0), baitAcc.get(0), preyAcc.get(0), 1/interactionToSpectralCountMap.get(interaction));
+				ppi = new Interaction(baitHGNCsymbol, preyHGNCsymbol, baitRefSeqIds, preyRefSeqRNAids, 1/interactionToSpectralCountMap.get(interaction));
 			}
 			interactionList.add(ppi);
 		}
-		
+
 		if(missingBaitMapping.size() != 0) {
 			System.out.print("Missing baits mappings (" + missingBaitMapping.size() +") : ");
 			for(String bait: missingBaitMapping) {
@@ -232,45 +242,45 @@ public class GraphLoader {
 			}
 			System.out.println();
 		}
-		
+
 		if(missingPreyMapping.size() != 0) {
 			System.out.print("Missing prey mappings (" + missingPreyMapping.size() +") : ");
 			for(String prey: missingPreyMapping) {
 				System.out.print(prey + "|");
 			}
 			System.out.println("\n");
-			
+
 		}
 		return interactionList;
 	}
-	
+
 	/**
 	 * Function to print information related to the cell map network 
 	 * @param interactionToSpectralCountMap
 	 */
 	@SuppressWarnings("unused")
-	private static void printProteinsInNetwork(HashMap<String, Double> interactionToSpectralCountMap) {
-	
+	private static void printProteinsInNetwork(HashMap<String,String> interactionToSpectralCountMap) {
+
 		HashSet<String> proteinSet = new HashSet<>();
-		
-		for(String interaction : interactionToSpectralCountMap.keySet()) {
-			
+
+		/*for(String interaction : interactionToSpectralCountMap.keySet()) {
+
 			String[] interactors = interaction.split("\t");
 			proteinSet.add(interactors[0]);
 			//proteinSet.add(interactors[1]);
-		}
-		
+		}*/
+
 		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(new File("C:\\Users\\Rachel\\Documents\\LESMoNlocal\\baits_refseqIDs_FDR0.01.tsv")));
-		
-			for(String protein: proteinSet) {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File("C:\\Users\\Rachel\\Documents\\LESMoNlocal\\baits_HGNCsymbols.tsv")));
+
+			for(String protein: interactionToSpectralCountMap.keySet()) {
 				//Write the RefSeq Protein accession
 				//String[] prot = protein.split("\\.");
 				//out.write(prot[0] + "\n");
-				
+
 				//Wrtie protein name
-				out.write(protein + "\n");
-				
+				out.write(interactionToSpectralCountMap.get(protein) + "\n");
+
 				out.flush();
 			}
 			out.close();
@@ -278,5 +288,5 @@ public class GraphLoader {
 			e.printStackTrace();
 		}
 	}
-	
+
 }
