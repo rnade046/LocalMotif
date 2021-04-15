@@ -7,10 +7,10 @@ public class MotifMain {
 
 	public static void main(String[] args) {
 
-		boolean runRemote = false;
+		boolean runRemote = true;
 		/* Command line arguments */ 
-		String motifsToTestFileName = args[0];
-		String degenMotifsFileName = args[1];
+		String degenMotifsToTestFile = args[0];
+		String degenMotifsToRefSeqFile = args[1];
 
 		/* Local computer - file paths */
 		String wd = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\";
@@ -19,11 +19,12 @@ public class MotifMain {
 		String rnaIdListFile = wd + "IO_files\\refSeqRNAids-HumanCellMap.tsv";
 
 		String mapMotifsToRefSeqIdsFile = wd + "IO_files\\mapMotifsToRefSeqIdsFile.tsv";
+		String refSeqToProtMapFile = wd + "IO_files\\protToRefSeqRNAids-HumanCellMap.tsv";
 
-		String motifsToTestFilePath = wd + motifsToTestFileName;
-		String motifsTodegenMotifsFilePath = wd + degenMotifsFileName;
+		String motifsToTestFilePath = wd + "IO_files\\test-motifs.txt";
+		String mapOfMotifsToDegenMotifsFilePath = wd + "IO_files\\degenMotifs_sample.tsv";
 		
-		String degenMotifSet = wd + "IO_files\\degenMotifSet_sample.tsv";
+		String degenMotifSet = wd + "IO_files\\degenMotifsToMap_000";
 		String degenMotifToRedSeqFile = wd + "IO_files\\motifAnnotationFile.tsv";
 		/* Remote computer - file paths */ 
 		if(runRemote) {
@@ -32,12 +33,13 @@ public class MotifMain {
 			fastaFile = wd + "input_files\\human_3UTRsequences.txt";
 			rnaIdListFile = wd + "IO_files\\refSeqRNAids-HumanCellMap.tsv";
 
-			mapMotifsToRefSeqIdsFile = wd + "IO_files\\mapMotifsToRefSeqIdsFile.tsv";
-
-			motifsToTestFilePath = wd + motifsToTestFileName;
-			motifsTodegenMotifsFilePath = wd + degenMotifsFileName;
-			degenMotifSet = wd + "degenMotifSet.tsv";
-			degenMotifToRedSeqFile = wd + "motifAnnotationFile.tsv";
+			mapMotifsToRefSeqIdsFile = wd + "mapMotifsToRefSeqIdsFile.tsv";
+			refSeqToProtMapFile = wd + "protToRefSeqRNAids-HumanCellMap.tsv";
+			
+			motifsToTestFilePath = wd + "motifsToTestFile.tsv";
+			mapOfMotifsToDegenMotifsFilePath = wd + "degenerateMotifs_FWD.tsv";
+			degenMotifSet = wd + degenMotifsToTestFile;
+			degenMotifToRedSeqFile = wd + degenMotifsToRefSeqFile;
 		}
 
 		int motifLength = 8;
@@ -54,14 +56,14 @@ public class MotifMain {
 			e.generateMotifList(mapMotifsToRefSeqIdsFile, motifsToTestFilePath);
 		}	
 		
-		File f1 = new File(motifsTodegenMotifsFilePath);
+		File f1 = new File(mapOfMotifsToDegenMotifsFilePath);
 		if(!f1.exists() && !f1.isDirectory()) {
 			MotifDegeneration d = new MotifDegeneration(motifLength, maxDegenThreshold);
-			d.enumerateDegenerateMotifs(motifsToTestFilePath, motifsTodegenMotifsFilePath);
+			d.enumerateDegenerateMotifs(motifsToTestFilePath, mapOfMotifsToDegenMotifsFilePath);
 			d.generateAllPossibleMotifs(degenMotifSet);
 		}
 		
-		MapMotifs.mapMotifsToRefSeqIds(mapMotifsToRefSeqIdsFile, degenMotifSet, motifsTodegenMotifsFilePath, degenMotifToRedSeqFile);
+		MapMotifs.mapMotifsToRefSeqIds(mapMotifsToRefSeqIdsFile, degenMotifSet, mapOfMotifsToDegenMotifsFilePath, degenMotifToRedSeqFile, refSeqToProtMapFile);
 	}
 
 }

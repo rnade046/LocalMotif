@@ -16,18 +16,38 @@ import java.util.List;
 
 public class MapMotifs {
 
-	public static void mapMotifsToRefSeqIds(String motifsToRefSeqIDFile, String degenMotifsFile, String motifToDegenMotifsFile, String degenMotifsToRefSeqIdsFile) {
+	public static void mapMotifsToRefSeqIds(String motifsToRefSeqIDFile, String degenMotifsFile, String motifToDegenMotifsFile, String degenMotifsToRefSeqIdsFile, String protToRefSeqFile) {
 
-		/* Load (65,466) motifs and their associated RefSeqIds */
-		HashMap<String, List<String>> motifsToRefSeqMap = loadMotifsToRefSeqMap(motifsToRefSeqIDFile);
 
 		/* Load degenerative motifs that need to be indexed */
 		List<String> degenMotifList = loadDegenerativeMotifsToMap(degenMotifsFile);
+		System.out.println("Loaded degen motifs to test: " + degenMotifList.size() + "\n");
 
-		/* Map degenMotifs to all associated motifs */
-		HashMap<String, HashSet<String>> degenMotifToRefSeqIdMap = mapDegenerateMotifToRefSeqIds(motifToDegenMotifsFile, degenMotifList,  motifsToRefSeqMap);
-		/* print degenMotif annotation */
-		printMapOfDegenMotifsToRefSeqIds(degenMotifsToRefSeqIdsFile, degenMotifToRefSeqIdMap, motifsToRefSeqMap);
+		System.out.println("Iterating through degen motif map: ");
+		HashMap<String, List<String>> degenMotifToRefSeqIdMap = mapDegenerateMotifToRefSeqIds(motifToDegenMotifsFile, degenMotifList);
+		
+		/* Load (65,466) motifs and their associated RefSeqIds */
+		HashMap<String, List<String>> motifsToRefSeqMap = loadMotifsToRefSeqMap(motifsToRefSeqIDFile);
+		System.out.println("Loaded motifs to refseq map: " + motifsToRefSeqMap.size());		
+		HashMap<String, String> refSeqToProtMap = loadRefSeqToProteinMap(protToRefSeqFile);
+		System.out.println("Loaded refSeq to protein map: " + refSeqToProtMap.size() + "\n");
+		
+		System.out.println("Print map of Degen Motifs To RefSeq Ids:");
+		printMapOfDegenMotifsToRefSeqIds(degenMotifsToRefSeqIdsFile, degenMotifToRefSeqIdMap, motifsToRefSeqMap, refSeqToProtMap);
+
+		
+//		//for(String motif: degenMotifList) {
+//			
+//			/* Map degenMotifs to all associated motifs */
+//			
+//			//System.out.println("Testing motif: " + motif);
+//			
+//			HashSet<String> refSeqIdSet = mapDegenerateMotifToRefSeqIdsForAGivenMotif(motifToDegenMotifsFile, motif, motifsToRefSeqMap);
+//			/* print degenMotif annotation */
+//			
+//			printDegenMotifsToRefSeqIds(degenMotifsToRefSeqIdsFile, motif, refSeqIdSet);
+//		//}
+		
 	}
 
 	/**
@@ -76,7 +96,35 @@ public class MapMotifs {
 		}
 		return motifsToRefSeqMap;
 	}
-
+	
+	private static HashMap<String, String> loadRefSeqToProteinMap(String inputFile){
+		HashMap<String, String> refSeqToProteinMap = new HashMap<>();
+		
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(inputFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+			
+			String line = input.readLine(); // no header 
+			while(line != null) {
+				
+				String prot = line.split("\t")[0];
+				String[] refSeqIds = line.split("\t")[1].split("\\|");
+				
+				for(String refSeqId : refSeqIds) {
+					refSeqToProteinMap.put(refSeqId, prot);
+				}
+				
+				line = input.readLine();
+			}
+			
+			input.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		return refSeqToProteinMap;
+	}
+	
 	/**
 	 * Load degenerate motifs to index as a list<String> 
 	 * 
@@ -105,7 +153,7 @@ public class MapMotifs {
 
 		return degenMotifList;
 	}
-	
+
 	/**
 	 * Map degenerate motifs to it's corresponding non degenerate motifs. 
 	 * Takes the list of degenerate motif that we are looking to map, runs through the file containing motif = list of degenMotifs, &
@@ -116,8 +164,8 @@ public class MapMotifs {
 	 * 
 	 * @return degenMotifsToNonDegenMotifMap	HashMap<String, HashSet<String>> - map of degenMotif = RefSeqID1|RefSeqID2|...|RefSeqIDX
 	 */
-	private static HashMap<String, HashSet<String>> mapDegenerateMotifToRefSeqIds(String mapMotifToDegenMotifsFile, List<String> degenMotifList, HashMap<String, List<String>>  motifsToRefSeqMap){
-		HashMap<String, HashSet<String>> degenMotifsToRefSeqIDsMap = new HashMap<>();
+	private static HashMap<String, List<String>> mapDegenerateMotifToRefSeqIds(String mapMotifToDegenMotifsFile, List<String> degenMotifList){
+		HashMap<String, List<String>> degenMotifsToMotifsMap = new HashMap<>();
 
 		InputStream in;
 		try {
@@ -126,9 +174,19 @@ public class MapMotifs {
 
 			/* Ex. line = motifX \t DegenMotif1|DegenMotif2|...|DegenMotifX */
 			String line = input.readLine(); // no header
-
+			int lineCount = 1;
+			System.out.print(lineCount + ".");
 			while(line != null) {
 
+				//System.out.println(lineCount +".");
+				
+				if(lineCount%100 == 0) {
+					System.out.print(lineCount + ".");
+				} 
+
+				if(lineCount%1000 == 0) {
+					System.out.println();
+				}
 				String motif = line.split("\t")[0];	// motif
 				HashSet<String> degenMotifsSet = new HashSet<String>(Arrays.asList(line.split("\t")[1].split("\\|"))); // List of degenerate motifs associated to "motif"
 
@@ -136,45 +194,155 @@ public class MapMotifs {
 				 * if so add the current "motif's" RefSeqIds to the degenMotifs list of associated motifs*/
 				for(String degenMotif: degenMotifList) {
 					if(degenMotifsSet.contains(degenMotif)) {
-						if(degenMotifsToRefSeqIDsMap.containsKey(degenMotif)) {
-							degenMotifsToRefSeqIDsMap.get(degenMotif).addAll(motifsToRefSeqMap.get(motif));
+						if(degenMotifsToMotifsMap.containsKey(degenMotif)) {
+							degenMotifsToMotifsMap.get(degenMotif).add(motif);
 						} else {
-							HashSet<String> associatedRefSeqIDList = new HashSet<>();
-							associatedRefSeqIDList.addAll(motifsToRefSeqMap.get(motif));
-							degenMotifsToRefSeqIDsMap.put(degenMotif, associatedRefSeqIDList);
+							List<String> associatedMotifList = new ArrayList<>();
+							associatedMotifList.add(motif);
+							degenMotifsToMotifsMap.put(degenMotif, associatedMotifList);
 						}
 					}
 				}
 				line = input.readLine();
+				lineCount++;
 			}
 
 			input.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
-
-		return degenMotifsToRefSeqIDsMap;
+		System.out.print("Done\n\n");
+		return degenMotifsToMotifsMap;
 	}
 
-	
-	private static void printMapOfDegenMotifsToRefSeqIds(String outputFile, HashMap<String, HashSet<String>> degenMotifsToAssociatedRefSeqMap, HashMap<String, List<String>> motifsToRefSeqIds) {
+	@SuppressWarnings("unused")
+	private static HashSet<String> mapDegenerateMotifToRefSeqIdsForAGivenMotif(String mapMotifToDegenMotifsFile, String degenMotif, HashMap<String, List<String>>  motifsToRefSeqMap){
+		HashSet<String> refSeqIDSet = new HashSet<>();
 
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(mapMotifToDegenMotifsFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			/* Ex. line = motifX \t DegenMotif1|DegenMotif2|...|DegenMotifX */
+			String line = input.readLine(); // no header
+			int lineCount = 1;
+			System.out.print(lineCount + ".");
+			while(line != null) {
+
+				System.out.print(lineCount + ".");
+//				if(lineCount%100000 == 0) {
+//					System.out.print(lineCount + ".");
+//				} 
+//
+//				if(lineCount%1000000 == 0) {
+//					System.out.println();
+//				}
+				String motif = line.split("\t")[0];	// motif
+				HashSet<String> degenMotifsSet = new HashSet<String>(Arrays.asList(line.split("\t")[1].split("\\|"))); // List of degenerate motifs associated to "motif"
+
+				/* for each degen motif that we're trying to map, check if it is associated to the current "motif", 
+				 * if so add the current "motif's" RefSeqIds to the degenMotifs list of associated motifs*/
+				if(degenMotifsSet.contains(degenMotif)) {
+					if(motifsToRefSeqMap.containsKey(motif)){
+						refSeqIDSet.addAll(motifsToRefSeqMap.get(motif));
+					}
+				}
+
+				line = input.readLine();
+				lineCount++;
+
+			}
+			input.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		System.out.print("Done\n");
+		return refSeqIDSet;
+	}
+
+	private static void printMapOfDegenMotifsToRefSeqIds(String outputFile, HashMap<String, List<String>> degenMotifsToAssociatedMotifsMap, 
+		HashMap<String, List<String>> motifsToRefSeqIds, HashMap<String, String> refSeqToProtMap) {
+		
+		int motifCount = 0;
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			
+			for(String degenMotif:  degenMotifsToAssociatedMotifsMap.keySet()) {
+				motifCount++;
+				if(motifCount%100 == 0) {
+					System.out.print(motifCount + ".");
+				}
+				
+				if(motifCount%1000 == 0) {
+					System.out.println();
+				}
+				
+				if(degenMotifsToAssociatedMotifsMap.get(degenMotif).size() >= 1) {
+					
+					out.write(degenMotif + "\t");
+					
+					HashSet<String> refSeqSet = getRefSeqIdSet(degenMotifsToAssociatedMotifsMap.get(degenMotif), motifsToRefSeqIds);
+					for(String refSeqId: refSeqSet) {
+						out.write(refSeqId + "|");
+					}
+					out.write("\t");
+					
+					HashSet<String> proteinSet = getProteinAssociatedToDegenMotif(refSeqSet, refSeqToProtMap);
+					for(String prot: proteinSet) {
+						out.write(prot + "|");
+					}
+				}
+				out.write("\n");
+			}
+			System.out.println("Done\n");
 
-			for(String degenMotif:  degenMotifsToAssociatedRefSeqMap.keySet()) {
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-				if(degenMotifsToAssociatedRefSeqMap.get(degenMotif).size() >= 1) {
+	}
+	
+	private static HashSet<String> getRefSeqIdSet(List<String> listOfMotifs, HashMap<String, List<String>> motifsToRefSeqMap){
+		HashSet<String> refSeqIdSet = new HashSet<>();
+		
+		for(String motif: listOfMotifs) {
+			if(motifsToRefSeqMap.containsKey(motif)) {
+				refSeqIdSet.addAll(motifsToRefSeqMap.get(motif));	
+			}
+		}		
+		return refSeqIdSet;
+	}
+	
+	private static HashSet<String> getProteinAssociatedToDegenMotif(HashSet<String> refSeqIds, HashMap<String, String> refSeqToProtMap){
+		HashSet<String> proteinSet = new HashSet<>();
+	
+		for(String refSeqId : refSeqIds) {
+			if(refSeqToProtMap.containsKey(refSeqId)) {
+				proteinSet.add(refSeqToProtMap.get(refSeqId));	
+			}
+		}			
+		
+		return proteinSet;
+	}
+
+	@SuppressWarnings("unused")
+	private static void printDegenMotifsToRefSeqIds(String outputFile, String degenMotif, HashSet<String> refSeqIDSet) {
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile), true));
+
 
 					out.write(degenMotif + "\t");
 
-						for(String refSeqId:  degenMotifsToAssociatedRefSeqMap.get(degenMotif)) {
-								out.write(refSeqId + "|");
-						}
+					for(String refSeqId: refSeqIDSet) {
+						out.write(refSeqId + "|");
 					}
-					out.write("\n");
-				}
+				
+				out.write("\n");
 			
+
 
 			out.close();
 		} catch (IOException e) {
