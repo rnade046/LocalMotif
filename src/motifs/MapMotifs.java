@@ -16,7 +16,7 @@ import java.util.List;
 
 public class MapMotifs {
 
-	public static void mapMotifsToRefSeqIds(String motifsToRefSeqIDFile, String degenMotifsFile, String motifToDegenMotifsFile, String degenMotifsToRefSeqIdsFile, String protToRefSeqFile) {
+	public static void mapDegenMotifsToRefSeqIds(String motifsToRefSeqIDFile, String degenMotifsFile, String motifToDegenMotifsFile, String degenMotifsToRefSeqIdsFile, String protToRefSeqFile) {
 
 
 		/* Load degenerative motifs that need to be indexed */
@@ -47,6 +47,17 @@ public class MapMotifs {
 //			
 //			printDegenMotifsToRefSeqIds(degenMotifsToRefSeqIdsFile, motif, refSeqIdSet);
 //		//}
+		
+	}
+	
+	public static void mapMotifsToRefSeqIds(String motifsToRefSeqIDFile, String protToRefSeqFile, String motifMapFile) {
+	
+		HashMap<String, List<String>> motifsToRefSeqMap = loadMotifsToRefSeqMap(motifsToRefSeqIDFile);
+		System.out.println("Loaded motifs to refseq map: " + motifsToRefSeqMap.size());		
+		HashMap<String, String> refSeqToProtMap = loadRefSeqToProteinMap(protToRefSeqFile);
+		System.out.println("Loaded refSeq to protein map: " + refSeqToProtMap.size() + "\n");
+		
+		printMapOfMotifsToRefSeqIds(motifMapFile, motifsToRefSeqMap, refSeqToProtMap);
 		
 	}
 
@@ -263,7 +274,8 @@ public class MapMotifs {
 
 	private static void printMapOfDegenMotifsToRefSeqIds(String outputFile, HashMap<String, List<String>> degenMotifsToAssociatedMotifsMap, 
 		HashMap<String, List<String>> motifsToRefSeqIds, HashMap<String, String> refSeqToProtMap) {
-		
+		int maxNumberOfProteins = 0;
+		int minNumberOfProteins = Integer.MAX_VALUE;
 		int motifCount = 0;
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
@@ -283,12 +295,20 @@ public class MapMotifs {
 					out.write(degenMotif + "\t");
 					
 					HashSet<String> refSeqSet = getRefSeqIdSet(degenMotifsToAssociatedMotifsMap.get(degenMotif), motifsToRefSeqIds);
+					HashSet<String> proteinSet = getProteinAssociatedToDegenMotif(refSeqSet, refSeqToProtMap);
+					if(proteinSet.size() > maxNumberOfProteins) {
+						maxNumberOfProteins = proteinSet.size();
+					}
+					if(proteinSet.size() < minNumberOfProteins) {
+						minNumberOfProteins = proteinSet.size();
+					}
+					
+					out.write(refSeqSet.size() + "\t" + proteinSet.size()  +"\t");
+					
 					for(String refSeqId: refSeqSet) {
 						out.write(refSeqId + "|");
 					}
 					out.write("\t");
-					
-					HashSet<String> proteinSet = getProteinAssociatedToDegenMotif(refSeqSet, refSeqToProtMap);
 					for(String prot: proteinSet) {
 						out.write(prot + "|");
 					}
@@ -296,7 +316,9 @@ public class MapMotifs {
 				out.write("\n");
 			}
 			System.out.println("Done\n");
-
+			
+			System.out.println("Max #proteins associated to motifs: " + maxNumberOfProteins);
+			System.out.println("Min #proteins associated to motifs: " + minNumberOfProteins);
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -326,6 +348,59 @@ public class MapMotifs {
 		
 		return proteinSet;
 	}
+	
+	private static void printMapOfMotifsToRefSeqIds(String outputFile, HashMap<String, List<String>> motifsToRefSeqIds, HashMap<String, String> refSeqToProtMap) {
+			int maxNumberOfProteins = 0;
+			int minNumberOfProteins = Integer.MAX_VALUE;
+			int motifCount = 0;
+			try {
+				BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+				
+				for(String motif:  motifsToRefSeqIds.keySet()) {
+					motifCount++;
+					if(motifCount%100 == 0) {
+						System.out.print(motifCount + ".");
+					}
+					
+					if(motifCount%1000 == 0) {
+						System.out.println();
+					}
+											
+						out.write(motif + "\t");
+						
+						HashSet<String> refSeqSet = new HashSet<>(motifsToRefSeqIds.get(motif));
+						HashSet<String> proteinSet = getProteinAssociatedToDegenMotif(refSeqSet, refSeqToProtMap);
+						
+						if(proteinSet.size() > maxNumberOfProteins) {
+							maxNumberOfProteins = proteinSet.size();
+						}
+						
+						if(proteinSet.size() < minNumberOfProteins) {
+							minNumberOfProteins = proteinSet.size();
+						}
+						
+						out.write(refSeqSet.size() + "\t" + proteinSet.size() + "\t");
+						
+						for(String refSeqId: refSeqSet) {
+							out.write(refSeqId + "|");
+						}
+						out.write("\t");
+						
+						for(String prot: proteinSet) {
+							out.write(prot + "|");
+						}
+					out.write("\n");
+				}
+				System.out.println("Done\n");
+				
+				System.out.println("Max #proteins associated to motifs: " + maxNumberOfProteins);
+				System.out.println("Min #proteins associated to motifs: " + minNumberOfProteins);
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
 
 	@SuppressWarnings("unused")
 	private static void printDegenMotifsToRefSeqIds(String outputFile, String degenMotif, HashSet<String> refSeqIDSet) {

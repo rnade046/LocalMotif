@@ -26,6 +26,7 @@ public class MotifMain {
 		
 		String degenMotifSet = wd + "IO_files\\degenMotifsToMap_000";
 		String degenMotifToRedSeqFile = wd + "IO_files\\motifAnnotationFile.tsv";
+		//String motifMapFile = wd + "IO_files\\motifMapped.tsv";
 		/* Remote computer - file paths */ 
 		if(runRemote) {
 			wd = "/home/rnade046/projects/rrg-mlaval/rnade046/motifDegen_Full_FWD/";
@@ -63,7 +64,8 @@ public class MotifMain {
 			d.generateAllPossibleMotifs(degenMotifSet);
 		}
 		
-		MapMotifs.mapMotifsToRefSeqIds(mapMotifsToRefSeqIdsFile, degenMotifSet, mapOfMotifsToDegenMotifsFilePath, degenMotifToRedSeqFile, refSeqToProtMapFile);
+		MapMotifs.mapDegenMotifsToRefSeqIds(mapMotifsToRefSeqIdsFile, degenMotifSet, mapOfMotifsToDegenMotifsFilePath, degenMotifToRedSeqFile, refSeqToProtMapFile);
+		//MapMotifs.mapMotifsToRefSeqIds(mapMotifsToRefSeqIdsFile, refSeqToProtMapFile, motifMapFile);
 	}
 
 }
