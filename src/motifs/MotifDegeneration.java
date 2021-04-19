@@ -106,7 +106,8 @@ public class MotifDegeneration {
 
 	/**
 	 * For a given motif produce all possible motifs (ie. degenerate motifs) with given criteria.
-	 * Current criteria includes motifs with a max of 7 degenerate characters.
+	 * Current criteria includes motifs with a max of 7 degenerate characters. 
+	 * Inspired by Cartesian Products: https://stackoverflow.com/questions/9591561/java-cartesian-product-of-a-list-of-lists  
 	 * 
 	 * @param motif				String - sequence motifs 
 	 * @return degenerateMotifs ArrayList<String> - all possible degenerate sequence motifs 

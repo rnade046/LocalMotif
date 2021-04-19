@@ -1,6 +1,7 @@
-package utils;
+package sampling;
 
 import graph.Annotation;
+import utils.Calculator;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -161,7 +162,7 @@ public class Sampling {
 	 * @param timesNetworkWasSampled	Number of times the network was sampled (eg. 10X7)
 	 * @return Monte Carlo Distribution as a map of {TPD: frequency} 
 	 */
-	private HashMap<Double, Double> computeFrequenciesOfSampledTPDs(double[] sampledTPDList, int timesNetworkWasSampled){
+	public static HashMap<Double, Double> computeFrequenciesOfSampledTPDs(double[] sampledTPDList, int timesNetworkWasSampled){
 		HashMap<Double, Double> probabilityOfTPDMap = new HashMap<Double, Double>(); //map to store {TPD: frequency}
 
 		/* calculate the occurrence of obtained total pairwise distances */
@@ -188,7 +189,7 @@ public class Sampling {
 	 * 
 	 * @param probabilityMapOfTPD
 	 */
-	private void checkFrequencyTotal(HashMap<Double, Double> probabilityOfTPDMap, int numProteinsToSample) {
+	public static void checkFrequencyTotal(HashMap<Double, Double> probabilityOfTPDMap, int numProteinsToSample) {
 
 		float probability = 0; // initialize probability
 

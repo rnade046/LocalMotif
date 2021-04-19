@@ -10,48 +10,10 @@ import graph.Protein;
 
 public class Loader {
 
-
-	public static double[][] loadDistanceMatrix(String distance_matrixFile, ArrayList<Protein> ProteinList) {
-		/* Import distance matrix from text file, it's dimensions are based on the size of the 
-		 * proteinNetwork List initially used to build the distance Matrix file */
-
-		double[][] distanceMatrix = new double[ProteinList.size()][ProteinList.size()]; // Initialize distance matrix
-
-		try {
-
-			InputStream in = new FileInputStream(new File(distance_matrixFile));				
-			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-
-			String line = input.readLine(); // read first line
-
-			int x = 0; // initialize row counter
-
-			while (line != null) {
-
-				String[] col = line.split("\t"); // split columns
-				int y = 0; // initialize column counter (resets at the end of every row)
-
-				for (String str : col) { // str is the index to go through all element of col
-
-					distanceMatrix[x][y] = Double.parseDouble(str);;// set the value (distance) at the appropriate coordinates
-					y++; // adds one to the value of y (change column)
-				}
-				x++; // adds one to the vale of x (change row)
-				line = input.readLine(); // read next line
-
-			}
-			input.close();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return distanceMatrix;
-	} // end import distance matrix
-
-	public static ArrayList<Annotation> importAnnotationGo(String inputFile, ArrayList<Protein> networkProteinList) {
-		/* Maps protein IDs (values) in the form of a string array with it's
+/*	public static ArrayList<Annotation> importAnnotationGo(String inputFile, ArrayList<Protein> networkProteinList) {
+		 Maps protein IDs (values) in the form of a string array with it's
 		 * corresponding GO ID (key) from given annotation GO file. Only keeps proteins found in the network
-		 */
+		 
 
 		// GoTerms will contain all GO terms with a list of associated protein IDs
 		ArrayList<Annotation> goTermsList = new ArrayList<Annotation>();
@@ -80,9 +42,9 @@ public class Loader {
 				String[] proteinIDList = protein_ids.split("\\|"); // split for names of individual proteins
 				String[] proteinSymbolsList = protein_symbols.split("\\|");
 
-				/* Check if proteins associated to the goTerm are found in the network. Only
+				 Check if proteins associated to the goTerm are found in the network. Only
 				 * proteins found in the network will be saved. Also store index of proteins
-				 * within the network. */
+				 * within the network. 
 				ArrayList<String> goProteinsInNetworkList = new ArrayList<String>();
 				ArrayList<String> goSymbolsInNetworkList = new ArrayList<String>();
 				ArrayList<Integer> idxProteinsInNetworkList = new ArrayList<Integer>();
@@ -105,7 +67,7 @@ public class Loader {
 					}
 				}
 
-				/* Check prevalence of proteins from annotation GO in network */
+				 Check prevalence of proteins from annotation GO in network 
 				Double goPrevalence = goProteinsInNetworkList.size() / (double) (proteinIDList.length);
 
 				if (goPrevalence > 0.5 && goProteinsInNetworkList.size() > 2 && goProteinsInNetworkList.size() < 1000) {
@@ -125,7 +87,7 @@ public class Loader {
 			e.printStackTrace();
 		}
 		return goTermsList;
-	}
+	}*/
 	/**************************************************************************************************
 	 * Load a Monte Carlos distribution file for all possible TPD generated on compute canada. 
 	 * File format : [header] TPD (n=#) "\t" Freq/NotFound

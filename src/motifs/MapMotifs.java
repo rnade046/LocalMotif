@@ -171,11 +171,11 @@ public class MapMotifs {
 	 * identifies all non degenerate motif the degenMotif is associated to
 	 * 
 	 * @param mapMotifToDegenMotifsFile	String - file path, format: motif \t degenMotif1|degenMotif2|...|degenMotifX
-	 * @param degenMotifList 			List<String> - list of degenerate motifs to map
+	 * @param degenMotifsToTestList 			List<String> - list of degenerate motifs to map
 	 * 
 	 * @return degenMotifsToNonDegenMotifMap	HashMap<String, HashSet<String>> - map of degenMotif = RefSeqID1|RefSeqID2|...|RefSeqIDX
 	 */
-	private static HashMap<String, List<String>> mapDegenerateMotifToRefSeqIds(String mapMotifToDegenMotifsFile, List<String> degenMotifList){
+	private static HashMap<String, List<String>> mapDegenerateMotifToRefSeqIds(String mapMotifToDegenMotifsFile, List<String> degenMotifsToTestList){
 		HashMap<String, List<String>> degenMotifsToMotifsMap = new HashMap<>();
 
 		InputStream in;
@@ -198,13 +198,14 @@ public class MapMotifs {
 				if(lineCount%1000 == 0) {
 					System.out.println();
 				}
+				
 				String motif = line.split("\t")[0];	// motif
-				HashSet<String> degenMotifsSet = new HashSet<String>(Arrays.asList(line.split("\t")[1].split("\\|"))); // List of degenerate motifs associated to "motif"
+				HashSet<String> currentDegenMotifsSet = new HashSet<String>(Arrays.asList(line.split("\t")[1].split("\\|"))); // List of degenerate motifs associated to "motif"
 
 				/* for each degen motif that we're trying to map, check if it is associated to the current "motif", 
 				 * if so add the current "motif's" RefSeqIds to the degenMotifs list of associated motifs*/
-				for(String degenMotif: degenMotifList) {
-					if(degenMotifsSet.contains(degenMotif)) {
+				for(String degenMotif: degenMotifsToTestList) {
+					if(currentDegenMotifsSet.contains(degenMotif)) {
 						if(degenMotifsToMotifsMap.containsKey(degenMotif)) {
 							degenMotifsToMotifsMap.get(degenMotif).add(motif);
 						} else {
@@ -214,6 +215,7 @@ public class MapMotifs {
 						}
 					}
 				}
+				
 				line = input.readLine();
 				lineCount++;
 			}
@@ -221,6 +223,8 @@ public class MapMotifs {
 			input.close();
 		} catch(IOException e) {
 			e.printStackTrace();
+			e.getCause();
+			e.getMessage();
 		}
 		System.out.print("Done\n\n");
 		return degenMotifsToMotifsMap;

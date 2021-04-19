@@ -1,8 +1,12 @@
 package utils;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -139,4 +143,41 @@ public class DistanceMatrix {
 			e.printStackTrace();
 		}	
 	}
+	
+	public static double[][] loadDistanceMatrix(String distance_matrixFile, ArrayList<Protein> ProteinList) {
+		/* Import distance matrix from text file, it's dimensions are based on the size of the 
+		 * proteinNetwork List initially used to build the distance Matrix file */
+
+		double[][] distanceMatrix = new double[ProteinList.size()][ProteinList.size()]; // Initialize distance matrix
+
+		try {
+
+			InputStream in = new FileInputStream(new File(distance_matrixFile));				
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine(); // read first line
+
+			int x = 0; // initialize row counter
+
+			while (line != null) {
+
+				String[] col = line.split("\t"); // split columns
+				int y = 0; // initialize column counter (resets at the end of every row)
+
+				for (String str : col) { // str is the index to go through all element of col
+
+					distanceMatrix[x][y] = Double.parseDouble(str);;// set the value (distance) at the appropriate coordinates
+					y++; // adds one to the value of y (change column)
+				}
+				x++; // adds one to the vale of x (change row)
+				line = input.readLine(); // read next line
+
+			}
+			input.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return distanceMatrix;
+	} // end import distance matrix
 }

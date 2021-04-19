@@ -13,6 +13,8 @@ import java.util.HashSet;
 import graph.Interaction;
 import graph.Protein;
 import motifs.MotifDegeneration;
+import sampling.MotifSampling;
+import sampling.ProteinAnnotations;
 import utils.Calculator;
 import utils.DistanceMatrix;
 import utils.GraphLoader;
@@ -34,36 +36,38 @@ public class Main {
 
 		String distanceMatrixFile = wd + "IO_files\\cellMap_distanceMatrix.txt";
 
-		String fastaFile = wd + "input_files\\human_3UTRsequences.txt";
-		String rnaIdListFile = wd + "IO_files\\prot&refSeqRNAids-HumanCellMap.tsv";
+		//String fastaFile = wd + "input_files\\human_3UTRsequences.txt";
+		//String rnaIdListFile = wd + "IO_files\\prot&refSeqRNAids-HumanCellMap.tsv";
+		String annotationFile = wd + "IO_files\\motifMapped.tsv";
+		String proteinAnnotationFrequencyFile = wd + "IO_files\\test-protFreqAnnotation.tsv";
+		String mcSamplingFile = wd + "IO_files\\test-MonteCarloSamplingFile_n3_s100000.tsv";
 		ArrayList<Interaction> interactionList =  GraphLoader.loadInteractionRepository(cellMapFile, baitCellMapMappingFile, baitMappingFile, preyMappingFile, 0.01);
 		System.out.println("Number of interactions: " + interactionList.size());
 
 		ArrayList<Protein> proteinList = NetworkProteins.getProteinsInNetwork(interactionList);
 		System.out.println("Number of Proteins: " + proteinList.size());
-		printProtAndRefSeqIdsInNetwork(rnaIdListFile, proteinList);
+		//printProtAndRefSeqIdsInNetwork(rnaIdListFile, proteinList);
 		//printRefSeqIdsInNetwork(rnaIdListFile, proteinList);
-		/*
-		printProteinsInNetwork(proteinListFile, proteinList);
+		
 		File f = new File(distanceMatrixFile);
 		if(!f.exists() && !f.isDirectory()) {
 			DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
 		}
-		double[][] distanceMatrix = Loader.loadDistanceMatrix(distanceMatrixFile, proteinList); 
-
-		// TESTING motif enumeration
-
-		ArrayList<Protein> proteinList = new ArrayList<>();
-		proteinList.add(new Protein("PLEC", new ArrayList<String>(Arrays.asList("NM_000445"))));
-		//SproteinList.add(new Protein("PX6", new ArrayList<String>(Arrays.asList("NM_001316313", "NM_000287"))));
-
-		MotifEnumerator enumerate = new MotifEnumerator(fastaFile, proteinList, 8);
-
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        System.out.println(timestamp + " [start]");
-		HashMap<String, HashSet<String>> enumeratedMotifs = enumerate.enumerateMotifs(7);
-		timestamp = new Timestamp(System.currentTimeMillis());
-        System.out.println(timestamp + " [end]"); */ 
+		
+		double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
+		
+		// For MC sampling 
+		// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list
+		File f1 = new File(proteinAnnotationFrequencyFile);
+		if(!f1.exists() && !f1.isDirectory()) {
+			System.out.println("Enumerating protein annotation frequency file");
+			ProteinAnnotations.enumerateProteinAnnotationFrequency(annotationFile, proteinAnnotationFrequencyFile);
+		}
+		// 2 - Initialize sampling
+		MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList, distanceMatrix);
+		// 3 - Perform sampling for n proteins
+		sampling.computeMultipleDistributions(3, 3, 10000, mcSamplingFile);
+		
 	}
 
 	public static void printRefSeqIdsInNetwork(String outputFile, ArrayList<Protein> proteinList) {

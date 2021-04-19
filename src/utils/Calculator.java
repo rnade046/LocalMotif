@@ -115,10 +115,10 @@ public class Calculator {
 
         for (int i = 0; i < networkPPIList.size(); i++) {
 
-            int proteinInteractor1 = networkPPIList.get(i).getID1();
-            int proteinInteractor2 = networkPPIList.get(i).getID2();
+            String proteinInteractor1 = networkPPIList.get(i).getProtein1();
+            String proteinInteractor2 = networkPPIList.get(i).getProtein2();
 
-            if (proteinOfInterest.getProteinId() == proteinInteractor1 || proteinOfInterest.getProteinId() == proteinInteractor2) {
+            if (proteinOfInterest.getProteinName().equals(proteinInteractor1) || proteinOfInterest.getProteinName().equals(proteinInteractor2)) {
                 interactionCounter++;
             }
         }
@@ -603,9 +603,9 @@ public class Calculator {
         return fdr;
     }
 
-    public static HashSet<Integer> determineUniProtIDsInNetwork(ArrayList<Protein> proteinsInNetworkList) {
+    public static HashSet<String> determineUniProtIDsInNetwork(ArrayList<Protein> proteinsInNetworkList) {
 
-        HashSet<Integer> uniProtIDsInNetwork = new HashSet<Integer>();
+        HashSet<String> uniProtIDsInNetwork = new HashSet<>();
 
         for (int i = 0; i < proteinsInNetworkList.size(); i++) {
             uniProtIDsInNetwork.add(proteinsInNetworkList.get(i).getProteinId());
