@@ -120,11 +120,9 @@ public class MapMotifs {
 			while(line != null) {
 				
 				String prot = line.split("\t")[0];
-				String[] refSeqIds = line.split("\t")[1].split("\\|");
+				String refSeqId = line.split("\t")[1];
 				
-				for(String refSeqId : refSeqIds) {
-					refSeqToProteinMap.put(refSeqId, prot);
-				}
+				refSeqToProteinMap.put(refSeqId, prot);
 				
 				line = input.readLine();
 			}

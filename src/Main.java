@@ -16,15 +16,16 @@ import motifs.MotifDegeneration;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
 import utils.Calculator;
+import utils.CorrelationGraphLoader;
 import utils.DistanceMatrix;
-import utils.GraphLoader;
+import utils.SaintGraphLoader;
 import utils.Loader;
 import utils.NetworkProteins;
 
 
 public class Main {
 
-	public static void main(String[] args) throws InterruptedException, ExecutionException {
+	public static void main(String[] args) {
 
 		String wd = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\";
 
@@ -33,17 +34,24 @@ public class Main {
 
 		String preyMappingFile = wd + "input_files\\preysMappingFile-BioMart.tsv";
 		String baitMappingFile = wd + "input_files\\baitsMappingFile-BioMart.tsv";
-
+		
+		String correlationRepository = wd + "input_files\\correlation_v2.tsv";
+		String proteinsInNetwork = wd + "CorrelationNet_listOfProteinNames.tsv";
 		String distanceMatrixFile = wd + "IO_files\\cellMap_distanceMatrix.txt";
-
+		
 		//String fastaFile = wd + "input_files\\human_3UTRsequences.txt";
 		//String rnaIdListFile = wd + "IO_files\\prot&refSeqRNAids-HumanCellMap.tsv";
 		String annotationFile = wd + "IO_files\\motifMapped.tsv";
 		String proteinAnnotationFrequencyFile = wd + "IO_files\\test-protFreqAnnotation.tsv";
 		String mcSamplingFile = wd + "IO_files\\test-MonteCarloSamplingFile_n3_s100000.tsv";
-		ArrayList<Interaction> interactionList =  GraphLoader.loadInteractionRepository(cellMapFile, baitCellMapMappingFile, baitMappingFile, preyMappingFile, 0.01);
+		
+		
+		CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, proteinsInNetwork);
+		
+		/*ArrayList<Interaction> interactionList =  SaintGraphLoader.loadInteractionRepositoryFromSaintExpressReport(cellMapFile, baitCellMapMappingFile, baitMappingFile, preyMappingFile, 0.01);
 		System.out.println("Number of interactions: " + interactionList.size());
-
+		
+		
 		ArrayList<Protein> proteinList = NetworkProteins.getProteinsInNetwork(interactionList);
 		System.out.println("Number of Proteins: " + proteinList.size());
 		//printProtAndRefSeqIdsInNetwork(rnaIdListFile, proteinList);
@@ -66,7 +74,7 @@ public class Main {
 		// 2 - Initialize sampling
 		MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList, distanceMatrix);
 		// 3 - Perform sampling for n proteins
-		sampling.computeMultipleDistributions(3, 3, 10000, mcSamplingFile);
+		sampling.computeMultipleDistributions(3, 3, 10000, mcSamplingFile);*/
 		
 	}
 

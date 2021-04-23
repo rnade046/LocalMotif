@@ -66,20 +66,23 @@ public class MotifSampling {
 	private int[] computeCumulativeSumOfWeights() {
 		int[] cumulativeWeightList = new int[this.proteinsInNetworkList.size()]; // initialize list the size of network list
 		int cumulativeWeight = 0; // initialize cumulative weight
-
+		int countMissingProts = 0;
 		/* iterate all proteins in the order of the network protein list; 
 		 * obtain weight of protein as it's annotation occurrence,
 		 * update it's weight as a cumulative weight and set in list */
+		System.out.println("Missing prot:");
 		for(int i=0; i<proteinsInNetworkList.size(); i++) {
 			if(proteinToOccurrenceMap.containsKey(proteinsInNetworkList.get(i).getProteinName())) {
 				int currentWeight = this.proteinToOccurrenceMap.get(this.proteinsInNetworkList.get(i).getProteinName());
 				cumulativeWeight += currentWeight; 
 				cumulativeWeightList[i] = cumulativeWeight;
 			} else { 
-				System.out.println("Missing prot " + proteinsInNetworkList.get(i).getProteinName());
+				System.out.print(proteinsInNetworkList.get(i).getProteinName() + "|");
+				countMissingProts++;
 			}
 			
 		}
+		System.out.println("\nNumber of missing proteins: " + countMissingProts);
 		return cumulativeWeightList;
 	}
 

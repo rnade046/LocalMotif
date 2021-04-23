@@ -14,9 +14,9 @@ import java.util.HashSet;
 
 import graph.Interaction;
 
-public class GraphLoader {
+public class SaintGraphLoader {
 
-	public static ArrayList<Interaction> loadInteractionRepository(String repositoryFile, String cellMapBaitMapFile, String bioMartBaitMapFile, String bioMartPreyMapFile, double fdr){
+	public static ArrayList<Interaction> loadInteractionRepositoryFromSaintExpressReport(String repositoryFile, String cellMapBaitMapFile, String bioMartBaitMapFile, String bioMartPreyMapFile, double fdr){
 
 		HashMap<String, Double> interactionToSpectralCountMap = loadSaintReport(repositoryFile, fdr);
 		HashMap<String,String> cellMapBaitMap = loadCellMapBaitMapping(cellMapBaitMapFile);
@@ -32,7 +32,8 @@ public class GraphLoader {
 
 		return interactionList;
 	}
-
+	
+	
 	/**
 	 * Loads the significant PPIs from the saint express report from cell-map.org as a mapping of the 
 	 * interaction and the average spectral counts. PPIs are deemed significant if their BFDR is <= to
@@ -288,5 +289,5 @@ public class GraphLoader {
 			e.printStackTrace();
 		}
 	}
-
+	
 }

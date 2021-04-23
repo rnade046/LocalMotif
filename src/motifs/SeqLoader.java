@@ -23,10 +23,10 @@ public class SeqLoader {
 			in = new FileInputStream(new File(inputFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 			
-			String line = input.readLine(); // no header
-			
+			String line = input.readLine(); // header
+			line = input.readLine();
 			while(line != null) {
-				refSeqIDs.add(line); // every line is a refSeq ID
+				refSeqIDs.add(line.split("\t")[1]); // every line is a refSeq ID
 				line = input.readLine();
 			}
 			

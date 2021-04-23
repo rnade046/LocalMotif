@@ -34,10 +34,13 @@ public class MotifEnumerator {
 		System.out.println("Testing id: ");
 		
 		for(String id: refSeqIds) {
-			if(idCount%100 == 0) {
+			if(idCount%1000 == 0) {
 				System.out.println();
 			}
-			System.out.print(idCount + "|");
+			if(idCount%100 == 0) {
+				System.out.print(idCount + "|");
+			}
+			
 			idCount++;
 			
 			String formattedSeq = "";
@@ -61,10 +64,10 @@ public class MotifEnumerator {
 			motifSet.addAll(currentMotifSet);
 			
 		}
-		System.out.println("Number of total motifs: " + countAllMotifs);
-		System.out.println("Number of unique motifs: " + motifSet.size() + "\n");
+		System.out.println("\n\nNumber of total motifs: " + countAllMotifs);
+		System.out.println("Number of unique motifs: " + motifSet.size());
 	
-		System.out.println("Number of refSeq Ids not found in Fasta file : " + countMissingSeq);
+		System.out.println("Number of refSeq Ids not found in Fasta file : " + countMissingSeq + "\n");
 		
 		// print motifs to test
 		printAllMotifs(motifSet, motifsToTestFile);
