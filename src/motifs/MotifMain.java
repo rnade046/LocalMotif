@@ -40,11 +40,14 @@ public class MotifMain {
 		int motifLength = Integer.parseInt(params.getProperty("motifLength"));
 		int maxDegenThreshold = Integer.parseInt(params.getProperty("maxDegenThreshold"));
 		
+		int numMotifFiles = Integer.parseInt(params.getProperty("numMotifFiles"));
+		
 		String wd = params.getProperty("working_directory");
 		
 		/* Command line arguments */ 
 		String motifsToTestFile = args[1];
-		String degenMotifsToRefSeqFile = args[2];
+		String degenMotifsToDegenMotifsFile = args[2];
+		String jobNumber = args[3];
 
 		/* Local computer - file paths */
 		String projectName = params.getProperty("project_name");
@@ -58,11 +61,10 @@ public class MotifMain {
 		String listOfUniqueMotifsFile = wd + "ListOfUniqueMotifs_"+ projectName + ".txt"; // output from motif enumeration
 		String motifMapFile = wd + "motifMappedToProteinsInNetwork"+ projectName +".tsv"; // output from motif enumeration
 		
-		String mapMotifsToDegenMotifsFilePath = wd + "MapOfMotifsToDegenMotifs_"+ projectName +".tsv"; // output from motif degeneration
+		String motifSetToTest = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
+		String mapOfMotifs = wd + degenMotifsToDegenMotifsFile;
 		
-		String motifSet = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
-		String mapOfMotifs = wd + degenMotifsToRefSeqFile;
-		
+		String degenMotifAnnotationFile = wd + "degenMotifMappedToProteinsInNetwork_" + projectName + "_" + jobNumber ; // output from motif degeneration
 		/* Generate mapping of protein HGNC symbols to mRNA RefSeqIds >> To call R */
 		
 		// MOTIF ENUMERATION CAN BE RUN LOCALLY // 
@@ -88,20 +90,20 @@ public class MotifMain {
 		if(enumeratePossibleDegenMotifs) {
 			System.out.println("**Generating all possible degen motifs**");
 			MotifDegeneration d1 = new MotifDegeneration(motifLength, maxDegenThreshold);
-			d1.generateAllPossibleMotifs(motifSet);
+			d1.generateAllPossibleMotifs(motifSetToTest);
 		}
 		
 		// MOTIF DEGENERATION SHOULD BE RUN REMOTELY //
 		if(enumerateDegenMotifs) {
 			System.out.println("**Enumerating degenerate motifs from non degenerate motifs**");
 			MotifDegeneration d = new MotifDegeneration(motifLength, maxDegenThreshold);
-			d.enumerateDegenerateMotifs(motifSet, mapOfMotifs);
+			d.enumerateDegenerateMotifs(motifSetToTest, mapOfMotifs);
 		}
 		
 		// Update to run with multiple files
 		if(mapMotifs) {
 			System.out.println("**Mapping degen motifs to proteins in network**");
-			MapMotifs.mapDegenMotifsToRefSeqIds(mapMotifsToRefSeqIdsFile, motifSet, mapMotifsToDegenMotifsFilePath, mapOfMotifs, mapProteinToRefSeqFile);
+			MapMotifs.mapDegenMotifsToRefSeqIds(motifSetToTest, mapOfMotifs, numMotifFiles, mapMotifsToRefSeqIdsFile, degenMotifAnnotationFile, mapProteinToRefSeqFile);
 			
 		}
 		
