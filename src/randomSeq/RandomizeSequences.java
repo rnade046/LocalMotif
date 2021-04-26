@@ -18,12 +18,15 @@ public class RandomizeSequences {
 
 		/* Load IDs associated to fasta Seq to randomize */
 		HashSet<String> refSeqIdSet = loadRefSeqIDs(refSeqIdFile);
+		System.out.println("Number of loaded RefSeq Ids: " + refSeqIdSet.size());
+		
 		HashMap<String, Integer> idxOfFasta = generateIndexOfFastaFile(fastaFile);
-		System.out.println("Number of seq to randomize: " +refSeqIdSet.size());
+		System.out.println("Number of fasta in file: " + idxOfFasta.size() + "\n");
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(randomizedFastaFile)));
 			int countId = 0;
-
+			int countFasta = 0;
+			System.out.println("Randomizing fasta");
 			for(String refSeqId: refSeqIdSet) {			
 				countId++;
 
@@ -35,7 +38,7 @@ public class RandomizeSequences {
 				}
 				/* Get formatted sequence as String */
 				if(idxOfFasta.containsKey(refSeqId)) {
-
+					countFasta++;
 					String seq = getRNAsequence(fastaFile, idxOfFasta.get(refSeqId));
 					String randomSeq = randomizeSequence(seq);
 
@@ -44,10 +47,12 @@ public class RandomizeSequences {
 					out.flush();
 				} 
 			}
+			System.out.println("Number of sequences generated: " + countFasta);
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 
 	/**
@@ -64,9 +69,11 @@ public class RandomizeSequences {
 			in = new FileInputStream(new File(refSeqIdsFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
-			String line = input.readLine();
+			String line = input.readLine(); // header
+			line = input.readLine();
+			
 			while(line!=null) {
-				refSeqList.add(line);
+				refSeqList.add(line.split("\t")[1]);
 				line = input.readLine();
 			}
 

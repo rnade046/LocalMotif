@@ -7,9 +7,10 @@ public class RandomMain {
 		String wd = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\";
 		
 		String fastaFile = wd + "input_files\\human_3UTRsequences.txt";
-		String rnaIdListFile = wd + "IO_files\\refSeqRNAids-HumanCellMap.tsv";
-		String randomFastaFile = wd + "IO_files\\random_humna_3UTRsequences.txt";
+		String rnaIdListFile = wd + "motif_enumeration\\BiomaRt_MappingRefSeqIdsToGeneSymbol_corrNet.tsv";
+		String randomFastaFile = wd + "IO_files\\random_human_3UTRsequences.txt";
 		
+		System.out.println("**Generating randomized fasta sequences**");
 		RandomizeSequences.generateRandomizedFasta(rnaIdListFile, fastaFile, randomFastaFile);
 	}
 

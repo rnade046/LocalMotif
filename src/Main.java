@@ -2,24 +2,14 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 
 import graph.Interaction;
 import graph.Protein;
-import motifs.MotifDegeneration;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
-import utils.Calculator;
 import utils.CorrelationGraphLoader;
 import utils.DistanceMatrix;
-import utils.SaintGraphLoader;
-import utils.Loader;
 import utils.NetworkProteins;
 
 
@@ -28,8 +18,6 @@ public class Main {
 	public static void main(String[] args) {
 
 		String wd = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\";
-
-		String cellMapFile = wd + "input_files\\saint-latest-HumanCellMap.txt";
 
 		String mapProtToRefSeqFile = wd + "motif_enumeration\\BiomaRt_MappingRefSeqIdsToGeneSymbol_corrNet.tsv";
 		
@@ -57,7 +45,7 @@ public class Main {
 			System.out.println("**Generating distance matrix**");
 			DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
 		}
-		/*
+		
 		double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
 		
 		// For MC sampling 
@@ -70,7 +58,7 @@ public class Main {
 		// 2 - Initialize sampling
 		MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList, distanceMatrix);
 		// 3 - Perform sampling for n proteins
-		sampling.computeMultipleDistributions(3, 3, 10000, mcSamplingFile);*/
+		sampling.computeMultipleDistributions(3, 3, 10000, mcSamplingFile);
 		
 	}
 
