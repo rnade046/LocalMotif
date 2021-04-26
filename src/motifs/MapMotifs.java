@@ -16,7 +16,8 @@ import java.util.List;
 
 public class MapMotifs {
 
-	public static void mapDegenMotifsToRefSeqIds(String listDegenMotifsToTestInputFile, String motifToDegenMotifsFile, int numMotifFiles, String motifsToRefSeqIDFile,   String degenMotifsToRefSeqIdsFile, String protToRefSeqFile) {
+	public static void mapDegenMotifsToRefSeqIds(String listDegenMotifsToTestInputFile, String motifToDegenMotifsFile, 
+			int numMotifFiles, String motifsToRefSeqIDFile, String degenMotifsToRefSeqIdsFile, String protToRefSeqFile) {
 
 
 		/* Load degenerative motifs that need to be indexed */
@@ -116,7 +117,9 @@ public class MapMotifs {
 			in = new FileInputStream(new File(inputFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 			
-			String line = input.readLine(); // no header 
+			String line = input.readLine(); // header 
+			line = input.readLine();
+			
 			while(line != null) {
 				
 				String prot = line.split("\t")[0];

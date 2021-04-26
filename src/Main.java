@@ -30,38 +30,34 @@ public class Main {
 		String wd = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\";
 
 		String cellMapFile = wd + "input_files\\saint-latest-HumanCellMap.txt";
-		String baitCellMapMappingFile = wd + "input_files\\baitsMappingFile-HumanCellMap.txt";
 
-		String preyMappingFile = wd + "input_files\\preysMappingFile-BioMart.tsv";
-		String baitMappingFile = wd + "input_files\\baitsMappingFile-BioMart.tsv";
+		String mapProtToRefSeqFile = wd + "motif_enumeration\\BiomaRt_MappingRefSeqIdsToGeneSymbol_corrNet.tsv";
 		
 		String correlationRepository = wd + "input_files\\correlation_v2.tsv";
 		String proteinsInNetwork = wd + "CorrelationNet_listOfProteinNames.tsv";
-		String distanceMatrixFile = wd + "IO_files\\cellMap_distanceMatrix.txt";
+		String distanceMatrixFile = wd + "IO_files\\distanceMatrix_cellMap_CorrNet.txt";
 		
-		//String fastaFile = wd + "input_files\\human_3UTRsequences.txt";
-		//String rnaIdListFile = wd + "IO_files\\prot&refSeqRNAids-HumanCellMap.tsv";
+		String fastaFile = wd + "input_files\\human_3UTRsequences.txt";
 		String annotationFile = wd + "IO_files\\motifMapped.tsv";
 		String proteinAnnotationFrequencyFile = wd + "IO_files\\test-protFreqAnnotation.tsv";
 		String mcSamplingFile = wd + "IO_files\\test-MonteCarloSamplingFile_n3_s100000.tsv";
 		
+		System.out.println("**Loading interaction repository**");
+		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetwork, 0.5);
+		System.out.println("Number of interactions:" + interactionList.size() + "\n");
 		
-		CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, proteinsInNetwork);
-		
-		/*ArrayList<Interaction> interactionList =  SaintGraphLoader.loadInteractionRepositoryFromSaintExpressReport(cellMapFile, baitCellMapMappingFile, baitMappingFile, preyMappingFile, 0.01);
-		System.out.println("Number of interactions: " + interactionList.size());
-		
-		
+		System.out.println("**Getting list of proteins in network**");
 		ArrayList<Protein> proteinList = NetworkProteins.getProteinsInNetwork(interactionList);
-		System.out.println("Number of Proteins: " + proteinList.size());
+		System.out.println("Number of Proteins: " + proteinList.size() + "\n");
 		//printProtAndRefSeqIdsInNetwork(rnaIdListFile, proteinList);
 		//printRefSeqIdsInNetwork(rnaIdListFile, proteinList);
 		
 		File f = new File(distanceMatrixFile);
 		if(!f.exists() && !f.isDirectory()) {
+			System.out.println("**Generating distance matrix**");
 			DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
 		}
-		
+		/*
 		double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
 		
 		// For MC sampling 

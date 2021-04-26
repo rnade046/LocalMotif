@@ -57,7 +57,7 @@ public class MotifMain {
 		String mapProteinToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds").replaceAll("\\s+", "");// output from BiomaRt
 		
 		/* Output Files */
-		String mapMotifsToRefSeqIdsFile = wd + "MapMotifsToRefSeqIds"+ projectName +".tsv"; // output from motif enumeration
+		String mapMotifsToRefSeqIdsFile = wd + "motif_enumeration/MapMotifsToRefSeqIds"+ projectName +".tsv"; // output from motif enumeration
 		String listOfUniqueMotifsFile = wd + "ListOfUniqueMotifs_"+ projectName + ".txt"; // output from motif enumeration
 		String motifMapFile = wd + "motifMappedToProteinsInNetwork"+ projectName +".tsv"; // output from motif enumeration
 		
