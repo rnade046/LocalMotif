@@ -16,7 +16,7 @@ import utils.NetworkProteins;
 public class Main {
 
 	public static void main(String[] args) {
-
+		boolean mcSampling = false;
 		String wd = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\";
 
 		String mapProtToRefSeqFile = wd + "motif_enumeration\\BiomaRt_MappingRefSeqIdsToGeneSymbol_corrNet.tsv";
@@ -48,6 +48,7 @@ public class Main {
 		
 		double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
 		
+		if(mcSampling) {
 		// For MC sampling 
 		// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list
 		File f1 = new File(proteinAnnotationFrequencyFile);
@@ -59,7 +60,7 @@ public class Main {
 		MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList, distanceMatrix);
 		// 3 - Perform sampling for n proteins
 		sampling.computeMultipleDistributions(3, 3, 10000, mcSamplingFile);
-		
+		}
 	}
 
 	public static void printRefSeqIdsInNetwork(String outputFile, ArrayList<Protein> proteinList) {
