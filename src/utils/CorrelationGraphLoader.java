@@ -86,7 +86,6 @@ public class CorrelationGraphLoader {
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 			String line = input.readLine();
-			int lineCount = 1;
 
 			while(line != null) {
 				/* store the line index of the start of a new sequence */
@@ -98,7 +97,6 @@ public class CorrelationGraphLoader {
 				}
 
 				line = input.readLine();
-				lineCount++;
 			}
 			input.close();
 		} catch (IOException e) {

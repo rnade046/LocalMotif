@@ -80,7 +80,7 @@ public class MotifSampling {
 				System.out.print(proteinsInNetworkList.get(i).getProteinName() + "|");
 				countMissingProts++;
 			}
-			
+
 		}
 		System.out.println("\nNumber of missing proteins: " + countMissingProts);
 		return cumulativeWeightList;
@@ -88,22 +88,25 @@ public class MotifSampling {
 
 	/**
 	 * Computes distributions for multiple number of proteins in range from go_start to go_stop. 
+	 * Every distribution is output in it's own file
 	 *
 	 * @param nProtToSampleLowerBound		beginning of the range of proteins that will be sampled
 	 * @param nProtToSampleUpperBound		end of the range of proteins that will be sampled
 	 * @param numOfTimesNetworkIsSampled 	number of times to calculate the distribution for each amount of proteins
+	 * @param mcFilePrefix					String - file path prefix for output distribution
 	 */
-	public void computeMultipleDistributions(int nProtToSampleLowerBound, int nProtToSampleUpperBound, int numOfTimesNetworkIsSampled, String mcFile) {
+	public void computeMultipleDistributions(int nProtToSampleLowerBound, int nProtToSampleUpperBound, int numOfTimesNetworkIsSampled, String mcFilePrefix) {
 
-		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(new File(mcFile)));
+		for (int n = nProtToSampleLowerBound; n <= nProtToSampleUpperBound; n++) { // range of proteins to sample
 
-			for (int n = nProtToSampleLowerBound; n <= nProtToSampleUpperBound; n++) { // range of proteins to sample
-				/* Given a GO Term is associated with n number of proteins, we perform Monte Carlo Sampling
-				 * and output the resulting distribution to the console */
+			System.out.println("Computing TPD: " + n);
 
-				HashMap<Double, Double> distribution = computeTPDdistribution(n, numOfTimesNetworkIsSampled);
-				System.out.println("Computing TPD for " + n + " proteins");
+			String mcFile = mcFilePrefix + n;
+			HashMap<Double, Double> distribution = computeTPDdistribution(n, numOfTimesNetworkIsSampled);
+
+			try {
+				BufferedWriter out = new BufferedWriter(new FileWriter(new File(mcFile)));
+
 				out.write("TPD (n = " + n + ")" + "\t" + "Frequency" + "\n");
 				for (double dist : distribution.keySet()) {
 					out.write(dist + "\t" + distribution.get(dist) + "\n");
@@ -111,13 +114,14 @@ public class MotifSampling {
 
 				} 
 				out.write("\n");
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
+		}
+
+	}
 	/**
 	 * Computes the distribution of TPD for certain amount of randomly selected proteins.
 	 *
@@ -140,7 +144,7 @@ public class MotifSampling {
 
 		return distribution;
 	}
-	
+
 	/**
 	 * Sample network X amount of times for Y number of proteins. 
 	 * 
@@ -157,14 +161,14 @@ public class MotifSampling {
 
 			/* select proteins from the weighted list (ie. proteins are proportional to their occurrence in annotation list */
 			ArrayList<Integer> randomProteins = getRandomWeightedProteins(numProteinsToSample);
-			
+
 			/* compute the total pairwise distance from the proteins selected above */
 			tpdSampleList[i] = Calculator.computeTPD(distanceMatrix, randomProteins);
 		}
 
 		return tpdSampleList;
 	}
-	
+
 	/**
 	 * Randomly selects proteins by identifying a random weight in the cumulative distribution
 	 *

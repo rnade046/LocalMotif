@@ -39,28 +39,37 @@ public class Main {
 		System.out.println("Number of Proteins: " + proteinList.size() + "\n");
 		//printProtAndRefSeqIdsInNetwork(rnaIdListFile, proteinList);
 		//printRefSeqIdsInNetwork(rnaIdListFile, proteinList);
-
+		
 		File f = new File(distanceMatrixFile);
 		if(!f.exists() && !f.isDirectory()) {
 			System.out.println("**Generating distance matrix**");
 			DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
 		}
-
+		
+		/* Perform motif enumeration around here */
+		
+		System.out.println("**Loading distance matrix**");
 		double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
 
 		if(mcSampling) {
+			
 			// For MC sampling 
-			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list
+			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
 			File f1 = new File(proteinAnnotationFrequencyFile);
 			if(!f1.exists() && !f1.isDirectory()) {
 				System.out.println("Enumerating protein annotation frequency file");
 				ProteinAnnotations.enumerateProteinAnnotationFrequency(annotationFile, proteinAnnotationFrequencyFile);
 			}
+			
+			/* This will be done in job arrays on CC */
+			System.out.println("**Performing Monte Carlo Sampling Procedure**");
 			// 2 - Initialize sampling
 			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList, distanceMatrix);
 			// 3 - Perform sampling for n proteins
 			sampling.computeMultipleDistributions(3, 3, 10000, mcSamplingFile);
 		}
+		
+		
 	}
 
 	public static void printRefSeqIdsInNetwork(String outputFile, ArrayList<Protein> proteinList) {
