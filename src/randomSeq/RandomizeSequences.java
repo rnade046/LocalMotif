@@ -47,7 +47,7 @@ public class RandomizeSequences {
 					out.flush();
 				} 
 			}
-			System.out.println("Number of sequences generated: " + countFasta);
+			System.out.println("\nNumber of sequences generated: " + countFasta);
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
