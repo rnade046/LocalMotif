@@ -14,18 +14,26 @@ public class checkAnnotations {
 
 	public static void main(String[] args) {
 
-		String inputFiles = "mapDegenMotifsToProteins_";
-		String regMotifFiles = "";
-		String outputFile = "";
-
+		String wd = "/home/rnade046/projects/rrg-mlaval/rnade046/motifDegen_Full_FWD/";
+		String inputFiles = wd + "degenMotifAnnotations/degenMotifMappedToProteinsInNetwork_corrNet_";
+		String regMotifFiles = wd + "motifsMappedToProteinsInNetworkcorrNet.tsv";
+		String protFreqFile = wd + "checkAnnotations_numberOfProteinsAnnotatedOccurence.tsv";
+		String unseenNumberOfAnnotatedProteinsFile = wd + "checkAnnotations_numberOfProteinsNotToSample.tsv";
+		String seenNumberOfAnnotatedProteinsFile = wd + "checkAnnotations_numberOfProteinsToSample.tsv";
+		
 		int numFiles = 992;
 		HashMap<Integer,Integer> mapOfProteinFreq = new HashMap<>();
 		
+		System.out.println("**Checking degen motifs annotation files**");
 		calculateProteinFreqFromDegenMotifs(mapOfProteinFreq, inputFiles, numFiles);
-		calculateProteinFreqFromRegularMotifs(mapOfProteinFreq, regMotifFiles);
 		
-		outputFreqOfProteinMap(mapOfProteinFreq, outputFile);
+		System.out.println("**Checking regular motifs annotation file**\n");
+		calculateProteinFreqFromRegularMotifs(mapOfProteinFreq, regMotifFiles);
 
+		System.out.println("**Outputing freq map**");
+		outputFreqOfProteinMap(mapOfProteinFreq, protFreqFile);
+		outputNumberOfProteinsNotSeenInAnnotationMap(mapOfProteinFreq, unseenNumberOfAnnotatedProteinsFile);
+		outputNumberOfProteinsSeenInAnnotationMap(mapOfProteinFreq, seenNumberOfAnnotatedProteinsFile);
 	}
 
 	/**
@@ -40,7 +48,15 @@ public class checkAnnotations {
 
 		/* iterate over all degen motif annotation files */
 		for(int i=0; i < numFiles; i++) {
-
+			
+			if(i%10==0) {
+				System.out.print(i + ".");
+			}
+			
+			if(i%100==0) {
+				System.out.println();
+			}
+			
 			String annotationFile = inputFiles + i; // current annotation file (ex. mapDegenMotifsToProteins_200) 
 
 			InputStream in;
@@ -63,12 +79,13 @@ public class checkAnnotations {
 
 					line = input.readLine();
 				}
-
+				
 				input.close();
 			} catch(IOException e) {
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Done\n");
 	}
 
 	/**
@@ -117,7 +134,8 @@ public class checkAnnotations {
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
-
+			out.write("NumAnnotatedProteins\tOccurrence\n");
+			
 			for(int numProt: mapOfProteinFreq.keySet()) {
 				out.write(numProt + "\t" + mapOfProteinFreq.get(numProt) + "\n");
 				out.flush();
@@ -130,4 +148,43 @@ public class checkAnnotations {
 
 	}
 
+	private static void outputNumberOfProteinsNotSeenInAnnotationMap(HashMap<Integer,Integer> mapOfProteinFreq, String outputFile) {
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+
+			for(int i=3; i<=2000; i++) {
+
+				if(!mapOfProteinFreq.containsKey(i)) {
+					out.write(i + "\n");
+					out.flush();
+				}
+				
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private static void outputNumberOfProteinsSeenInAnnotationMap(HashMap<Integer,Integer> mapOfProteinFreq, String outputFile) {
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+
+			for(int i=3; i<=2000; i++) {
+
+				if(mapOfProteinFreq.containsKey(i)) {
+					out.write(i + "\n");
+					out.flush();
+				}
+				
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
 }
