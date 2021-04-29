@@ -19,11 +19,11 @@ import utils.NetworkProteins;
 public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-		
+
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
 		params.load(new FileInputStream(args[0]));		
-		
+
 		String wd = params.getProperty("working_directory");
 
 		String fastaFile = wd + params.getProperty("fastaFile");
@@ -36,7 +36,7 @@ public class Main {
 
 		String annotationFile = wd + params.getProperty("motifAnnotationFile");
 		String degenAnnotationPrefix = wd + params.getProperty("degenAnnotationPrefix");
-		
+
 		String proteinAnnotationFrequencyFile = wd + params.getProperty("proteinAnnotationFrequencyFile");
 		String mcSamplingPrefix = wd + params.getProperty("mcSamplingPrefix");
 
@@ -58,19 +58,18 @@ public class Main {
 
 		/* Perform motif enumeration around here */
 
-		System.out.println("**Loading distance matrix**");
+		System.out.println("**Loading distance matrix**\n");
 		double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
 
 
 		if(Boolean.parseBoolean(params.getProperty("calculateProteinAnnotationFreq"))) {	
 			// For MC sampling 
 			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
-			File f1 = new File(proteinAnnotationFrequencyFile);
-			if(!f1.exists() && !f1.isDirectory()) {
-				System.out.println("Enumerating protein annotation frequency file");
-				ProteinAnnotations.enumerateProteinAnnotationFrequency(annotationFile, proteinAnnotationFrequencyFile);
-			}
+			System.out.println("**Enumerating protein annotation frequency file**");
+			ProteinAnnotations freq = new ProteinAnnotations(Integer.parseInt(params.getProperty("lowerBoundToSample", "3")), Integer.parseInt(params.getProperty("upperBoundToSample", "2000")));
+			freq.calculateProteinAnnotationFrequency(annotationFile, degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
 		}
+		
 		if(Boolean.parseBoolean(params.getProperty("performMCprocedure"))) {
 			/* This will be done in job arrays on CC */
 			System.out.println("**Performing Monte Carlo Sampling Procedure**");

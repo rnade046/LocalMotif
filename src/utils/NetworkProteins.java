@@ -28,6 +28,7 @@ public class NetworkProteins {
         for(String protein: proteinNetworkSet.keySet()) {
 
             Protein protein1 = new Protein(protein, proteinNetworkSet.get(protein)); // call Protein Class constructor, store protein name (iterator.next())
+     
             proteinList.add(protein1); // add protein object to protein list
         }
        

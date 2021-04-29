@@ -608,7 +608,7 @@ public class Calculator {
         HashSet<String> uniProtIDsInNetwork = new HashSet<>();
 
         for (int i = 0; i < proteinsInNetworkList.size(); i++) {
-            uniProtIDsInNetwork.add(proteinsInNetworkList.get(i).getProteinId());
+            uniProtIDsInNetwork.addAll(proteinsInNetworkList.get(i).getProteinId());
         }
 
         return uniProtIDsInNetwork;
