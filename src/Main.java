@@ -23,7 +23,7 @@ public class Main {
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
 		params.load(new FileInputStream(args[0]));		
-
+		
 		String wd = params.getProperty("working_directory");
 
 		String fastaFile = wd + params.getProperty("fastaFile");
@@ -38,7 +38,7 @@ public class Main {
 		String degenAnnotationPrefix = wd + params.getProperty("degenAnnotationPrefix");
 
 		String proteinAnnotationFrequencyFile = wd + params.getProperty("proteinAnnotationFrequencyFile");
-		String mcSamplingPrefix = wd + params.getProperty("mcSamplingPrefix");
+		String mcSamplingPrefix = wd + "mcSamplingDistribution_";
 
 		System.out.println("**Loading interaction repository**");
 		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, 0.5);
@@ -71,12 +71,16 @@ public class Main {
 		}
 		
 		if(Boolean.parseBoolean(params.getProperty("performMCprocedure"))) {
+			int lowerBound = Integer.parseInt(args[1]);
+			int upperBound = Integer.parseInt(args[2]);
+			
+			int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
 			/* This will be done in job arrays on CC */
 			System.out.println("**Performing Monte Carlo Sampling Procedure**");
 			// 2 - Initialize sampling
 			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList, distanceMatrix);
 			// 3 - Perform sampling for n proteins
-			sampling.computeMultipleDistributions(3, 3, 10000, mcSamplingPrefix);
+			sampling.computeMultipleDistributions(lowerBound, upperBound, numOfSamplings, mcSamplingPrefix);
 		}
 
 

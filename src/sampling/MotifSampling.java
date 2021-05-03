@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
+import java.util.HashSet;
+import java.util.concurrent.ThreadLocalRandom;
 
 import graph.Protein;
 import utils.Calculator;
@@ -24,13 +25,18 @@ public class MotifSampling {
 	double[][] distanceMatrix;
 	ArrayList<Protein> proteinsInNetworkList;
 	HashMap<String, Integer> proteinToOccurrenceMap; 	// Map containing annotated proteins and their occurrence of annotation
-	int[] cumulativeSumOfWeights;						// array containing the cumulative sum of weights for random weighted selection
-
+	long[] cumulativeSumOfWeights;						// array containing the cumulative sum of weights for random weighted selection
+	long maxCumulativeWeight;
+	HashSet<Integer> protsNotToSample;
+	
 	public MotifSampling(String inputFile, ArrayList<Protein> protList, double[][] dm) {
 		distanceMatrix = dm;
 		proteinsInNetworkList = protList;
 		proteinToOccurrenceMap = loadProteinOccurrenceList(inputFile);
 		cumulativeSumOfWeights = computeCumulativeSumOfWeights();
+		
+		maxCumulativeWeight = cumulativeSumOfWeights[cumulativeSumOfWeights.length-1];
+		protsNotToSample = listProteinsNotToSample();
 	}
 
 	/** 
@@ -63,29 +69,46 @@ public class MotifSampling {
 	 * 
 	 * @return cumulativeWeightList	list of cumulative weights.
 	 */
-	private int[] computeCumulativeSumOfWeights() {
-		int[] cumulativeWeightList = new int[this.proteinsInNetworkList.size()]; // initialize list the size of network list
-		int cumulativeWeight = 0; // initialize cumulative weight
+	private long[] computeCumulativeSumOfWeights() {
+		long[] cumulativeWeightList = new long[this.proteinsInNetworkList.size()]; // initialize list the size of network list
+		long cumulativeWeight = 0; // initialize cumulative weight
 		int countMissingProts = 0;
 		/* iterate all proteins in the order of the network protein list; 
 		 * obtain weight of protein as it's annotation occurrence,
 		 * update it's weight as a cumulative weight and set in list */
-		System.out.println("Missing prot:");
+		System.out.println("Not annotated proteins:");
 		for(int i=0; i<proteinsInNetworkList.size(); i++) {
 			if(proteinToOccurrenceMap.containsKey(proteinsInNetworkList.get(i).getProteinName())) {
-				int currentWeight = this.proteinToOccurrenceMap.get(this.proteinsInNetworkList.get(i).getProteinName());
+				long currentWeight = this.proteinToOccurrenceMap.get(this.proteinsInNetworkList.get(i).getProteinName());
 				cumulativeWeight += currentWeight; 
 				cumulativeWeightList[i] = cumulativeWeight;
 			} else { 
-				System.out.print(proteinsInNetworkList.get(i).getProteinName() + "|");
+				long currentWeight = 0;
+				cumulativeWeight += currentWeight; 
+				cumulativeWeightList[i] = cumulativeWeight;
+				
+				System.out.print(proteinsInNetworkList.get(i).getProteinName() + "_" + i + "|");
 				countMissingProts++;
 			}
 
 		}
-		System.out.println("\nNumber of missing proteins: " + countMissingProts);
+		System.out.println("\nNumber of missing proteins: " + countMissingProts + "\n");
 		return cumulativeWeightList;
 	}
 
+	private HashSet<Integer> listProteinsNotToSample() {
+		HashSet<Integer> proteinsNotToSampleList = new HashSet<>();
+		
+		for(int i=0; i<this.proteinsInNetworkList.size(); i++) {
+			if(!this.proteinToOccurrenceMap.containsKey(this.proteinsInNetworkList.get(i).getProteinName())) {
+				proteinsNotToSampleList.add(i);
+			}
+			
+		}
+		
+		return proteinsNotToSampleList;
+	}
+	
 	/**
 	 * Computes distributions for multiple number of proteins in range from go_start to go_stop. 
 	 * Every distribution is output in it's own file
@@ -101,7 +124,7 @@ public class MotifSampling {
 
 			System.out.println("Computing TPD: " + n);
 
-			String mcFile = mcFilePrefix + n;
+			String mcFile = mcFilePrefix + "s" + numOfTimesNetworkIsSampled + "_n" + n;
 			HashMap<Double, Double> distribution = computeTPDdistribution(n, numOfTimesNetworkIsSampled);
 
 			try {
@@ -176,20 +199,26 @@ public class MotifSampling {
 	 * @return array of selected protein indexes
 	 */
 	private ArrayList<Integer> getRandomWeightedProteins(int numProteinsToSample) {
-		Random r = new Random(); 
 		ArrayList<Integer> randomProteins = new ArrayList<>();
 
 		/* Selection process occurs until the number of selected proteins equals number of proteins to sample from */ 
 		while (randomProteins.size() < numProteinsToSample) {
-			int sumCumulativeWeight = this.cumulativeSumOfWeights[this.cumulativeSumOfWeights.length -1]; 
-			/* select a random weight between 1 and sum of cumulative weight */
-			int selectedWeight = r.nextInt(sumCumulativeWeight); 
+			/* select a random weight between 0 and sum of cumulative weight */
+			long selectedWeight = ThreadLocalRandom.current().nextLong(this.maxCumulativeWeight); // math random return number between 0 and 1 
 			/* protein corresponding to selected random weight will be the first protein to be greater or equal to the weight */
 			for(int protIndex=0; protIndex<this.cumulativeSumOfWeights.length; protIndex++) {
-				if(this.cumulativeSumOfWeights[protIndex] >= selectedWeight && !randomProteins.contains(protIndex)) {
-					randomProteins.add(protIndex);
+				if(selectedWeight < this.cumulativeSumOfWeights[protIndex]) {
+					
+					if(this.listProteinsNotToSample().contains(protIndex)) {
+						System.out.println("ERROR: Sampled Protein " + protIndex);
+					}
+					
+					if(!randomProteins.contains(protIndex)) {
+						randomProteins.add(protIndex);
+					}
+					
 					break; // when protein index is identified break out of the loop
-				}
+				} 
 			}
 		}
 		return randomProteins;
