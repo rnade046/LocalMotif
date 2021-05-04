@@ -160,6 +160,10 @@ public class Calculator {
         if(distance == 0.0) {
         	System.out.println("tpd = 0");
         }
+        
+        if(distance > 100) {
+        	System.out.println();
+        }
         return (double) Math.round(distance * 100d) / 100d;
 
     }
