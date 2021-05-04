@@ -11,8 +11,10 @@ import graph.Interaction;
 import graph.Protein;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
+import utils.Calculator;
 import utils.CorrelationGraphLoader;
 import utils.DistanceMatrix;
+import utils.Loader;
 import utils.NetworkProteins;
 
 
@@ -33,7 +35,8 @@ public class Main {
 		String proteinsInNetworkOutputFile = wd + "CorrelationNet_listOfProteinNames.tsv";
 
 		String distanceMatrixFile = wd + params.getProperty("distanceMatrixFile");
-
+		String distanceMatrix2File = wd + "IO_files\\distanceMatrix2_CorrNet.txt";
+		
 		String annotationFile = wd + params.getProperty("motifAnnotationFile");
 		String degenAnnotationPrefix = wd + params.getProperty("degenAnnotationPrefix");
 
@@ -55,12 +58,30 @@ public class Main {
 			System.out.println("**Generating distance matrix**");
 			DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
 		}
-
+		
 		/* Perform motif enumeration around here */
 
-		System.out.println("**Loading distance matrix**\n");
+		System.out.println("**Loading distance matrix**");
 		double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
 
+		/* Determine which proteins are disconnected*/ 
+		boolean[] proteinsToKeep = Calculator.determineConnectedProteins(distanceMatrix);
+		/* Update proteins to keep in the network (ie. those that contribute to the most connected component) */
+		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep);
+
+		if(proteinList.size() != proteinList2.size()) {
+			System.out.println("**Checking for disconnected components**");
+			File f1 = new File(distanceMatrix2File);
+			if(!f1.exists() && !f1.isDirectory()) {
+				/* Update distance matrix to only include proteins that contribute to the most connected component of the graph */
+				System.out.println("**Updating distance matrix**");
+				DistanceMatrix.updateDistanceMatrix(proteinsToKeep, distanceMatrix, distanceMatrix2File);
+			}
+			
+			/* Load distance matrix representing fully connected component */
+			System.out.println("**Loading updated distance matrix**\n");
+			distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrix2File, proteinList2);
+		} 
 
 		if(Boolean.parseBoolean(params.getProperty("calculateProteinAnnotationFreq"))) {	
 			// For MC sampling 
@@ -78,7 +99,7 @@ public class Main {
 			/* This will be done in job arrays on CC */
 			System.out.println("**Performing Monte Carlo Sampling Procedure**");
 			// 2 - Initialize sampling
-			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList, distanceMatrix);
+			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList2, distanceMatrix);
 			// 3 - Perform sampling for n proteins
 			sampling.computeMultipleDistributions(lowerBound, upperBound, numOfSamplings, mcSamplingPrefix);
 		}
