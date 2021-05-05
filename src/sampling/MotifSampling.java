@@ -182,6 +182,14 @@ public class MotifSampling {
 		 * as many times as the network is to be sampled (e.g. 10X7) */
 		for (int i = 0; i < timesToSampleNetwork; i++) {
 
+			if(i%10000 == 0) {
+				System.out.print(i + ".");
+			}
+			
+			if(i%100000 == 0) {
+				System.out.println();
+			}
+			
 			/* select proteins from the weighted list (ie. proteins are proportional to their occurrence in annotation list */
 			ArrayList<Integer> randomProteins = getRandomWeightedProteins(numProteinsToSample);
 

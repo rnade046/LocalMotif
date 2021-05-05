@@ -27,24 +27,25 @@ public class Main {
 		params.load(new FileInputStream(args[0]));		
 		
 		String wd = params.getProperty("working_directory");
-
+		String projectName = params.getProperty("project_name");
+		
 		String fastaFile = wd + params.getProperty("fastaFile");
 		String mapProtToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds");
 
 		String correlationRepository = wd + params.getProperty("networkRepositoryFile");
-		String proteinsInNetworkOutputFile = wd + "CorrelationNet_listOfProteinNames.tsv";
+		String proteinsInNetworkOutputFile = wd + projectName +"_listOfProteinNames.tsv";
 
-		String distanceMatrixFile = wd + params.getProperty("distanceMatrixFile");
-		String distanceMatrix2File = wd + "IO_files\\distanceMatrix2_CorrNet.txt";
+		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt";
+		String distanceMatrix2File = wd +  projectName + "_distanceMatrix2.txt";
 		
 		String annotationFile = wd + params.getProperty("motifAnnotationFile");
 		String degenAnnotationPrefix = wd + params.getProperty("degenAnnotationPrefix");
 
-		String proteinAnnotationFrequencyFile = wd + params.getProperty("proteinAnnotationFrequencyFile");
-		String mcSamplingPrefix = wd + "mcSamplingDistribution_";
+		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
+		String mcSamplingPrefix = wd + projectName + "mcSamplingDistribution_";
 
 		System.out.println("**Loading interaction repository**");
-		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, 0.5);
+		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")));
 		System.out.println("Number of interactions:" + interactionList.size() + "\n");
 
 		System.out.println("**Getting list of proteins in network**");
