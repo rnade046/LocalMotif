@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.commons.math3.analysis.function.Floor;
+
 import graph.Protein;
 import utils.Calculator;
 
@@ -191,7 +193,7 @@ public class MotifSampling {
 			}
 			
 			/* select proteins from the weighted list (ie. proteins are proportional to their occurrence in annotation list */
-			ArrayList<Integer> randomProteins = getRandomWeightedProteins(numProteinsToSample);
+			ArrayList<Integer> randomProteins = getRandomWeightedProteinsWithBinarySearch(numProteinsToSample);
 
 			/* compute the total pairwise distance from the proteins selected above */
 			tpdSampleList[i] = Calculator.computeTPD(distanceMatrix, randomProteins);
@@ -206,6 +208,7 @@ public class MotifSampling {
 	 * @param numProteinsToSample number of proteins to select from network
 	 * @return array of selected protein indexes
 	 */
+	@SuppressWarnings("unused")
 	private ArrayList<Integer> getRandomWeightedProteins(int numProteinsToSample) {
 		ArrayList<Integer> randomProteins = new ArrayList<>();
 
@@ -232,5 +235,40 @@ public class MotifSampling {
 		return randomProteins;
 	}
 
+	/**
+	 * Randomly selects proteins by identifying a random weight in the cumulative distribution
+	 * Binary search implemented as described: https://en.wikipedia.org/wiki/Binary_search_algorithm#Procedure_for_finding_the_leftmost_element
+	 *
+	 *
+	 * @param numProteinsToSample number of proteins to select from network
+	 * @return array of selected protein indexes
+	 */
+	private ArrayList<Integer> getRandomWeightedProteinsWithBinarySearch(int numProteinsToSample) {
+		ArrayList<Integer> randomProteinsIdxList = new ArrayList<>();
+
+		/* Selection process occurs until the number of selected proteins equals number of proteins to sample from */ 
+		while (randomProteinsIdxList.size() < numProteinsToSample) {
+			/* select a random weight between 0 and sum of cumulative weight */
+			long selectedWeight = ThreadLocalRandom.current().nextLong(this.maxCumulativeWeight); // math random return number between 0 and 1 
+			int l = 0;
+			int r = this.cumulativeSumOfWeights.length;
+			
+			/* protein corresponding to selected random weight will be the first protein to be greater or equal to the weight */
+			while(l < r) {
+				int m = (int) Math.floor((l+r)/ (double)2);
+				if(this.cumulativeSumOfWeights[m] < selectedWeight) {
+					l = m + 1;
+				} else { 
+					r = m;
+				}
+			}
+			
+			if(!randomProteinsIdxList.contains(l)) {
+				randomProteinsIdxList.add(l);
+			}
+		}
+		return randomProteinsIdxList;
+	}
+	
 }
 

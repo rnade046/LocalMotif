@@ -42,7 +42,7 @@ public class Main {
 		String degenAnnotationPrefix = wd + params.getProperty("degenAnnotationPrefix");
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
-		String mcSamplingPrefix = wd + projectName + "mcSamplingDistribution_";
+		String mcSamplingPrefix = wd + projectName + "_mcSamplingDistribution_";
 
 		System.out.println("**Loading interaction repository**");
 		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")));
