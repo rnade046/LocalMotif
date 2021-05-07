@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.commons.math3.analysis.function.Floor;
-
 import graph.Protein;
 import utils.Calculator;
 
@@ -198,7 +196,7 @@ public class MotifSampling {
 			/* compute the total pairwise distance from the proteins selected above */
 			tpdSampleList[i] = Calculator.computeTPD(distanceMatrix, randomProteins);
 		}
-
+		System.out.print("Done\n");
 		return tpdSampleList;
 	}
 

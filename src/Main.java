@@ -24,10 +24,10 @@ public class Main {
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
 		params.load(new FileInputStream(args[0]));		
-		
+
 		String wd = params.getProperty("working_directory");
 		String projectName = params.getProperty("project_name");
-		
+
 		String fastaFile = wd + params.getProperty("fastaFile");
 		String mapProtToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds");
 
@@ -36,12 +36,12 @@ public class Main {
 
 		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt";
 		String distanceMatrix2File = wd +  projectName + "_distanceMatrix2.txt";
-		
+
 		String annotationFile = wd + params.getProperty("motifAnnotationFile");
 		String degenAnnotationPrefix = wd + params.getProperty("degenAnnotationPrefix");
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
-		String mcSamplingPrefix = wd + projectName + "_mcSamplingDistribution_";
+		String mcSamplingPrefix = wd + "mcDistributions/" + projectName + "_mcSamplingDistribution_";
 		String normalDistributionParamsFile = wd + projectName + "_normalDistributionParams.tsv";
 
 		System.out.println("**Loading interaction repository**");
@@ -59,7 +59,7 @@ public class Main {
 			System.out.println("**Generating distance matrix**");
 			DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
 		}
-		
+
 		/* Perform motif enumeration around here */
 
 		System.out.println("**Loading distance matrix**");
@@ -78,7 +78,7 @@ public class Main {
 				System.out.println("**Updating distance matrix**");
 				DistanceMatrix.updateDistanceMatrix(proteinsToKeep, distanceMatrix, distanceMatrix2File);
 			}
-			
+
 			/* Load distance matrix representing fully connected component */
 			System.out.println("**Loading updated distance matrix**\n");
 			distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrix2File, proteinList2);
@@ -91,28 +91,24 @@ public class Main {
 			ProteinAnnotations freq = new ProteinAnnotations(Integer.parseInt(params.getProperty("lowerBoundToSample", "3")), Integer.parseInt(params.getProperty("upperBoundToSample", "2000")));
 			freq.calculateProteinAnnotationFrequency(annotationFile, degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
 		}
-		
-		
+
+
 		int lowerBound = Integer.parseInt(args[1]);
 		int upperBound = Integer.parseInt(args[2]);
-		
+
 		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
-		
+
 		if(Boolean.parseBoolean(params.getProperty("performMCprocedure"))) {
-			
-			
 			/* This will be done in job arrays on CC */
 			System.out.println("**Performing Monte Carlo Sampling Procedure**");
-			// 2 - Initialize sampling
-			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList2, distanceMatrix);
-			// 3 - Perform sampling for n proteins
-			sampling.computeMultipleDistributions(lowerBound, upperBound, numOfSamplings, mcSamplingPrefix);
+			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList2, distanceMatrix); // 2 - Initialize sampling
+			sampling.computeMultipleDistributions(lowerBound, upperBound, numOfSamplings, mcSamplingPrefix); // 3 - Perform sampling for n proteins
 		}
 
 		if(Boolean.parseBoolean(params.getProperty("calculateNormalDistributionParams"))) {
 			ApproximateNormalDistribuiton.getNormalDistributionParams(mcSamplingPrefix, lowerBound, upperBound, numOfSamplings, normalDistributionParamsFile);
 		}
-		
+
 	}
 
 	public static void printRefSeqIdsInNetwork(String outputFile, ArrayList<Protein> proteinList) {

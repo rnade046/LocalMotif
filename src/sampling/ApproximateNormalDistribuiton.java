@@ -8,7 +8,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class ApproximateNormalDistribuiton {
 
@@ -26,24 +29,40 @@ public class ApproximateNormalDistribuiton {
 	public static void getNormalDistributionParams(String mcDistPrefix, int lowerBound, int upperBound, int numSampling, String normalDistParamsFile) {
 
 		HashMap<Integer, Double[]> normalDistributionParamsMap = new HashMap<>();
+		List<Integer> missingDistributions = new ArrayList<>();
 		
+		System.out.println("Loading mc distributions: ");
 		for(int i=lowerBound; i<upperBound; i++) {
 
-			/* Load each distribution individually && check that freq = 1 */
 			String mcDistFile = mcDistPrefix + i;
-			HashMap<Double, Double> distributionMap = loadMonteCarloDistributions(mcDistFile);
-			Sampling.checkFrequencyTotal(distributionMap, numSampling);
+			File f = new File(mcDistFile);
 			
-			/* Calculate normal distribution parameters */
-			double mean = computeDistributionMean(distributionMap);
-			double stdv = computeDistributionStandardDeviation(distributionMap, mean);
+			/* Calculate params if distribution file exists */
+			if(f.exists()) {			
+				
+				/* Load each distribution individually && check that freq = 1 */
+				
+				HashMap<Double, Double> distributionMap = loadMonteCarloDistributions(mcDistFile);
+				Sampling.checkFrequencyTotal(distributionMap, numSampling);
 
-			/* Store parameters */
-			normalDistributionParamsMap.put(i, new Double[]{mean, stdv});
+				/* Calculate normal distribution parameters */
+				double mean = computeDistributionMean(distributionMap);
+				double stdv = computeDistributionStandardDeviation(distributionMap, mean);
+
+				/* Store parameters */
+				normalDistributionParamsMap.put(i, new Double[]{mean, stdv});
+			} else {
+				missingDistributions.add(i);	
+			}
 		}
-
+		System.out.print("Done\n");
 		/* Output normal distribution parameters */
 		exportDistributionParameters(normalDistributionParamsMap, lowerBound, upperBound, normalDistParamsFile);
+	
+		/* Output missing distributions to console */
+		if(!missingDistributions.isEmpty()) {
+			System.out.println("Missing file for distribution, where n = " + Arrays.toString(missingDistributions.toArray()));
+		}
 	}
 
 	/**
@@ -66,7 +85,11 @@ public class ApproximateNormalDistribuiton {
 			String line = input.readLine(); // header
 			String nprot = line.split("\\s+")[3].split("\\")[0];
 			System.out.print(nprot + ".");
-
+			
+			if(Integer.parseInt(nprot)%50 ==0) {
+				System.out.println();
+			}
+			
 			line = input.readLine();
 
 			while(line!=null) {
@@ -79,13 +102,13 @@ public class ApproximateNormalDistribuiton {
 				distributionMap.put(tpd, freq);
 				line = input.readLine();
 			}
-			
+
 			input.close();
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return  distributionMap;
 	}
 
@@ -139,15 +162,15 @@ public class ApproximateNormalDistribuiton {
 			writer.write("nProt\tMean\tSd\n");
 			for (int nProt=lowerBound; nProt<=upperBound; nProt++){
 				Double[] params = new Double[] {0.0, 0.0};
-				
+
 				if(distributionParamsMap.containsKey(nProt)) {
 					params = distributionParamsMap.get(nProt);
 				} 
-				
+
 				writer.write(nProt + "\t" + params[0] + "\t" + params[1] + "\n");
 				writer.flush();
 			}
-			
+
 			writer.close();
 		} catch (IOException ex){
 			System.out.println("Error while exporting distributions parameters: export file was not found");
