@@ -9,14 +9,13 @@ import java.util.Properties;
 
 import graph.Interaction;
 import graph.Protein;
+import sampling.ApproximateNormalDistribuiton;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
 import utils.Calculator;
 import utils.CorrelationGraphLoader;
 import utils.DistanceMatrix;
-import utils.Loader;
 import utils.NetworkProteins;
-
 
 public class Main {
 
@@ -43,6 +42,7 @@ public class Main {
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
 		String mcSamplingPrefix = wd + projectName + "_mcSamplingDistribution_";
+		String normalDistributionParamsFile = wd + projectName + "_normalDistributionParams.tsv";
 
 		System.out.println("**Loading interaction repository**");
 		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")));
@@ -92,11 +92,15 @@ public class Main {
 			freq.calculateProteinAnnotationFrequency(annotationFile, degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
 		}
 		
+		
+		int lowerBound = Integer.parseInt(args[1]);
+		int upperBound = Integer.parseInt(args[2]);
+		
+		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
+		
 		if(Boolean.parseBoolean(params.getProperty("performMCprocedure"))) {
-			int lowerBound = Integer.parseInt(args[1]);
-			int upperBound = Integer.parseInt(args[2]);
 			
-			int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
+			
 			/* This will be done in job arrays on CC */
 			System.out.println("**Performing Monte Carlo Sampling Procedure**");
 			// 2 - Initialize sampling
@@ -105,7 +109,10 @@ public class Main {
 			sampling.computeMultipleDistributions(lowerBound, upperBound, numOfSamplings, mcSamplingPrefix);
 		}
 
-
+		if(Boolean.parseBoolean(params.getProperty("calculateNormalDistributionParams"))) {
+			ApproximateNormalDistribuiton.getNormalDistributionParams(mcSamplingPrefix, lowerBound, upperBound, numOfSamplings, normalDistributionParamsFile);
+		}
+		
 	}
 
 	public static void printRefSeqIdsInNetwork(String outputFile, ArrayList<Protein> proteinList) {
