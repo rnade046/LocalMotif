@@ -15,6 +15,7 @@ import sampling.ProteinAnnotations;
 import utils.Calculator;
 import utils.CorrelationGraphLoader;
 import utils.DistanceMatrix;
+import utils.MotifTester;
 import utils.NetworkProteins;
 
 public class Main {
@@ -43,6 +44,9 @@ public class Main {
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
 		String mcSamplingPrefix = wd + "mcDistributions/" + projectName + "_mcSamplingDistribution_";
 		String normalDistributionParamsFile = wd + projectName + "_normalDistributionParams.tsv";
+		
+		String testedDegenMotifsOutputPrefix = wd + "testedMotifClustering/" + projectName + "_testedDegenMotifClustering_";
+		String testedMotifOutputPrefix = wd + projectName + "_testeMotifClustering_";
 
 		System.out.println("**Loading interaction repository**");
 		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")));
@@ -84,33 +88,47 @@ public class Main {
 			distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrix2File, proteinList2);
 		} 
 
+		int lowerBound = Integer.parseInt(params.getProperty("lowerBoundToSample", "3"));
+		int upperBound = Integer.parseInt(params.getProperty("upperBoundToSample", "2000"));
+		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
+		
 		if(Boolean.parseBoolean(params.getProperty("calculateProteinAnnotationFreq"))) {	
 			// For MC sampling 
 			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
 			System.out.println("**Enumerating protein annotation frequency file**");
-			ProteinAnnotations freq = new ProteinAnnotations(Integer.parseInt(params.getProperty("lowerBoundToSample", "3")), Integer.parseInt(params.getProperty("upperBoundToSample", "2000")));
+			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound);
 			freq.calculateProteinAnnotationFrequency(annotationFile, degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
 		}
 
-
-		int lowerBound = Integer.parseInt(args[1]);
-		int upperBound = Integer.parseInt(args[2]);
-
-		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
-
+		/* Perform Monte Carlo Sampling procedure */
 		if(Boolean.parseBoolean(params.getProperty("performMCprocedure"))) {
-			/* This will be done in job arrays on CC */
 			System.out.println("**Performing Monte Carlo Sampling Procedure**");
 			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList2, distanceMatrix); // 2 - Initialize sampling
-			sampling.computeMultipleDistributions(lowerBound, upperBound, numOfSamplings, mcSamplingPrefix); // 3 - Perform sampling for n proteins
+			sampling.computeMultipleDistributions(Integer.parseInt(args[1]), Integer.parseInt(args[2]), numOfSamplings, mcSamplingPrefix); // 3 - Perform sampling for n proteins
 		}
 
 		if(Boolean.parseBoolean(params.getProperty("calculateNormalDistributionParams"))) {
 			ApproximateNormalDistribuiton.getNormalDistributionParams(mcSamplingPrefix, lowerBound, upperBound, numOfSamplings, normalDistributionParamsFile);
 		}
-
+		
+		/* Load and test significance annotations */
+		if(Boolean.parseBoolean(params.getProperty("testMotifs"))) {
+			System.out.println("**Assessing motif clustering**");
+			MotifTester m = new MotifTester(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound);
+			
+			if(Boolean.parseBoolean(params.getProperty("testDegenMotifs"))) {
+				m.testMotifClustering(degenAnnotationPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+			}
+			
+			if(Boolean.parseBoolean(params.getProperty("testNonDegenMotifs"))) {
+				m.testMotifClustering(annotationFile, testedMotifOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+			}
+		
+		}
+	
 	}
 
+	
 	public static void printRefSeqIdsInNetwork(String outputFile, ArrayList<Protein> proteinList) {
 
 		try {

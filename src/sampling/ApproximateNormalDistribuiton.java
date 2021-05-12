@@ -32,9 +32,9 @@ public class ApproximateNormalDistribuiton {
 		List<Integer> missingDistributions = new ArrayList<>();
 		
 		System.out.println("Loading mc distributions: ");
-		for(int i=lowerBound; i<upperBound; i++) {
+		for(int i=lowerBound; i<=upperBound; i++) {
 
-			String mcDistFile = mcDistPrefix + i;
+			String mcDistFile = mcDistPrefix + "s" + numSampling + "_n" + i;
 			File f = new File(mcDistFile);
 			
 			/* Calculate params if distribution file exists */
@@ -83,7 +83,7 @@ public class ApproximateNormalDistribuiton {
 
 
 			String line = input.readLine(); // header
-			String nprot = line.split("\\s+")[3].split("\\")[0];
+			String nprot = line.split("\\s+")[3].split("\\)")[0];
 			System.out.print(nprot + ".");
 			
 			if(Integer.parseInt(nprot)%50 ==0) {
@@ -92,9 +92,9 @@ public class ApproximateNormalDistribuiton {
 			
 			line = input.readLine();
 
-			while(line!=null) {
+			while(line!=null && !line.isEmpty()) {
 
-				String[] col = line.split("\\s+");
+				String[] col = line.split("\t");
 
 				double tpd = Double.parseDouble(col[0]);
 				double freq = Double.parseDouble(col[1]);
