@@ -12,10 +12,11 @@ import graph.Protein;
 import sampling.ApproximateNormalDistribuiton;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
+import utils.AssessEnrichment;
 import utils.Calculator;
 import utils.CorrelationGraphLoader;
 import utils.DistanceMatrix;
-import utils.MotifTester;
+import utils.MotifEnrichment;
 import utils.NetworkProteins;
 
 public class Main {
@@ -45,9 +46,11 @@ public class Main {
 		String mcSamplingPrefix = wd + "mcDistributions/" + projectName + "_mcSamplingDistribution_";
 		String normalDistributionParamsFile = wd + projectName + "_normalDistributionParams.tsv";
 		
-		String testedDegenMotifsOutputPrefix = wd + "testedMotifClustering/" + projectName + "_testedDegenMotifClustering_";
-		String testedMotifOutputPrefix = wd + projectName + "_testeMotifClustering_";
+		String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + "_testedDegenMotifClustering_";
+		String testedMotifOutputPrefix = wd + "motifClustering/" + projectName + "_testedMotifClustering_";
 
+		String significanceScoresFile = wd + projectName + "_listOfCalculatedSignificanceScores.tsv";
+		
 		System.out.println("**Loading interaction repository**");
 		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")));
 		System.out.println("Number of interactions:" + interactionList.size() + "\n");
@@ -114,7 +117,7 @@ public class Main {
 		/* Load and test significance annotations */
 		if(Boolean.parseBoolean(params.getProperty("testMotifs"))) {
 			System.out.println("**Assessing motif clustering**");
-			MotifTester m = new MotifTester(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound);
+			MotifEnrichment m = new MotifEnrichment(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound);
 			
 			if(Boolean.parseBoolean(params.getProperty("testDegenMotifs"))) {
 				m.testMotifClustering(degenAnnotationPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
@@ -124,6 +127,8 @@ public class Main {
 				m.testMotifClustering(annotationFile, testedMotifOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 			}
 		
+			System.out.println("**Assessing significance scores**");
+			AssessEnrichment.assessSignificanceScores(testedMotifOutputPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), significanceScoresFile);
 		}
 	
 	}

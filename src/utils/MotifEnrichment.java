@@ -15,7 +15,7 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 
 import graph.Protein;
 
-public class MotifTester {
+public class MotifEnrichment {
 
 	private double[][] distanceMatrix;
 	private HashMap<String, Integer> indexOfProteinsInNetwork;
@@ -23,7 +23,7 @@ public class MotifTester {
 	private int lowerBound;
 	private int upperBound;
 
-	public MotifTester(double[][] _distance_matrix, ArrayList<Protein> proteinsInNetwork, String normalDistributionParamsFile, int _lowerBound, int _upperBound) {
+	public MotifEnrichment(double[][] _distance_matrix, ArrayList<Protein> proteinsInNetwork, String normalDistributionParamsFile, int _lowerBound, int _upperBound) {
 
 		this.distanceMatrix = _distance_matrix;
 		this.indexOfProteinsInNetwork = getIndexOfProteins(proteinsInNetwork);
