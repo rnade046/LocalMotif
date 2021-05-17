@@ -42,7 +42,7 @@ public class RandomizeSequences {
 					String seq = getRNAsequence(fastaFile, idxOfFasta.get(refSeqId));
 					String randomSeq = randomizeSequence(seq);
 
-					out.write(">RANDOM_" + refSeqId + "\n");
+					out.write(">Seq_RANDOM_" + refSeqId + "\n");
 					out.write(randomSeq + "\n\n");
 					out.flush();
 				} 

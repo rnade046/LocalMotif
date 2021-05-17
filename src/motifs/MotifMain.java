@@ -57,14 +57,14 @@ public class MotifMain {
 		String mapProteinToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds").replaceAll("\\s+", "");// output from BiomaRt
 		
 		/* Output Files */
-		String mapMotifsToRefSeqIdsFile = wd + "motif_enumeration/MapMotifsToRefSeqIds"+ projectName +".tsv"; // output from motif enumeration
-		String listOfUniqueMotifsFile = wd + "ListOfUniqueMotifs_"+ projectName + ".txt"; // output from motif enumeration
-		String motifMapFile = wd + "motifMappedToProteinsInNetwork"+ projectName +".tsv"; // output from motif enumeration
+		String mapMotifsToRefSeqIdsFile = wd + projectName + "_MapMotifsToRefSeqIds.tsv"; // output from motif enumeration
+		String listOfUniqueMotifsFile = wd + projectName + "_ListOfUniqueMotifs.txt"; // output from motif enumeration
+		String motifMapFile = wd + projectName + "_motifMappedToProteinsInNetwork.tsv"; // output from motif enumeration
 		
 		String motifSetToTest = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
 		String mapOfMotifs = wd + degenMotifsToDegenMotifsFile;
 		
-		String degenMotifAnnotationFile = wd + "degenMotifMappedToProteinsInNetwork_" + projectName + "_" + jobNumber ; // output from motif degeneration
+		String degenMotifAnnotationFile = wd + projectName+  "_degenMotifMappedToProteinsInNetwork_" + jobNumber ; // output from motif degeneration
 		/* Generate mapping of protein HGNC symbols to mRNA RefSeqIds >> To call R */
 		
 		// MOTIF ENUMERATION CAN BE RUN LOCALLY // 
