@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MapMotifs {
 
@@ -218,7 +219,7 @@ public class MapMotifs {
 					line = input.readLine();
 					lineCount++;
 				}
-				System.out.println();
+				System.out.println("current map size: " + degenMotifsToMotifsMap.size());
 				input.close();
 			} catch(IOException e) {
 				e.printStackTrace();
@@ -283,10 +284,17 @@ public class MapMotifs {
 		int maxNumberOfProteins = 0;
 		int minNumberOfProteins = Integer.MAX_VALUE;
 		int motifCount = 0;
+		
+		System.out.println("Number of degen motifs to iterate: " + degenMotifsToAssociatedMotifsMap.size());
+		
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 			
-			for(String degenMotif:  degenMotifsToAssociatedMotifsMap.keySet()) {
+			for(Map.Entry<String, List<String>> entry : degenMotifsToAssociatedMotifsMap.entrySet()) {
+				
+				String degenMotif = entry.getKey();
+				List<String> associatedMotifs = entry.getValue();
+				
 				motifCount++;
 				if(motifCount%100 == 0) {
 					System.out.print(motifCount + ".");
@@ -296,11 +304,12 @@ public class MapMotifs {
 					System.out.println();
 				}
 				
+				System.out.println(degenMotif + "|associated to non degenMotifs: " + associatedMotifs.size());
 				if(degenMotifsToAssociatedMotifsMap.get(degenMotif).size() >= 1) {
 					
 					out.write(degenMotif + "\t");
 					
-					HashSet<String> refSeqSet = getRefSeqIdSet(degenMotifsToAssociatedMotifsMap.get(degenMotif), motifsToRefSeqIds);
+					HashSet<String> refSeqSet = getRefSeqIdSet(associatedMotifs, motifsToRefSeqIds);
 					HashSet<String> proteinSet = getProteinAssociatedToDegenMotif(refSeqSet, refSeqToProtMap);
 					if(proteinSet.size() > maxNumberOfProteins) {
 						maxNumberOfProteins = proteinSet.size();
