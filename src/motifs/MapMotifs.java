@@ -183,7 +183,7 @@ public class MapMotifs {
 		
 		for(int i=0; i<=numMotifFile; i++) {
 			// mapMotifToDegenMotifsFile = mapMotifsToDegenMotifs_
-			String file = mapMotifToDegenMotifsFile + i + ".tsv";
+			String file = mapMotifToDegenMotifsFile + i;
 			
 			System.out.print("File " + i + ": ");
 			
