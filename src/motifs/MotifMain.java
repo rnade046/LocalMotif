@@ -46,7 +46,7 @@ public class MotifMain {
 		
 		/* Command line arguments */ 
 		String motifsToTestFile = args[1];
-		String degenMotifsToDegenMotifsFile = args[2];
+		String motifsToDegenMotifsFile = args[2];
 		String jobNumber = args[3];
 
 		/* Local computer - file paths */
@@ -59,10 +59,10 @@ public class MotifMain {
 		/* Output Files */
 		String mapMotifsToRefSeqIdsFile = wd + projectName + "_MapMotifsToRefSeqIds.tsv"; // output from motif enumeration
 		String listOfUniqueMotifsFile = wd + projectName + "_ListOfUniqueMotifs.txt"; // output from motif enumeration
-		String motifMapFile = wd + projectName + "_motifMappedToProteinsInNetwork.tsv"; // output from motif enumeration
+		String motifMapFile = wd + projectName + "_motifMappedToProteinsInNetwork_1"; // output from motif enumeration
 		
 		String motifSetToTest = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
-		String mapOfMotifs = wd + degenMotifsToDegenMotifsFile;
+		String mapOfMotifs = wd + motifsToDegenMotifsFile;
 		
 		String degenMotifAnnotationFile = wd + projectName+  "_degenMotifMappedToProteinsInNetwork_" + jobNumber ; // output from motif degeneration
 		/* Generate mapping of protein HGNC symbols to mRNA RefSeqIds >> To call R */
@@ -87,6 +87,7 @@ public class MotifMain {
 		
 		// MISSING STEP : Split # of motif in listOfUniqueMotifsToTest into a max of 1000 files ??? 
 		
+		// Enumerating possible degen motifs only needs to be run once; output all possibilities for motifs of length l, with an alphabet of x characters. 
 		if(enumeratePossibleDegenMotifs) {
 			System.out.println("**Generating all possible degen motifs**");
 			MotifDegeneration d1 = new MotifDegeneration(motifLength, maxDegenThreshold);
