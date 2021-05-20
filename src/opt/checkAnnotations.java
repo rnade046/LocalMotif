@@ -4,28 +4,36 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.Properties;
 
 public class checkAnnotations {
 
-	public static void main(String[] args) {
-
-		String wd = "/home/rnade046/projects/rrg-mlaval/rnade046/motifDegen_Full_FWD/";
-		String inputFiles = wd + "degenMotifAnnotations/degenMotifMappedToProteinsInNetwork_corrNet_";
-		String regMotifFiles = wd + "motifsMappedToProteinsInNetworkcorrNet.tsv";
-		String protFreqFile = wd + "checkAnnotations_numberOfProteinsAnnotatedOccurence.tsv";
-		String unseenNumberOfAnnotatedProteinsFile = wd + "checkAnnotations_numberOfProteinsNotToSample.tsv";
-		String seenNumberOfAnnotatedProteinsFile = wd + "checkAnnotations_numberOfProteinsToSample.tsv";
+	public static void main(String[] args) throws FileNotFoundException, IOException {
 		
-		int numFiles = 992;
+		Properties params = new Properties();
+		params.load(new FileInputStream(args[0]));
+		
+		String wd = params.getProperty("working_directory");
+		String projectName = params.getProperty("project_name");
+		
+		String degenMotifFilesPrefix = wd + "annotationFiles/"+ projectName+  "_degenMotifMappedToProteinsInNetwork_";
+		String regMotifFiles =  wd + "annotationFiles/" + params.getProperty("motifAnnotationFile");
+		
+		String protFreqFile = wd + projectName + "_checkAnnotations_numberOfProteinsAnnotatedOccurence.tsv";
+		String unseenNumberOfAnnotatedProteinsFile = wd + projectName + "_checkAnnotations_numberOfProteinsNotToSample.tsv";
+		String seenNumberOfAnnotatedProteinsFile = wd + projectName + "_checkAnnotations_numberOfProteinsToSample.tsv";
+		
+		int numFiles = Integer.parseInt(params.getProperty("numDegenMotifFiles"));
 		HashMap<Integer,Integer> mapOfProteinFreq = new HashMap<>();
 		
 		System.out.println("**Checking degen motifs annotation files**");
-		calculateProteinFreqFromDegenMotifs(mapOfProteinFreq, inputFiles, numFiles);
+		calculateProteinFreqFromDegenMotifs(mapOfProteinFreq, degenMotifFilesPrefix, numFiles);
 		
 		System.out.println("**Checking regular motifs annotation file**\n");
 		calculateProteinFreqFromRegularMotifs(mapOfProteinFreq, regMotifFiles);
