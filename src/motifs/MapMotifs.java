@@ -52,7 +52,7 @@ public class MapMotifs {
 		
 	}
 	
-	public static void mapMotifsToRefSeqIds(String motifsToRefSeqIDFile, String protToRefSeqFile, String motifMapFile) {
+	public static void mapMotifsToProteins(String motifsToRefSeqIDFile, String protToRefSeqFile, String motifMapFile) {
 	
 		HashMap<String, List<String>> motifsToRefSeqMap = loadMotifsToRefSeqMap(motifsToRefSeqIDFile);
 		System.out.println("Loaded motifs to refseq map: " + motifsToRefSeqMap.size());		

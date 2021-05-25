@@ -27,7 +27,6 @@ public class MotifMain {
 		 * 	- List of proteins in the network (as HGNC symbols)
 		 * 	- 3'UTR mRNA sequences of human genes (FASTA format)
 		 */ 
-		
 		System.out.println("Loading parameters file \n");
 		Properties params = new Properties();
 		params.load(new FileInputStream(args[0]));
@@ -82,7 +81,7 @@ public class MotifMain {
 			System.out.println("**Generating annotation file for non degenerate motifs**");
 			
 			/* Map motifs to the proteins in the network */
-			MapMotifs.mapMotifsToRefSeqIds(mapMotifsToRefSeqIdsFile, mapProteinToRefSeqFile, motifMapFile);
+			MapMotifs.mapMotifsToProteins(mapMotifsToRefSeqIdsFile, mapProteinToRefSeqFile, motifMapFile);
 		}	
 		
 		// MISSING STEP : Split # of motif in listOfUniqueMotifsToTest into a max of 1000 files ??? 
@@ -96,9 +95,9 @@ public class MotifMain {
 		
 		// MOTIF DEGENERATION SHOULD BE RUN REMOTELY //
 		if(enumerateDegenMotifs) {
-			System.out.println("**Enumerating degenerate motifs from non degenerate motifs**");
+			System.out.println("**Enumerating motifs from degenerate motifs**");
 			MotifDegeneration d = new MotifDegeneration(motifLength, maxDegenThreshold);
-			d.enumerateDegenerateMotifs(motifSetToTest, mapOfMotifs);
+			d.enumerateNonDegenerateMotifs(motifSetToTest, mapOfMotifs);
 		}
 		
 		// Update to run with multiple files

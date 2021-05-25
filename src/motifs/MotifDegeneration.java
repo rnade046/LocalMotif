@@ -15,7 +15,6 @@ import java.util.List;
 public class MotifDegeneration {
 
 	private int motifLength;
-	private int solutions;
 	private int maxDegenThreshold;
 	private HashMap<Character, Character[]> degenCharacterMap;
 	private HashSet<Character> degenCharacterSet;
@@ -29,28 +28,32 @@ public class MotifDegeneration {
 	public MotifDegeneration(int motifLength_, int maxDegenThreshold_) {
 		this.motifLength = motifLength_;
 		this.maxDegenThreshold = maxDegenThreshold_;
-		this.degenCharacterMap = defineIUPAC(); 											 // Define nucleotide mapping to various degenerate characters (following IUPAC standard)
+		this.degenCharacterMap = defineDegenCharacterMap(); 											 // Define nucleotide mapping to various degenerate characters (following IUPAC standard)
 		this.degenCharacterSet = new HashSet<>(Arrays.asList('R', 'D', 'H', 'V', 'B', '*')); // Define set of characters that are degenerate characters
-		this.solutions = calculateSolutions(); 												 // Calculate the number of motif solutions
 	}
 
-	public void enumerateDegenerateMotifs(String inputFile, String outputFile) {
+	public void enumerateNonDegenerateMotifs(String inputFile, String outputFile) {
 		FileInputStream in;
 		try {
 			in = new FileInputStream(new File(inputFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 			
-			String motif = input.readLine();
+			String degenMotif = input.readLine();
 			System.out.println("Degenerating motifs: ");
 			int motifCount=1;
-			while(motif != null) {
-				System.out.print(motifCount + ".");
-				HashSet<String> degenMotifs = getAllMotifs(motif);
-				printMotifs(outputFile, motif, degenMotifs);
+			while(degenMotif != null) {
+				if(motifCount%100 == 0){
+					System.out.print(motifCount + ".");
+				}
 				
-				motif = input.readLine();
+				int solutions = calculateSolutions(degenMotif);
+				HashSet<String> nonDegenMotifSet = getAllMotifs(degenMotif, solutions);
+				printMotifs(outputFile, degenMotif, nonDegenMotifSet);
+				
+				degenMotif = input.readLine();
 				motifCount++;
-				if(motifCount%10 == 0) {
+				
+				if(motifCount%1000 == 0) {
 					System.out.println();
 				}
 			}
@@ -69,19 +72,32 @@ public class MotifDegeneration {
 	 * 
 	 * @return charMap	 HashMap<Character, Character[]> - map {nucleotide : list of possible characters}
 	 */
-	private HashMap<Character, Character[]> defineIUPAC(){
+	private HashMap<Character, Character[]> defineDegenCharacterMap(){
 		HashMap<Character, Character[]> charMap = new HashMap<>();
 
-		Character[] a = {'A', 'R', 'D', 'H', 'V', '*'};
-		Character[] u = {'U', 'Y', 'B', 'D', 'H', '*'};
-		Character[] g = {'G', 'R', 'B', 'D', 'V', '*'};
-		Character[] c = {'C', 'Y', 'B', 'H', 'V', '*'};
+		Character[] a = {'A'};
+		Character[] t = {'T'};
+		Character[] g = {'G'};
+		Character[] c = {'C'};
+		Character[] r = {'A', 'G'};
+		Character[] y = {'T', 'C'};
+		Character[] d = {'A', 'T', 'G'};
+		Character[] b = {'T', 'G', 'C'};
+		Character[] h = {'A', 'T', 'C'};
+		Character[] v = {'A', 'G', 'C'};
+		Character[] x = {'A', 'T', 'G', 'C'};
 
 		charMap.put('A', a);
-		charMap.put('T', u);
+		charMap.put('T', t);
 		charMap.put('G', g);
 		charMap.put('C', c);
-
+		charMap.put('R', r);
+		charMap.put('Y', y);
+		charMap.put('D', d);
+		charMap.put('B', b);
+		charMap.put('H', h);
+		charMap.put('V', v);
+		charMap.put('*', x);
 		return charMap;
 	}
 
@@ -95,10 +111,10 @@ public class MotifDegeneration {
 	 * 
 	 * @return solutions	int - number of solutions for a given motif of length 8
 	 */
-	private int calculateSolutions() {
+	private int calculateSolutions(String motif) {
 		int solutions = 1;
 		for(int i = 0; i < motifLength; i++) {
-			solutions *= degenCharacterMap.get('A').length;
+			solutions *= degenCharacterMap.get(motif.charAt(i)).length;
 		}
 		return solutions;
 	} 
@@ -112,14 +128,13 @@ public class MotifDegeneration {
 	 * @param motif				String - sequence motifs 
 	 * @return degenerateMotifs ArrayList<String> - all possible degenerate sequence motifs 
 	 */
-	private HashSet<String> getAllMotifs(String motif) {
-		HashSet<String> degenerateMotifs = new HashSet<>();
-
+	private HashSet<String> getAllMotifs(String motif, int solutions) {
+		HashSet<String> motifs = new HashSet<>();
+;
 		/* generate all solutions */ 
 		for(int i = 0; i < solutions; i++) {
 			int j = 1;
 			String seq = "";
-			int degenCount = 0;
 			/* generate a given motif */
 			for(int k=0; k < motif.length() ; k++) {
 				Character[] set = degenCharacterMap.get(motif.charAt(k));
@@ -127,20 +142,12 @@ public class MotifDegeneration {
 				char charToAppend = set[(i/j)%set.length]; // magic 
 				seq += charToAppend;
 				j *= set.length;
-
-				/* keep count if added character is a generate character */
-				if(degenCharacterSet.contains(charToAppend)) {
-					degenCount++;
-				}
 			}
 
-			/* motif must pass max number of degenerate character threshold to be considered in our approach */
-			if(degenCount <= this.maxDegenThreshold) {
-				degenerateMotifs.add(seq);
-			}
+				motifs.add(seq);
 
 		}	
-		return degenerateMotifs;
+		return motifs;
 	}
 	
 	/**
