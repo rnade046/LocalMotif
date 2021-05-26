@@ -1,5 +1,6 @@
 package motifs;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashSet;
@@ -40,6 +41,22 @@ public class MotifMain {
 		int maxDegenThreshold = Integer.parseInt(params.getProperty("maxDegenThreshold"));
 		
 		String wd = params.getProperty("working_directory");
+		
+		/* Create dependent directories */
+	    File dir1 = new File(wd + "/mapDegenMotifsToMotifs");
+	    if (! dir1.exists()){
+	        dir1.mkdir();
+	    }
+	    
+	    File dir2 = new File(wd + "/annotationFiles");
+	    if (! dir2.exists()){
+	        dir2.mkdir();
+	    }
+	    
+	    File dir3 = new File(wd + "/degenMotifSet");
+	    if (! dir3.exists()){
+	        dir3.mkdir();
+	    }
 		
 		/* Command line arguments */ 
 		String motifsToTestFile = args[1];
