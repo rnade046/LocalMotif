@@ -39,7 +39,6 @@ public class Main {
 		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt";
 		String distanceMatrix2File = wd +  projectName + "_distanceMatrix2.txt";
 
-		String annotationFile = wd + params.getProperty("motifAnnotationFile");
 		String degenAnnotationPrefix = wd + params.getProperty("degenAnnotationPrefix");
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
@@ -47,7 +46,6 @@ public class Main {
 		String normalDistributionParamsFile = wd + projectName + "_normalDistributionParams.tsv";
 		
 		String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + "_testedDegenMotifClustering_";
-		String testedMotifOutputPrefix = wd + "motifClustering/" + projectName + "_testedMotifClustering_";
 
 		String significanceScoresFile = wd + projectName + "_listOfCalculatedSignificanceScores.tsv";
 		
@@ -100,7 +98,7 @@ public class Main {
 			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
 			System.out.println("**Enumerating protein annotation frequency file**");
 			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound);
-			freq.calculateProteinAnnotationFrequency(annotationFile, degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
+			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
 		}
 
 		/* Perform Monte Carlo Sampling procedure */
@@ -118,17 +116,13 @@ public class Main {
 		if(Boolean.parseBoolean(params.getProperty("testMotifs"))) {
 			System.out.println("**Assessing motif clustering**");
 			MotifEnrichment m = new MotifEnrichment(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound);
+			m.testMotifClustering(degenAnnotationPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 			
-			if(Boolean.parseBoolean(params.getProperty("testDegenMotifs"))) {
-				m.testMotifClustering(degenAnnotationPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+			if(Boolean.parseBoolean(params.getProperty("assessSignificanceScores"))) {
+				System.out.println("**Assessing significance scores**");
+				AssessEnrichment.assessSignificanceScores(testedDegenMotifsOutputPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), significanceScoresFile);
 			}
 			
-			if(Boolean.parseBoolean(params.getProperty("testNonDegenMotifs"))) {
-				m.testMotifClustering(annotationFile, testedMotifOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-			}
-		
-			System.out.println("**Assessing significance scores**");
-			AssessEnrichment.assessSignificanceScores(testedMotifOutputPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), significanceScoresFile);
 		}
 	
 	}

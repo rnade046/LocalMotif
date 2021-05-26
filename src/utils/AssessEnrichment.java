@@ -12,14 +12,10 @@ import java.util.ArrayList;
 
 public class AssessEnrichment {
 
-	public static void assessSignificanceScores(String motifClusteringFilePrefix, String degenMotifsClusteringFilesPrefix, int numOfDegenMotifFiles, String outputFile) {
+	public static void assessSignificanceScores(String degenMotifsClusteringFilesPrefix, int numOfDegenMotifFiles, String outputFile) {
 		
 		/* initialize list */
 		ArrayList<Double> significantScoresList = new ArrayList<>();
-		
-		// non degen motif
-		String motifClusteringFile = motifClusteringFilePrefix + 1;
-		getSignificantScores(motifClusteringFile, significantScoresList);
 		
 		for(int i=0; i<numOfDegenMotifFiles; i++) {
 			String degenMotifClusteringFile = degenMotifsClusteringFilesPrefix + i;

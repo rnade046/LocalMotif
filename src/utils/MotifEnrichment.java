@@ -63,11 +63,11 @@ public class MotifEnrichment {
 					String col[] = line.split("\t");
 					
 					/* check the number of proteins annotated by motifs is within our set bounds of n proteins to be tested */
-					int numProt = Integer.parseInt(col[2]);
+					int numProt = Integer.parseInt(col[1]);
 					if(numProt>=lowerBound && numProt<=upperBound) {
 
 						/* get list of proteins in Network */
-						ArrayList<String> proteinInNetworkAssociatedToMotif = getListOfProteinsInNetwork(col[4].split("\\|"));
+						ArrayList<String> proteinInNetworkAssociatedToMotif = getListOfProteinsInNetwork(col[2].split("\\|"));
 						
 						/* check againt that the number of proteins annotated by motifs is within our set bounds of n proteins to be tested */
 						if(proteinInNetworkAssociatedToMotif.size()>=lowerBound && proteinInNetworkAssociatedToMotif.size() <= upperBound) {

@@ -19,7 +19,7 @@ public class ProteinAnnotations {
 		this.upperBoundToSample = _upperBoundToSample;
 	}
 
-	public void calculateProteinAnnotationFrequency(String inputAnnotationFile, String degenMotifAnnotationPrefix, int numDegenFiles, String outputProteinFrequencyFile) {
+	public void calculateProteinAnnotationFrequency(String degenMotifAnnotationPrefix, int numDegenFiles, String outputProteinFrequencyFile) {
 
 		/***
 		 * Given an annotation list of type 
@@ -32,9 +32,6 @@ public class ProteinAnnotations {
 
 		HashMap<String, Integer> proteinToFrequencyMap = new HashMap<>();
 		
-		System.out.println("Searching regular motif annotation file\n");
-		computeFrequencyOfProteins(inputAnnotationFile, proteinToFrequencyMap);
-		
 		System.out.print("Searching degen motif annotation files:");
 		for(int i=0; i<numDegenFiles; i++) {
 			if(i%100==0) {
@@ -43,6 +40,7 @@ public class ProteinAnnotations {
 			if(i%10==0) {
 				System.out.print(i +".");
 			}
+			
 			String degenAnnotationFile = degenMotifAnnotationPrefix + i;
 			computeFrequencyOfProteins(degenAnnotationFile, proteinToFrequencyMap);
 		}
@@ -67,11 +65,11 @@ public class ProteinAnnotations {
 
 			while(line!=null) {
 
-				int numOfAnnotatedProteins = Integer.parseInt(line.split("\\t")[2]);
+				int numOfAnnotatedProteins = Integer.parseInt(line.split("\\t")[1]);
 				if(numOfAnnotatedProteins >= this.lowerBoundToSample && numOfAnnotatedProteins<= this.upperBoundToSample) {
 
 
-					String[] protein_ids = line.split("\\t")[4].split("\\|"); // idx[4] = protein (name) list 
+					String[] protein_ids = line.split("\\t")[2].split("\\|"); // idx[2] = protein (name) list 
 
 					/* For all proteins of a given annotation; if in list update number of occurrence, otherwise initialize */
 					for(int i=0; i<protein_ids.length; i++) {
