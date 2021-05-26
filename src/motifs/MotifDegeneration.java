@@ -42,7 +42,7 @@ public class MotifDegeneration {
 			System.out.println("Degenerating motifs: ");
 			int motifCount=1;
 			while(degenMotif != null) {
-				if(motifCount%100 == 0){
+				if(motifCount%1000 == 0){
 					System.out.print(motifCount + ".");
 				}
 				
@@ -53,7 +53,7 @@ public class MotifDegeneration {
 				degenMotif = input.readLine();
 				motifCount++;
 				
-				if(motifCount%1000 == 0) {
+				if(motifCount%10000 == 0) {
 					System.out.println();
 				}
 			}

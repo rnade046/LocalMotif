@@ -17,16 +17,6 @@ import java.util.Map;
 
 public class MapMotifs {
 
-	
-	public static void mapDegenMotifsToProteins(String listDegenMotifsToMotifsTestFile, String motifToProteinFile, String degenMotifAnnotationFile) {
-	
-		/* Load map degen motifs = motifs */ 
-		
-		/* Load motifs to proteins */
-		
-		/* Output mapping of degenMotifs to proteins */
-	}
-	
 	/**
 	 * @deprecated
 	 * @param listDegenMotifsToTestInputFile
@@ -78,7 +68,7 @@ public class MapMotifs {
 		HashMap<String, String> refSeqToProtMap = loadRefSeqToProteinMap(protToRefSeqFile);
 		System.out.println("Loaded refSeq to protein map: " + refSeqToProtMap.size() + "\n");
 		
-		printMapOfMotifsToProteins(motifMapFile, motifsToRefSeqMap, refSeqToProtMap);
+		printMapOfMotifsToRefSeqIds(motifMapFile, motifsToRefSeqMap, refSeqToProtMap);
 		
 	}
 
@@ -383,7 +373,7 @@ public class MapMotifs {
 		return proteinSet;
 	}
 	
-	private static void printMapOfMotifsToProteins(String outputFile, HashMap<String, List<String>> motifsToRefSeqIds, HashMap<String, String> refSeqToProtMap) {
+	private static void printMapOfMotifsToRefSeqIds(String outputFile, HashMap<String, List<String>> motifsToRefSeqIds, HashMap<String, String> refSeqToProtMap) {
 			int maxNumberOfProteins = 0;
 			int minNumberOfProteins = Integer.MAX_VALUE;
 			int motifCount = 0;
@@ -413,12 +403,16 @@ public class MapMotifs {
 							minNumberOfProteins = proteinSet.size();
 						}
 						
-						out.write(proteinSet.size() + "\t");
+						out.write(refSeqSet.size() + "\t" + proteinSet.size() + "\t");
+						
+						for(String refSeqId: refSeqSet) {
+							out.write(refSeqId + "|");
+						}
+						out.write("\t");
 						
 						for(String prot: proteinSet) {
 							out.write(prot + "|");
 						}
-						
 					out.write("\n");
 				}
 				System.out.println("Done\n");
