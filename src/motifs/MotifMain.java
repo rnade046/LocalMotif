@@ -41,7 +41,7 @@ public class MotifMain {
 		int maxDegenThreshold = Integer.parseInt(params.getProperty("maxDegenThreshold"));
 		
 		String wd = params.getProperty("working_directory");
-		
+	
 		/* Create dependent directories */
 	    File dir1 = new File(wd + "/mapDegenMotifsToMotifs");
 	    if (! dir1.exists()){
@@ -78,6 +78,7 @@ public class MotifMain {
 		String mapOfDegenMotifs = wd + "mapDegenMotifsToMotifs/" + projectName + "_enumerateNonDegenMotifs_" + jobNumber;
 		
 		String degenMotifAnnotationFile = wd + "annotationFiles/" + projectName+  "_degenMotifMappedToProteinsInNetwork_" + jobNumber ; // output from motif degeneration
+		degenMotifAnnotationFile = params.getProperty("degenAnnotationPrefix").replaceAll("\\s+", "") + jobNumber;
 		/* Generate mapping of protein HGNC symbols to mRNA RefSeqIds >> To call R */
 		
 		// MOTIF ENUMERATION CAN BE RUN LOCALLY // 
