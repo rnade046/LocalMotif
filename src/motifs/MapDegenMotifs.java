@@ -27,7 +27,7 @@ public class MapDegenMotifs {
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 			String line = input.readLine(); //no header
-			int countMotifs = 1; 
+			int countMotifs = 0; 
 			while(line != null) {
 				
 				if(countMotifs%1000 == 0) {
