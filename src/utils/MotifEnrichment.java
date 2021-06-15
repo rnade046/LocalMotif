@@ -83,14 +83,14 @@ public class MotifEnrichment {
 							double p_val = nd.probability(0, tpd);
 							
 							/* print motif; numProts; listProteins; tpd; p-val */
-							printAnnotationDetails(annotationOutputFile, col[0], proteinInNetworkAssociatedToMotif, tpd, p_val);
+							printAnnotationDetails(annotationOutputFile, col[0], proteinInNetworkAssociatedToMotif.size(), tpd, p_val);
 						}
 					}
 
 					line = input.readLine();
 					motifCount++;
 				}
-
+				System.out.println("Done\n");
 				input.close();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -185,18 +185,12 @@ public class MotifEnrichment {
 		return listOfIndexOfProteinsInNetworkAnnotatedByMotif;
 	}
 	
-	private void printAnnotationDetails(String annotationOutputFile, String motif, ArrayList<String> proteinsInNetworkAnnotatedByMotif, double tpd, double pValue) {
+	private void printAnnotationDetails(String annotationOutputFile, String motif, int numProts, double tpd, double pValue) {
 		
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(annotationOutputFile), true));
 			
-			out.write(motif + "\t" + proteinsInNetworkAnnotatedByMotif.size() + "\t");
-			
-			for(String prot:proteinsInNetworkAnnotatedByMotif) {
-				out.write(prot + "|");
-			}
-			
-			out.write("\t" + tpd + "\t" + pValue + "\n");
+			out.write(motif + "\t" + numProts + "\t" + tpd + "\t" + pValue + "\n");
 			
 			out.close();
 		} catch (IOException e) {

@@ -1,4 +1,4 @@
-package graph;
+package fdr;
 
 public class FalseDiscoveryRate {
     private double FalseDiscoveryRate;

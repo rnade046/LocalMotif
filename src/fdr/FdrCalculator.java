@@ -1,16 +1,16 @@
-package utils;
+package fdr;
 
 import graph.Annotation;
-import graph.FalseDiscoveryRate;
+import utils.Calculator;
 
 import java.util.ArrayList;
 
 public class FdrCalculator {
 
-    /* original goTerms list */
-    private ArrayList<Annotation> goAnnotations;
-    /* shuffled goTerms list */
-    private ArrayList<Annotation> shuffledGoAnnotations;
+    /* pvalues associated to regular motifs */
+    private ArrayList<Double> motifsSignificanceScores;
+    /* pvalues associated to null model */
+    private ArrayList<Double> nullSignificanceScores;
 
     /**
      * Constructor of the class.
@@ -18,16 +18,16 @@ public class FdrCalculator {
      * @param goAnnotations list of goTerms
      * @param shuffledGoAnnotations list of shuffled goTerms
      */
-    public FdrCalculator(ArrayList<Annotation> goAnnotations, ArrayList<Annotation> shuffledGoAnnotations) {
+    public FdrCalculator(String motifSignificanceScoresFile, String nullSignificanceScoresFile) {
         this.goAnnotations = goAnnotations;
         this.shuffledGoAnnotations = shuffledGoAnnotations;
     }
 
-    /**
+/*    *//**
      * Modifies every goTerm in both shuffled and original lists with TPD.
      *
      * @param distanceMatrix distance matrix which is used to calculate TPD.
-     */
+     *//*
     public void modifyGoAnnotationsWithTPD(double[][] distanceMatrix) {
     	System.out.println("computing annotation TPDs:");
         Modifier.setClusterTPD(goAnnotations, distanceMatrix); // Annotation Go List
@@ -37,14 +37,14 @@ public class FdrCalculator {
         System.out.println("");
     }
 
-    /**
+    *//**
      * Modifies every goTerm in both shuffled and original lists with a p-value. P-value is calculated using normal
      * approximation (which is built according to previously computed parameters), so it is obligatory to have a file
      * with normal distribution parameters before calling this function. If you don't have this file, you can call
      * computeNormalDistributionParameters and then pass the name of the new file to this function.
      *
      * @param distributionParametersFilePath path to the file with distribution parameter
-     */
+     *//*
     public double modifyGoAnnotationsWithPvalueFromNormalApproximation(String distributionParametersFilePath, int numOfSampling) {
     	
     	double[] minimum_pvals = new double[2];
@@ -56,18 +56,18 @@ public class FdrCalculator {
         return min_pval;
     }
 
-    /**
+    *//**
      * Computes all normal distributions parameters and stores them in the file.
      *
      * @param distributionFilePath 				path to the file with distributions
      * @param nProtToSampleUpperBound 			largest amount of protein for which we will compute distribution parameters
      * @param distributionParametersFilePath 	path to the file with output (computed parameters)
-     */
+     *//*
     public void computeNormalDistributionParameters(String distributionFilePath, int nProtToSampleLowerBound, int nProtToSampleUpperBound, String distributionParametersFilePath) {
         Loader.loadMonteCarloDistributions(distributionFilePath, nProtToSampleLowerBound, nProtToSampleUpperBound, distributionParametersFilePath);
     	//Loader.loadDistributions2(distributionFilePath, nProtToSampleLowerBound, nProtToSampleUpperBound, distributionParametersFilePath);
     }
-    
+    */
     
     /**
      * Computes the false discovery rate table.

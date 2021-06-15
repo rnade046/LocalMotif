@@ -9,9 +9,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import fdr.FalseDiscoveryRate;
 import graph.Protein;
 import graph.Annotation;
-import graph.FalseDiscoveryRate;
 
 public class FormatOutput {
 

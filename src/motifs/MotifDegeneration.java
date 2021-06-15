@@ -180,18 +180,20 @@ public class MotifDegeneration {
 		
 	}
 	
-	public void generateAllPossibleMotifs(String outputFile) {
+	public void generateAllPossibleMotifs(String outputFilePrefix) {
 		System.out.println("Generating set of degenerate motifs");
 		List<Character> nucleotides = Arrays.asList('A', 'T', 'C', 'G', 'R', 'Y', 'B', 'D', 'H', 'V', '*'); 
 		String accum = "";
 		HashMap<String, ArrayList<Integer>> container = new HashMap<String, ArrayList<Integer>>();
+		int breaks = (int) Math.round(Math.pow(nucleotides.size(), this.motifLength))/1000 ;
+		Integer fileIdx = 0;
 		
-		permutation(nucleotides, this.motifLength, accum, container, outputFile);
+		fileIdx = permutation(nucleotides, this.motifLength, accum, container, breaks, fileIdx, outputFilePrefix);
 	//	System.out.println("\nPrinting motifs");
-		printDegenMotifSet(outputFile, container);
+		printDegenMotifSet(outputFilePrefix, fileIdx, container);
 	}
 	
-	private void permutation(List<Character> NA, int k, String accumulated, HashMap<String, ArrayList<Integer>> container, String outputFile){
+	private Integer permutation(List<Character> NA, int k, String accumulated, HashMap<String, ArrayList<Integer>> container, int breaks, Integer fileIndex, String outputFilePrefix){
 		
 		if(k == 0)
 		{
@@ -200,22 +202,25 @@ public class MotifDegeneration {
 			ArrayList<Integer> value = new ArrayList<Integer>();
 			container.put(accumulated, value);
 			
-			if(container.size()%1000000 == 0) {
-				printDegenMotifSet(outputFile, container);
+			if(container.size()%breaks == 0) {
+				printDegenMotifSet(outputFilePrefix, fileIndex, container);
+				fileIndex++;
 			}
 			
-			return;
+			return fileIndex;
 		}
 		for(Character na:NA)
-			permutation(NA, k - 1, accumulated + na, container, outputFile);
+			fileIndex = permutation(NA, k - 1, accumulated + na, container, breaks, fileIndex, outputFilePrefix);
+		
+		return fileIndex;
 		
 	}
 	
-	private void printDegenMotifSet(String outputFile, HashMap<String, ArrayList<Integer>> degenMotifs) {
+	private void printDegenMotifSet(String outputFile, int fileIdx, HashMap<String, ArrayList<Integer>> degenMotifs) {
 		
 		BufferedWriter out;
 		try {
-			out = new BufferedWriter(new FileWriter(new File(outputFile), true));
+			out = new BufferedWriter(new FileWriter(new File(outputFile + fileIdx)));
 			
 			
 			for(String motif: degenMotifs.keySet()) {

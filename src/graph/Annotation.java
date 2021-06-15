@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Annotation {
 
     // instance variables
-    private String name;
+    private String name; // motif
     private ArrayList<String> protein_names; // protein ids(!!)
     private ArrayList<String> protein_symbols;
     private ArrayList<Integer> protein_idxList;

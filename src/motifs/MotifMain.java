@@ -74,6 +74,7 @@ public class MotifMain {
 		String listOfUniqueMotifsFile = wd + projectName + "_ListOfUniqueMotifs.txt"; // output from motif enumeration
 		String motifMappedToProteinsFile = wd + projectName + "_motifMappedToProteinsInNetwork"; // output from motif enumeration
 		
+		String degenMotifSetPrefix = wd + params.getProperty("degenMotifsToTestPrefix").replace("\\s+", "");
 		String motifSetToTest = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
 		String mapOfDegenMotifs = wd + "mapDegenMotifsToMotifs/" + projectName + "_enumerateNonDegenMotifs_" + jobNumber;
 		
@@ -105,7 +106,7 @@ public class MotifMain {
 		if(enumeratePossibleDegenMotifs) {
 			System.out.println("**Generating all possible degen motifs**");
 			MotifDegeneration d1 = new MotifDegeneration(motifLength, maxDegenThreshold);
-			d1.generateAllPossibleMotifs(motifSetToTest);
+			d1.generateAllPossibleMotifs(degenMotifSetPrefix);
 		}
 		
 		// MOTIF DEGENERATION SHOULD BE RUN REMOTELY //

@@ -34,7 +34,7 @@ public class AssessEnrichment {
 			String line = input.readLine(); // no header
 			
 			while(line!=null) {
-				double pval = Double.parseDouble(line.split("\t")[4]);
+				double pval = Double.parseDouble(line.split("\t")[3]);
 				significanceScoresList.add(pval);
 				
 				line = input.readLine();

@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import graph.Annotation;
-import graph.Protein;
 
 public class Loader {
 

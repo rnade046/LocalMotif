@@ -39,7 +39,7 @@ public class Main {
 		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt";
 		String distanceMatrix2File = wd +  projectName + "_distanceMatrix2.txt";
 
-		String degenAnnotationPrefix = wd + params.getProperty("degenAnnotationPrefix");
+		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix");
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
 		String mcSamplingPrefix = wd + "mcDistributions/" + projectName + "_mcSamplingDistribution_";
@@ -48,6 +48,18 @@ public class Main {
 		String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + "_testedDegenMotifClustering_";
 
 		String significanceScoresFile = wd + projectName + "_listOfCalculatedSignificanceScores.tsv";
+		
+		File directory = new File(wd + "/mcDistributions");
+		if (! directory.exists()){
+			System.out.println("creating directory: mcDistributions/");
+			directory.mkdir();
+		}
+		
+		File directory2 = new File(wd + "/motifClustering");
+		if (! directory2.exists()){
+			System.out.println("creating directory: motifClustering/");
+			directory2.mkdir();
+		}
 		
 		System.out.println("**Loading interaction repository**");
 		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")));
@@ -117,14 +129,14 @@ public class Main {
 			System.out.println("**Assessing motif clustering**");
 			MotifEnrichment m = new MotifEnrichment(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound);
 			m.testMotifClustering(degenAnnotationPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-			
-			if(Boolean.parseBoolean(params.getProperty("assessSignificanceScores"))) {
-				System.out.println("**Assessing significance scores**");
-				AssessEnrichment.assessSignificanceScores(testedDegenMotifsOutputPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), significanceScoresFile);
-			}
-			
 		}
-	
+
+		/* Look at the overall distribution of significance scores once all annotations have been tested */
+		if(Boolean.parseBoolean(params.getProperty("assessSignificanceScores"))) {
+			System.out.println("**Assessing significance scores**");
+			AssessEnrichment.assessSignificanceScores(testedDegenMotifsOutputPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), significanceScoresFile);
+		}
+		
 	}
 
 	

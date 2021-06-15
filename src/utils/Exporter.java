@@ -3,8 +3,8 @@ package utils;
 import java.io.*;
 import java.util.ArrayList;
 
+import fdr.FalseDiscoveryRate;
 import graph.Annotation;
-import graph.FalseDiscoveryRate;
 import graph.Interaction;
 
 public class Exporter {

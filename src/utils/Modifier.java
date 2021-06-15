@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
+import fdr.FalseDiscoveryRate;
 import graph.Annotation;
-import graph.FalseDiscoveryRate;
 import graph.Interaction;
 import graph.Protein;
 
