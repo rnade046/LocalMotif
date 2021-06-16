@@ -566,44 +566,7 @@ public class Calculator {
         return shuffledAnnotationGoList;
     }
 
-    public static double computeFDR(ArrayList<Annotation> goAnnotationList, ArrayList<Annotation> goAnnotationShuffleList, double pThreshold) {
-        /***************************************************************************************************
-         * Compute the false discovery rate for goTerms surpassing a certain p-value threshold (pThreshold)
-         *
-         * FDR = nOfShuffledGo_pval that passed / nGo_pval that passed
-         ***************************************************************************************************/
-
-        double fdr;
-
-        int goCount = 0;
-        int shuffledCount = 0;
-        
-        for (int i = 0; i < goAnnotationList.size(); i++) {
-
-            /* Count goTerms that have a p-value smaller than threshold */
-            Annotation annotation = goAnnotationList.get(i);
-            double pval = annotation.getPvalue();
-
-            if (pval <= pThreshold) {
-                goCount++;
-            }
-
-
-            /* Count shuffled goTerms that have a p-value smaller than the threshold*/
-            Annotation shuffledAnnotation = goAnnotationShuffleList.get(i);
-            double shuffled_pval = shuffledAnnotation.getPvalue();
-
-            if (shuffled_pval <= pThreshold) {
-                shuffledCount++;
-            }
-
-        }
-
-        fdr = shuffledCount / (double) goCount;
-
-        return fdr;
-    }
-
+ 
     public static HashSet<String> determineUniProtIDsInNetwork(ArrayList<Protein> proteinsInNetworkList) {
 
         HashSet<String> uniProtIDsInNetwork = new HashSet<>();
@@ -613,22 +576,6 @@ public class Calculator {
         }
 
         return uniProtIDsInNetwork;
-    }
-
-    public static int computeGoPassFDRthreshold(double p_val, ArrayList<Annotation> goAnnotationList) {
-
-        int goCount = 0;
-
-        for (int i = 0; i < goAnnotationList.size(); i++) {
-            Annotation goAnnotation = goAnnotationList.get(i);
-            //System.out.println(goAnnotation.getPvalue());
-            if (goAnnotation.getPvalue() <= p_val) {
-                goCount++;
-            }
-        }
-
-
-        return goCount;
     }
 
 }

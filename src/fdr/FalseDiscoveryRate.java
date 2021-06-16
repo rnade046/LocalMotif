@@ -3,12 +3,12 @@ package fdr;
 public class FalseDiscoveryRate {
     private double FalseDiscoveryRate;
     private double Pvalue;
-    private int PassingGoTerms;
+    private int PassingAnnotations;
 
-    public FalseDiscoveryRate(double falseDiscoveryRate, double pvalue, int passingGoTerms) {
+    public FalseDiscoveryRate(double falseDiscoveryRate, double pvalue, int passingAnnotations) {
         FalseDiscoveryRate = falseDiscoveryRate;
         Pvalue = pvalue;
-        this.PassingGoTerms= passingGoTerms;
+        this.PassingAnnotations= passingAnnotations;
     }
 
     public double getFalseDiscoveryRate() {
@@ -27,11 +27,11 @@ public class FalseDiscoveryRate {
         Pvalue = pvalue;
     }
 
-    public int getPassingGoTerms() {
-        return PassingGoTerms;
+    public int getPassingAnnotation() {
+        return PassingAnnotations;
     }
 
-    public void setPassingGoTerms(int passingGoTerms) {
-        this.PassingGoTerms = passingGoTerms;
+    public void setPassingAnnotations(int passingAnnotations) {
+        this.PassingAnnotations = passingAnnotations;
     }
 }

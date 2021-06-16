@@ -3,6 +3,7 @@ package fdr;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class MainFDR {
@@ -22,7 +23,10 @@ public class MainFDR {
 		String motifs_significanceScoresFile = wd + projectName + "_listOfCalculatedSignificanceScores.tsv";
 		String nullModel_significanceScoresFile = wd + projectName + "_listOfCalculatedSignificanceScores.tsv";
 
-		/* Load list of significance scores */
+		/* Compute FDRs between motifs and null model + monotonic transformation */
+		FdrCalculator fdrCalc = new FdrCalculator(motifs_significanceScoresFile, nullModel_significanceScoresFile);
+		ArrayList<FalseDiscoveryRate> fdr = fdrCalc.computeFdr();
+		
 		
 		
 	}

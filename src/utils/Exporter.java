@@ -3,7 +3,6 @@ package utils;
 import java.io.*;
 import java.util.ArrayList;
 
-import fdr.FalseDiscoveryRate;
 import graph.Annotation;
 import graph.Interaction;
 
@@ -32,22 +31,6 @@ public class Exporter {
         }
     }
 
-    public static void testGoFDR(ArrayList<FalseDiscoveryRate> falseDiscoveryRates, String fdrExportFile) {
-
-        try {
-            BufferedWriter out = new BufferedWriter(new FileWriter(fdrExportFile));
-            out.write("FDR" + "\t" + "Pval" + "\t" + "#Go" + "\n");
-
-            for (FalseDiscoveryRate fdr : falseDiscoveryRates) {
-                out.write(fdr.getFalseDiscoveryRate() + "\t" + fdr.getPvalue() + "\t" + fdr.getPassingGoTerms() + "\n");
-                out.flush();
-            }
-
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     public static void printGO_results(ArrayList<Annotation> annotationGoList, ArrayList<Annotation> shuffledAnnotationList, String goExportFile) {
 
