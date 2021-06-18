@@ -40,7 +40,7 @@ public class MapDegenMotifs {
 				
 				String degenMotif = line.split("\t")[0];
 				String[] motifList = line.split("\t")[1].split("\\|");
-
+				
 				mapAnnotationFiles(degenMotifAnnotationFile, degenMotif, motifList, motifToProteinMap);
 
 				line = input.readLine();
@@ -120,9 +120,11 @@ public class MapDegenMotifs {
 			/* For every motif, identify list of annotating proteins */
 			HashSet<String> proteinSet = new HashSet<>();
 			for(String motif: motifSet) {
-
-				for(String protein: motifToProteinMap.get(motif)) {
-					proteinSet.add(protein);
+				
+				if(motifToProteinMap.containsKey(motif)) {
+					for(String protein: motifToProteinMap.get(motif)) {
+						proteinSet.add(protein);
+					}
 				}
 			}
 			

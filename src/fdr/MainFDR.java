@@ -23,6 +23,8 @@ public class MainFDR {
 		String motifs_significanceScoresFile = wd + projectName + "_listOfCalculatedSignificanceScores.tsv";
 		String nullModel_significanceScoresFile = wd + projectName + "_listOfCalculatedSignificanceScores.tsv";
 
+		/* Get list of significance scores */
+		
 		/* Compute FDRs between motifs and null model + monotonic transformation */
 		FdrCalculator fdrCalc = new FdrCalculator(motifs_significanceScoresFile, nullModel_significanceScoresFile);
 		ArrayList<FalseDiscoveryRate> fdr = fdrCalc.computeFdr();

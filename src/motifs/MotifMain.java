@@ -76,10 +76,9 @@ public class MotifMain {
 		
 		String degenMotifSetPrefix = wd + params.getProperty("degenMotifsToTestPrefix").replace("\\s+", "");
 		String motifSetToTest = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
-		String mapOfDegenMotifs = wd + "mapDegenMotifsToMotifs/" + projectName + "_enumerateNonDegenMotifs_" + jobNumber;
+		String mapOfDegenMotifs = wd + "mapDegenMotifsToMotifs/" + projectName + "_nullModel_enumerateNonDegenMotifs_" + jobNumber;
 		
-		String degenMotifAnnotationFile = wd + "annotationFiles/" + projectName+  "_degenMotifMappedToProteinsInNetwork_" + jobNumber ; // output from motif degeneration
-		degenMotifAnnotationFile = params.getProperty("degenAnnotationPrefix").replaceAll("\\s+", "") + jobNumber;
+		 String degenMotifAnnotationFile = params.getProperty("degenAnnotationPrefix").replaceAll("\\s+", "") + jobNumber;
 		/* Generate mapping of protein HGNC symbols to mRNA RefSeqIds >> To call R */
 		
 		// MOTIF ENUMERATION CAN BE RUN LOCALLY // 
