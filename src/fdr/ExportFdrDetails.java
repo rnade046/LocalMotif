@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class ExportFdrDetails {
 
-    public static void testGoFDR(ArrayList<FalseDiscoveryRate> falseDiscoveryRates, String fdrExportFile) {
+    public static void exportFDR(ArrayList<FalseDiscoveryRate> falseDiscoveryRates, String fdrExportFile) {
 
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter(fdrExportFile));

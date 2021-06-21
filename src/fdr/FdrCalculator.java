@@ -39,20 +39,21 @@ public class FdrCalculator {
     	ArrayList<FalseDiscoveryRate> fdrs = new ArrayList<>();
         
         /* Computes the false discovery rate and #annotations that pass FDR for the certain p-value */
-        for (double pVal = this.minPval; pVal < 0.1; pVal = pVal * 5) {
+        for (double pVal = this.minPval; pVal < 0.1; pVal = pVal * 2) {
         	
         	double[] info = computeFDR(pVal); // info [0] = FDR, [1] = annotation that pass threshold\
         	
         	fdrs.add(new FalseDiscoveryRate(info[0], pVal, (int) info[1]));
         }
         
-        for (double pVal = 0.1; pVal <= 1.01; pVal += 0.005) {
+        for (double pVal = 0.1; pVal <= 1.01; pVal += 0.05) {
         	
         	double[] info = computeFDR(pVal); // info [0] = FDR, [1] = annotation that pass threshold
         	
         	fdrs.add(new FalseDiscoveryRate(info[0], pVal, (int) info[1]));
         }
         
+        System.out.println("Performing monotonic transformation");
         fdrs = monotonicTransformationForFdr(fdrs); //monotonic transformation
         
         return fdrs;
