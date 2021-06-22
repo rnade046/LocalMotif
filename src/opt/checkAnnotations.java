@@ -22,12 +22,11 @@ public class checkAnnotations {
 		String wd = params.getProperty("working_directory");
 		String projectName = params.getProperty("project_name");
 		
-		String degenMotifFilesPrefix = wd + "annotationFiles/"+ projectName+  "_degenMotifMappedToProteinsInNetwork_";
-		String regMotifFiles =  wd + "annotationFiles/" + params.getProperty("motifAnnotationFile");
+		String degenMotifFilesPrefix = params.getProperty("degenAnnotationPrefix");
 		
 		String protFreqFile = wd + projectName + "_checkAnnotations_numberOfProteinsAnnotatedOccurence.tsv";
-		String unseenNumberOfAnnotatedProteinsFile = wd + projectName + "_checkAnnotations_numberOfProteinsNotToSample.tsv";
-		String seenNumberOfAnnotatedProteinsFile = wd + projectName + "_checkAnnotations_numberOfProteinsToSample.tsv";
+		//String unseenNumberOfAnnotatedProteinsFile = wd + projectName + "_checkAnnotations_numberOfProteinsNotToSample.tsv";
+		//String seenNumberOfAnnotatedProteinsFile = wd + projectName + "_checkAnnotations_numberOfProteinsToSample.tsv";
 		
 		int numFiles = Integer.parseInt(params.getProperty("numDegenMotifFiles"));
 		HashMap<Integer,Integer> mapOfProteinFreq = new HashMap<>();
@@ -35,13 +34,11 @@ public class checkAnnotations {
 		System.out.println("**Checking degen motifs annotation files**");
 		calculateProteinFreqFromDegenMotifs(mapOfProteinFreq, degenMotifFilesPrefix, numFiles);
 		
-		System.out.println("**Checking regular motifs annotation file**\n");
-		calculateProteinFreqFromRegularMotifs(mapOfProteinFreq, regMotifFiles);
 
 		System.out.println("**Outputing freq map**");
 		outputFreqOfProteinMap(mapOfProteinFreq, protFreqFile);
-		outputNumberOfProteinsNotSeenInAnnotationMap(mapOfProteinFreq, unseenNumberOfAnnotatedProteinsFile);
-		outputNumberOfProteinsSeenInAnnotationMap(mapOfProteinFreq, seenNumberOfAnnotatedProteinsFile);
+		//outputNumberOfProteinsNotSeenInAnnotationMap(mapOfProteinFreq, unseenNumberOfAnnotatedProteinsFile);
+		//outputNumberOfProteinsSeenInAnnotationMap(mapOfProteinFreq, seenNumberOfAnnotatedProteinsFile);
 	}
 
 	/**
@@ -104,6 +101,7 @@ public class checkAnnotations {
 	 * @param inputFiles		String - file path with annotation file prefix
 	 * @param numFiles			int - number of degenMotifs files (corresponds to the file labeling)
 	 */
+	@SuppressWarnings("unused")
 	private static void calculateProteinFreqFromRegularMotifs(HashMap<Integer, Integer> mapOfProteinFreq, String inputFile) {
 
 		InputStream in;
@@ -156,6 +154,7 @@ public class checkAnnotations {
 
 	}
 
+	@SuppressWarnings("unused")
 	private static void outputNumberOfProteinsNotSeenInAnnotationMap(HashMap<Integer,Integer> mapOfProteinFreq, String outputFile) {
 
 		try {
@@ -176,6 +175,7 @@ public class checkAnnotations {
 
 	}
 
+	@SuppressWarnings("unused")
 	private static void outputNumberOfProteinsSeenInAnnotationMap(HashMap<Integer,Integer> mapOfProteinFreq, String outputFile) {
 
 		try {
