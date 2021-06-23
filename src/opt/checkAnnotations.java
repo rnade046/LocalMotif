@@ -73,7 +73,7 @@ public class checkAnnotations {
 
 				while(line!=null) {
 
-					Integer numOfProt = Integer.parseInt(line.split("\t")[2]); // number of proteins that contain this motif
+					Integer numOfProt = Integer.parseInt(line.split("\t")[1]); // number of proteins this motif annotates
 
 					/* Update map */
 					if(mapOfProteinFreq.containsKey(numOfProt)) {	
