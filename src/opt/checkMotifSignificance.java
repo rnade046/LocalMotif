@@ -30,12 +30,12 @@ public class checkMotifSignificance {
 		
 		/* Check motifs - Map<String, Double>*/
 		System.out.println("**Searching motif clustering**");
-		HashMap<String, Double> motifsClusteringMap = searchForMotifClustering(motifsToCheck, motifsPrefix, numFiles);
+		HashMap<String, Double[]> motifsClusteringMap = searchForMotifClustering(motifsToCheck, motifsPrefix, numFiles);
 		System.out.println("Found motifs: " + motifsClusteringMap.size() + "\n");
 		
 		/* Check degen - Map<String, Double>*/ 
 		System.out.println("**Searching null clustering**");
-		HashMap<String, Double> nullClusteringMap = searchForMotifClustering(motifsToCheck, nullPrefix, numFiles);
+		HashMap<String, Double[]> nullClusteringMap = searchForMotifClustering(motifsToCheck, nullPrefix, numFiles);
 		System.out.println("Found motifs: " + nullClusteringMap.size() + "\n");
 		
 		/* print results */
@@ -67,9 +67,9 @@ public class checkMotifSignificance {
 		return motifsToCheck;
 	}
 
-	private static HashMap<String, Double> searchForMotifClustering(HashSet<String> motifsToCheck, String motifPrefix, int numFiles) {
+	private static HashMap<String, Double[]> searchForMotifClustering(HashSet<String> motifsToCheck, String motifPrefix, int numFiles) {
 
-		HashMap<String, Double> mapOfMotifClustering = new HashMap<>();
+		HashMap<String, Double[]> mapOfMotifClustering = new HashMap<>();
 
 		/* iterate over all degen motif annotation files */
 		for(int i=0; i < numFiles; i++) {
@@ -97,7 +97,10 @@ public class checkMotifSignificance {
 
 					if(motifsToCheck.contains(motif)) {
 						double tpd = Double.parseDouble(line.split("\t")[2]);
-						mapOfMotifClustering.put(motif, tpd);
+						double pval = Double.parseDouble(line.split("\t")[3]);
+						Double[] array = {tpd, pval};
+						
+						mapOfMotifClustering.put(motif, array);
 
 						if(mapOfMotifClustering.size() ==  motifsToCheck.size()) {
 							break;
@@ -115,19 +118,20 @@ public class checkMotifSignificance {
 		return mapOfMotifClustering;
 	}
 	
-	private static void printClusteringResults(HashSet<String> motifsToCheck, HashMap<String, Double> motifsClusteringMap, 
-			HashMap<String, Double> nullClusteringMap, String outputFile) {
+	private static void printClusteringResults(HashSet<String> motifsToCheck, HashMap<String, Double[]> motifsClusteringMap, 
+			HashMap<String, Double[]> nullClusteringMap, String outputFile) {
 	
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 			
-			out.write("Motif\tTPD\tNullTPD");
+			out.write("Motif\tTPD\tpval\tNullTPD\tpval\n");
 			
 			for(String motif: motifsToCheck) {
 				
 				if(motifsClusteringMap.containsKey(motif) && nullClusteringMap.containsKey(motif)) {
 
-					out.write(motif + "\t" + motifsClusteringMap.get(motif) + "\t" + nullClusteringMap + "\n");
+					out.write(motif + "\t" + motifsClusteringMap.get(motif)[0] + "\t" + motifsClusteringMap.get(motif)[1] 
+					+ "\t" + nullClusteringMap.get(motif)[0] + "\t"+ nullClusteringMap.get(motif)[1] + "\n");
 				}
 				
 			}
