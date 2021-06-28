@@ -96,9 +96,10 @@ public class checkMotifSignificance {
 					String motif = line.split("\t")[0];
 
 					if(motifsToCheck.contains(motif)) {
+						double nprot = Double.parseDouble(line.split("\t")[1]);
 						double tpd = Double.parseDouble(line.split("\t")[2]);
 						double pval = Double.parseDouble(line.split("\t")[3]);
-						Double[] array = {tpd, pval};
+						Double[] array = {nprot, tpd, pval};
 						
 						mapOfMotifClustering.put(motif, array);
 
@@ -124,14 +125,14 @@ public class checkMotifSignificance {
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 			
-			out.write("Motif\tTPD\tpval\tNullTPD\tpval\n");
+			out.write("Motif\tnProt\tTPD\tpval\tNullnProt\tNullTPD\tNullpval\n");
 			
 			for(String motif: motifsToCheck) {
 				
 				if(motifsClusteringMap.containsKey(motif) && nullClusteringMap.containsKey(motif)) {
 
-					out.write(motif + "\t" + motifsClusteringMap.get(motif)[0] + "\t" + motifsClusteringMap.get(motif)[1] 
-					+ "\t" + nullClusteringMap.get(motif)[0] + "\t"+ nullClusteringMap.get(motif)[1] + "\n");
+					out.write(motif + "\t" + motifsClusteringMap.get(motif)[0].intValue() + "\t" + motifsClusteringMap.get(motif)[1] + "\t" + motifsClusteringMap.get(motif)[2] 
+					+ "\t" + nullClusteringMap.get(motif)[0].intValue() + "\t"+ nullClusteringMap.get(motif)[1] + "\t"+ nullClusteringMap.get(motif)[2]+ "\n");
 				}
 				
 			}
