@@ -42,25 +42,39 @@ public class Main {
 		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix");
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
-		String mcSamplingPrefix = wd + "mcDistributions/" + projectName + "_mcSamplingDistribution_";
-		String normalDistributionParamsFile = wd + projectName + "_normalDistributionParams.tsv";
-		
-		String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + "_testedDegenMotifClustering_";
 
-		String significanceScoresFile = wd + projectName + "_listOfCalculatedSignificanceScores.tsv";
-		
-		File directory = new File(wd + "/mcDistributions");
+		int clusteringMeasure = Integer.parseInt(params.getProperty("clusteringMeasure", "0"));
+		double percentThreshold = Double.parseDouble(params.getProperty("percentThreshold", "0.2"));
+
+		String clusteringName = "";
+
+		switch(clusteringMeasure) {
+		case 0: clusteringName = "_TPD";
+		break;
+		case 1: clusteringName = "_coreTPD_p" + percentThreshold;
+		break;
+		case 2: clusteringName = "_TPPD_p" + percentThreshold;
+		break;
+		}
+
+		String mcSamplingPrefix = wd + "mcDistributions/" + projectName + clusteringName + "_mcSamplingDistribution_";
+		String normalDistributionParamsFile = wd + projectName + clusteringName +"_normalDistributionParams.tsv";
+
+		String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + clusteringName + "_testedDegenMotifClustering_";
+		String significanceScoresFile = wd + projectName + clusteringName + "_listOfCalculatedSignificanceScores.tsv";
+
+		File directory = new File(wd + "/mcDistributions"); 
 		if (! directory.exists()){
 			System.out.println("creating directory: mcDistributions/");
 			directory.mkdir();
 		}
-		
+
 		File directory2 = new File(wd + "/motifClustering");
 		if (! directory2.exists()){
 			System.out.println("creating directory: motifClustering/");
 			directory2.mkdir();
 		}
-		
+
 		System.out.println("**Loading interaction repository**");
 		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")));
 		System.out.println("Number of interactions:" + interactionList.size() + "\n");
@@ -104,7 +118,7 @@ public class Main {
 		int lowerBound = Integer.parseInt(params.getProperty("lowerBoundToSample", "3"));
 		int upperBound = Integer.parseInt(params.getProperty("upperBoundToSample", "2000"));
 		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
-		
+
 		if(Boolean.parseBoolean(params.getProperty("calculateProteinAnnotationFreq"))) {	
 			// For MC sampling 
 			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
@@ -116,18 +130,18 @@ public class Main {
 		/* Perform Monte Carlo Sampling procedure */
 		if(Boolean.parseBoolean(params.getProperty("performMCprocedure"))) {
 			System.out.println("**Performing Monte Carlo Sampling Procedure**");
-			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList2, distanceMatrix); // 2 - Initialize sampling
+			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList2, distanceMatrix, clusteringMeasure, percentThreshold); // 2 - Initialize sampling
 			sampling.computeMultipleDistributions(Integer.parseInt(args[1]), Integer.parseInt(args[2]), numOfSamplings, mcSamplingPrefix); // 3 - Perform sampling for n proteins
 		}
 
 		if(Boolean.parseBoolean(params.getProperty("calculateNormalDistributionParams"))) {
 			ApproximateNormalDistribuiton.getNormalDistributionParams(mcSamplingPrefix, lowerBound, upperBound, numOfSamplings, normalDistributionParamsFile);
 		}
-		
+
 		/* Load and test significance annotations */
 		if(Boolean.parseBoolean(params.getProperty("testMotifs"))) {
 			System.out.println("**Assessing motif clustering**");
-			MotifEnrichment m = new MotifEnrichment(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound);
+			MotifEnrichment m = new MotifEnrichment(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound,clusteringMeasure, percentThreshold);
 			m.testMotifClustering(degenAnnotationPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 		}
 
@@ -136,10 +150,10 @@ public class Main {
 			System.out.println("**Assessing significance scores**");
 			AssessEnrichment.assessSignificanceScores(testedDegenMotifsOutputPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), significanceScoresFile);
 		}
-		
+
 	}
 
-	
+
 	public static void printRefSeqIdsInNetwork(String outputFile, ArrayList<Protein> proteinList) {
 
 		try {

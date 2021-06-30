@@ -22,8 +22,11 @@ public class MotifEnrichment {
 	private HashMap<Integer, double[]> normalDistributionParams;
 	private int lowerBound;
 	private int upperBound;
+	private int clusteringMeasure;
+	private double percentThreshold;
 
-	public MotifEnrichment(double[][] _distance_matrix, ArrayList<Protein> proteinsInNetwork, String normalDistributionParamsFile, int _lowerBound, int _upperBound) {
+	public MotifEnrichment(double[][] _distance_matrix, ArrayList<Protein> proteinsInNetwork, String normalDistributionParamsFile, 
+			int _lowerBound, int _upperBound, int clustering_measure, double percent_threshold) {
 
 		this.distanceMatrix = _distance_matrix;
 		this.indexOfProteinsInNetwork = getIndexOfProteins(proteinsInNetwork);
@@ -31,6 +34,9 @@ public class MotifEnrichment {
 		this.normalDistributionParams = loadNormalDistributionParams(normalDistributionParamsFile);
 		this.lowerBound = _lowerBound;
 		this.upperBound = _upperBound;
+	
+		this.clusteringMeasure = clustering_measure;
+		this.percentThreshold = percent_threshold;
 	}
 
 	public void testMotifClustering(String annotationFilePrefix, String outputPrefix, int currentLowerBoundToTest, int currentUpperBoundToTest) {
@@ -74,7 +80,16 @@ public class MotifEnrichment {
 							
 							/* compute TPD */
 							ArrayList<Integer> indexOfProteinsInNetworkAnnotatedByMotif = getIndexOfProteinsInNetworkAnnotatedByMotif(proteinInNetworkAssociatedToMotif);
-							double tpd = Calculator.computeTPD(distanceMatrix, indexOfProteinsInNetworkAnnotatedByMotif);
+
+							double tpd = 0;
+							switch(clusteringMeasure) {
+							case 0: tpd = TopPercentPairwiseDistance.computeTPD(indexOfProteinsInNetworkAnnotatedByMotif, distanceMatrix);
+							break;
+							case 1: tpd = TopPercentPairwiseDistance.getTPPD(indexOfProteinsInNetworkAnnotatedByMotif, distanceMatrix, percentThreshold);
+							break;
+							case 2: tpd = TopPercentPairwiseDistance.getCoreTPD(indexOfProteinsInNetworkAnnotatedByMotif, distanceMatrix, percentThreshold);
+							break;
+							}
 							
 							/* assess clustering significance */
 							double[] params = normalDistributionParams.get(proteinInNetworkAssociatedToMotif.size());

@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.concurrent.ThreadLocalRandom;
 
 import graph.Protein;
-import utils.Calculator;
+import utils.TopPercentPairwiseDistance;
 
 public class MotifSampling {
 	/**
@@ -29,12 +29,19 @@ public class MotifSampling {
 	long maxCumulativeWeight;
 	HashSet<Integer> protsNotToSample;
 	
-	public MotifSampling(String inputFile, ArrayList<Protein> protList, double[][] dm) {
+	int clusteringMeasure;
+	double percentThreshold;
+
+	public MotifSampling(String inputFile, ArrayList<Protein> protList, double[][] dm, int clustering_measure, double percent_threshold) {
 		distanceMatrix = dm;
 		proteinsInNetworkList = protList;
+		
+		clusteringMeasure = clustering_measure;
+		percentThreshold = percent_threshold;
+		
 		proteinToOccurrenceMap = loadProteinOccurrenceList(inputFile);
 		cumulativeSumOfWeights = computeCumulativeSumOfWeights();
-		
+
 		maxCumulativeWeight = cumulativeSumOfWeights[cumulativeSumOfWeights.length-1];
 		protsNotToSample = listProteinsNotToSample();
 	}
@@ -86,7 +93,7 @@ public class MotifSampling {
 				long currentWeight = 0;
 				cumulativeWeight += currentWeight; 
 				cumulativeWeightList[i] = cumulativeWeight;
-				
+
 				System.out.print(proteinsInNetworkList.get(i).getProteinName() + "_" + i + "|");
 				countMissingProts++;
 			}
@@ -98,17 +105,17 @@ public class MotifSampling {
 
 	private HashSet<Integer> listProteinsNotToSample() {
 		HashSet<Integer> proteinsNotToSampleList = new HashSet<>();
-		
+
 		for(int i=0; i<this.proteinsInNetworkList.size(); i++) {
 			if(!this.proteinToOccurrenceMap.containsKey(this.proteinsInNetworkList.get(i).getProteinName())) {
 				proteinsNotToSampleList.add(i);
 			}
-			
+
 		}
-		
+
 		return proteinsNotToSampleList;
 	}
-	
+
 	/**
 	 * Computes distributions for multiple number of proteins in range from go_start to go_stop. 
 	 * Every distribution is output in it's own file
@@ -125,7 +132,7 @@ public class MotifSampling {
 			System.out.println("Computing TPD: " + n);
 
 			String mcFile = mcFilePrefix + "s" + numOfTimesNetworkIsSampled + "_n" + n;
-			HashMap<Double, Double> distribution = computeTPDdistribution(n, numOfTimesNetworkIsSampled);
+			HashMap<Double, Double> distribution = computeMonteCarloDistribution(n, numOfTimesNetworkIsSampled);
 
 			try {
 				BufferedWriter out = new BufferedWriter(new FileWriter(new File(mcFile)));
@@ -152,7 +159,7 @@ public class MotifSampling {
 	 * @param timesToSampleNetwork   	number of iterations to sample Network
 	 * @return the distribution of TPD for certain amount of randomly selected proteins
 	 */
-	private HashMap<Double, Double> computeTPDdistribution(int numProteinsToSample, int timesToSampleNetwork) {
+	private HashMap<Double, Double> computeMonteCarloDistribution(int numProteinsToSample, int timesToSampleNetwork) {
 
 		HashMap<Double, Double> distribution;
 
@@ -185,16 +192,24 @@ public class MotifSampling {
 			if(i%10000 == 0) {
 				System.out.print(i + ".");
 			}
-			
+
 			if(i%100000 == 0) {
 				System.out.println();
 			}
-			
+
 			/* select proteins from the weighted list (ie. proteins are proportional to their occurrence in annotation list */
 			ArrayList<Integer> randomProteins = getRandomWeightedProteinsWithBinarySearch(numProteinsToSample);
 
 			/* compute the total pairwise distance from the proteins selected above */
-			tpdSampleList[i] = Calculator.computeTPD(distanceMatrix, randomProteins);
+			switch(clusteringMeasure) {
+			case 0: tpdSampleList[i] = TopPercentPairwiseDistance.computeTPD(randomProteins, distanceMatrix);
+			break;
+			case 1: tpdSampleList[i] = TopPercentPairwiseDistance.getTPPD(randomProteins, distanceMatrix, percentThreshold);
+			break;
+			case 2: tpdSampleList[i] = TopPercentPairwiseDistance.getCoreTPD(randomProteins, distanceMatrix, percentThreshold);
+			break;
+			}
+
 		}
 		System.out.print("Done\n");
 		return tpdSampleList;
@@ -217,15 +232,15 @@ public class MotifSampling {
 			/* protein corresponding to selected random weight will be the first protein to be greater or equal to the weight */
 			for(int protIndex=0; protIndex<this.cumulativeSumOfWeights.length; protIndex++) {
 				if(selectedWeight < this.cumulativeSumOfWeights[protIndex]) {
-					
+
 					if(this.listProteinsNotToSample().contains(protIndex)) {
 						System.out.println("ERROR: Sampled Protein " + protIndex);
 					}
-					
+
 					if(!randomProteins.contains(protIndex)) {
 						randomProteins.add(protIndex);
 					}
-					
+
 					break; // when protein index is identified break out of the loop
 				} 
 			}
@@ -250,7 +265,7 @@ public class MotifSampling {
 			long selectedWeight = ThreadLocalRandom.current().nextLong(this.maxCumulativeWeight); // math random return number between 0 and 1 
 			int l = 0;
 			int r = this.cumulativeSumOfWeights.length;
-			
+
 			/* protein corresponding to selected random weight will be the first protein to be greater or equal to the weight */
 			while(l < r) {
 				int m = (int) Math.floor((l+r)/ (double)2);
@@ -260,13 +275,13 @@ public class MotifSampling {
 					r = m;
 				}
 			}
-			
+
 			if(!randomProteinsIdxList.contains(l)) {
 				randomProteinsIdxList.add(l);
 			}
 		}
 		return randomProteinsIdxList;
 	}
-	
+
 }
 

@@ -7,6 +7,46 @@ import java.util.Map.Entry;
 
 public class TopPercentPairwiseDistance {
 
+	
+    /**
+     * Computes the total pairwise distance from a list of protein indexes of
+     * interest corresponding to proteins in the network, using the distances found
+     * in the distance matrix
+     * 
+     * @param distance_matrix
+     * @param proteinIdxList : list of protein indexes in distance matrix
+     * @return total pairwise distance
+     **/
+    public static double computeTPD(ArrayList<Integer> proteinIdxList, double[][] distance_matrix) {
+        
+
+        double distance = 0; // initialize distance
+
+        // read distance matrix to get sum of distances between significant proteins
+        for (int i = 0; i < proteinIdxList.size(); i++) {
+            for (int j = i + 1; j < proteinIdxList.size(); j++) {
+            	
+                if (i > distance_matrix.length || j > distance_matrix.length) {
+                    System.out.println("error");
+                }
+                
+                if (distance_matrix[proteinIdxList.get(i)][proteinIdxList.get(j)] == Double.MAX_VALUE || distance == Double.MAX_VALUE) {
+                    distance = Double.MAX_VALUE;
+                } else {
+                    // indexes of proteins of interests are found in the array list indexProt
+                    distance += distance_matrix[proteinIdxList.get(i)][proteinIdxList.get(j)];
+                }
+                
+            }
+        }
+        if(distance == 0.0) {
+        	System.out.println("tpd = 0");
+        }
+        
+        return (double) Math.round(distance * 100d) / 100d;
+
+    }
+	
 	/**
 	 * For a given list of protein indexes within the network, identify the core proteins, and compute their top % pairwise distance. 
 	 * 
