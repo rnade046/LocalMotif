@@ -1,6 +1,7 @@
 package utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -68,7 +69,7 @@ public class TopPercentPairwiseDistance {
 		/* Compute top percent pairwise distance */
 		double tppd = computeTPPD(sortedPaths, percentThreshold);
 		
-		return tppd;
+		return (double) Math.round(tppd * 1000d) / 1000d;
 	}
 
 	/**
@@ -89,7 +90,7 @@ public class TopPercentPairwiseDistance {
 		/* compute total pairwise distance for core proteins */
 		double coreTPD = computeCoreTPD(coreProteins, distanceMatrix);
 		
-		return coreTPD;
+		return (double) Math.round(coreTPD * 1000d) / 1000d;
 	}
 	
 	/**
@@ -144,7 +145,7 @@ public class TopPercentPairwiseDistance {
 
 		for(int i=0; i<coreNodesIdxs.size(); i++) {
 			for(int j=i+1; j<coreNodesIdxs.size(); j++) {
-				coreTPD += distanceMatrix[i][j];
+				coreTPD += distanceMatrix[coreNodesIdxs.get(i)][coreNodesIdxs.get(j)];
 			}
 		}
 		
@@ -179,9 +180,11 @@ public class TopPercentPairwiseDistance {
 		/* get all paths */
 		for(int i=0; i<coreIdxs.size(); i++) {
 			for(int j=i+1; j<orderedIdxs.size(); j++) {
-				allPaths.add(distanceMatrix[i][j]);
+				allPaths.add(distanceMatrix[coreIdxs.get(i)][orderedIdxs.get(j)]);
 			}
 		}
+		
+		Collections.sort(allPaths);   
 		
 		return allPaths;
 	}

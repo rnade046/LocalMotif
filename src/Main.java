@@ -51,9 +51,9 @@ public class Main {
 		switch(clusteringMeasure) {
 		case 0: clusteringName = "_TPD";
 		break;
-		case 1: clusteringName = "_coreTPD_p" + percentThreshold;
+		case 1: clusteringName = "_TPPD_p" + percentThreshold;
 		break;
-		case 2: clusteringName = "_TPPD_p" + percentThreshold;
+		case 2: clusteringName = "_coreTPD_p" + percentThreshold;
 		break;
 		}
 
@@ -71,7 +71,7 @@ public class Main {
 
 		File directory2 = new File(wd + "/motifClustering");
 		if (! directory2.exists()){
-			System.out.println("creating directory: motifClustering/");
+			System.out.println("creating directory: motifClustering/ \n");
 			directory2.mkdir();
 		}
 
