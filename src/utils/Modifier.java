@@ -135,7 +135,7 @@ public class Modifier {
 		 ***********************************************************************************/
 		for (int h = 0; h < clusterList.size(); h++) {
 			Annotation cluster = clusterList.get(h);
-			double tpd = Calculator.computeTPD(distance_matrix, cluster.getIdxProteinsList());
+			double tpd = TopPercentPairwiseDistance.computeTPD(cluster.getIdxProteinsList(), distance_matrix);
 			cluster.setTPD(tpd);
 			if(h%100 == 0) {
 				System.out.print(h + "|");

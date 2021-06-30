@@ -1,7 +1,7 @@
 package sampling;
 
 import graph.Annotation;
-import utils.Calculator;
+import utils.TopPercentPairwiseDistance;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -149,7 +149,7 @@ public class Sampling {
 			}
 
 			/* compute the total pairwise distance from the proteins selected above */
-			tpdSampleList[i] = Calculator.computeTPD(distanceMatrix, randomProteins);
+			tpdSampleList[i] = TopPercentPairwiseDistance.computeTPD(randomProteins, distanceMatrix);
 		}
 
 		return tpdSampleList;
