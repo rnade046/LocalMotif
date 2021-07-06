@@ -1,4 +1,4 @@
-package opt;
+package ClusteredMotifs;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -30,6 +30,7 @@ public class FindSignificantMotifs {
 		try {
 			
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			out.write("motif\tnProts\tTPD\tPval\t#File\n");
 			
 			for(int i=0; i<numOfFiles; i++) {
 
@@ -44,7 +45,8 @@ public class FindSignificantMotifs {
 					
 					double pval = Double.parseDouble(line.split("\t")[3]);
 					if(pval <= pvalThreshold) {
-						out.write(line + "\n");
+						out.write(line + "\t" + i + "\n");
+						
 					}
 					
 					line = input.readLine();
