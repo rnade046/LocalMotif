@@ -19,10 +19,18 @@ public class AssessEnrichment {
 		
 		for(int i=0; i<numOfDegenMotifFiles; i++) {
 			String degenMotifClusteringFile = degenMotifsClusteringFilesPrefix + i;
-			getSignificantScores(degenMotifClusteringFile, significantScoresList);
-		}
+			
+			File f = new File(degenMotifClusteringFile);
+			if(f.exists()) {
+				getSignificantScores(degenMotifClusteringFile, significantScoresList);
+			} else {
+				System.out.println("No file: " + i + "\n");
+			}
+			
+		} 
 		
 		printSignifcanceScores(significantScoresList, outputFile);
+		System.out.println("Done");
 	}
 	
 	private static void getSignificantScores(String inputFile, ArrayList<Double> significanceScoresList){
