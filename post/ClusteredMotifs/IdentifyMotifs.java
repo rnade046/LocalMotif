@@ -13,14 +13,6 @@ import java.util.Map.Entry;
 
 public class IdentifyMotifs {
 
-	public static void getMotifs() {
-
-
-
-
-		/* Search through annotation Files to get proteins annotated by */
-
-	}
 
 	/**
 	 * Identify the motifs that are significantly clustered at the specified p-value threshold.
@@ -80,37 +72,44 @@ public class IdentifyMotifs {
 	 * 
 	 * @return motifMapOfannotatedProteins	Map<String, String[]> - map of motif and it's list of annotated proteins
 	 */
-	public static HashMap<String, String[]> getAnnotatedProteinInfo(HashMap<String, Integer> motifMapOfFileIdxs, String annotationFilePrefix){
+	public static HashMap<String, String[]> getAnnotatedProteinInfo(HashMap<String, Integer> motifMapOfFileIdxs, String annotationFilePrefix, String outputFile){
 
 		HashMap<String, String[]> motifMapOfAnnotatedProteins = new HashMap<>();
 
-		/* Search for every motif */
-		for(Entry<String, Integer> m: motifMapOfFileIdxs.entrySet()) {
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 
-			String annotationFile = annotationFilePrefix + m.getValue();
-			String motif = m.getKey();
-			try {
+			/* Search for every motif */
+			for(Entry<String, Integer> m: motifMapOfFileIdxs.entrySet()) {
+
+				String annotationFile = annotationFilePrefix + m.getValue();
+				String motif = m.getKey();
+
 				InputStream in = new FileInputStream(new File(annotationFile));
 				BufferedReader input = new BufferedReader(new InputStreamReader(in));
-				
+
 				String line = input.readLine();
-				
+
 				while(line!=null) {
-					
+
 					/* Store annotated proteins for the found motif && break out of loop */
 					if(line.split("\t")[0].equals(motif)) {
 						motifMapOfAnnotatedProteins.put(motif, line.split("\t")[2].split("|"));
+						
+						out.write(line + "\n");
+						out.flush();
 						break;  
 					}
 					line = input.readLine();
 				}
-				
-				input.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 
+				input.close();
+			}
+
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		return motifMapOfAnnotatedProteins;
 	}
 
