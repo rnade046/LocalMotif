@@ -190,7 +190,7 @@ public class MotifSampling {
 		for (int i = 0; i < timesToSampleNetwork; i++) {
 
 			if(i%10000 == 0) {
-				System.out.print(i + ".");
+				System.out.println(i + ".");
 			}
 
 			if(i%100000 == 0) {

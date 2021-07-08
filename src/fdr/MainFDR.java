@@ -22,12 +22,26 @@ public class MainFDR {
 		//String motifsPrefix = wd + "motifClustering/" + projectName + "_testedDegenMotifClustering_";
 		//String nullMotifsPrefix = wd + "motifClustering/" + projectName + "_testedDegenMotifClustering_";
 
-		String motifs_significanceScoresFile = wd + "fdr/" + projectName + "_listOfCalculatedSignificanceScores.tsv";
-		String nullModel_significanceScoresFile = wd + "fdr/" + projectName + "_nullModel_listOfCalculatedSignificanceScores.tsv";
+		int clusteringMeasure = Integer.parseInt(params.getProperty("clusteringMeasure", "0"));
+		double percentThreshold = Double.parseDouble(params.getProperty("percentThreshold", "0.2"));
+
+		String clusteringName = "";
+
+		switch(clusteringMeasure) {
+		case 0: clusteringName = "";
+		break;
+		case 1: clusteringName = "_TPPD" + percentThreshold;
+		break;
+		case 2: clusteringName = "_coreTPD" + percentThreshold;
+		break;
+		}
+		
+		String motifs_significanceScoresFile = wd + "fdr/" + projectName + clusteringName + "_listOfCalculatedSignificanceScores.tsv";
+		String nullModel_significanceScoresFile = wd + "fdr/" + projectName + "_nullModel" + clusteringName + "_listOfCalculatedSignificanceScores.tsv";
 		
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		String fdrOutput = wd + "fdr/" + sdf1.format(timestamp) + "_" + projectName + "_FDRatThresholds_monotonicTransformation.tsv";
+		String fdrOutput = wd + "fdr/" + sdf1.format(timestamp) + "_" + projectName + clusteringName + "_FDRatThresholds_monotonicTransformation.tsv";
 		//String significantMotifs = wd + pro
 		
 		/* Get list of significance scores */

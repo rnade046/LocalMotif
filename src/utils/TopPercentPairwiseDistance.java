@@ -58,14 +58,14 @@ public class TopPercentPairwiseDistance {
 	 * @return tppd						double top percent pairwise distance
 	 */
 	public static double getTPPD(ArrayList<Integer> annotatedProteinsIndexes, double[][] distanceMatrix, double percentThreshold) {
-
+		
 		/* Identify core nodes */
 		int nodeThreshold = (int) Math.ceil(annotatedProteinsIndexes.size()*percentThreshold); // determine number of core proteins
 		ArrayList<Integer> coreProteins = getCoreProteins(annotatedProteinsIndexes, distanceMatrix, nodeThreshold); 	// Identify core proteins
 		
 		/* List sorted paths involving  */
 		ArrayList<Double> sortedPaths = getPaths(coreProteins, annotatedProteinsIndexes, distanceMatrix);
-
+		
 		/* Compute top percent pairwise distance */
 		double tppd = computeTPPD(sortedPaths, percentThreshold);
 		
