@@ -37,7 +37,15 @@ public class IdentifyMotifs {
 
 			/* search all files for significant motifs */
 			for(int i=0; i<numOfFiles; i++) {
-
+				
+				if(i%10 == 0) {
+					System.out.print(i + ".");
+				}
+				
+				if(i%100 == 0) {
+					System.out.println();
+				}
+				
 				String motifClusteringFile = motifClusteringPrefix + i;
 
 				InputStream in = new FileInputStream(new File(motifClusteringFile));
@@ -61,27 +69,67 @@ public class IdentifyMotifs {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		System.out.println("Done");
 		return motifsMapFileIdx;
 	}
+	
+	
+	public static HashMap<String, Integer> loadSignificantMotifs(String motifClusteringFile) {
+
+		HashMap<String, Integer> motifsMapFileIdx = new HashMap<>();
+
+		try {
+
+				InputStream in = new FileInputStream(new File(motifClusteringFile));
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+				String line = input.readLine();
+
+				while(line!=null) {
+
+					motifsMapFileIdx.put(line.split("\t")[0], 1);
+					
+					line = input.readLine();
+				}
+				input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Done");
+		return motifsMapFileIdx;
+	}
+	
 
 	/**
 	 * Find each significant motif in the annotation file and obtain the proteins in annotates, store in map. 
 	 * 
-	 * @param motifMapOfFileIdxs	Map<String, Integer> - map of motifs and their corresponding file idex
+	 * @param motifMapOfFileIdxs	Map<String, Integer> - map of motifs and their corresponding file index
 	 * @param annotationFilePrefix	String - file path prefix to annotation files
 	 * 
 	 * @return motifMapOfannotatedProteins	Map<String, String[]> - map of motif and it's list of annotated proteins
 	 */
-	public static HashMap<String, String[]> getAnnotatedProteinInfo(HashMap<String, Integer> motifMapOfFileIdxs, String annotationFilePrefix, String outputFile){
+	public static HashMap<String, String[]> getAnnotatedProteinInfo(HashMap<String, Integer> motifMapOfFileIdxs, String annotationFilePrefix){
 
 		HashMap<String, String[]> motifMapOfAnnotatedProteins = new HashMap<>();
 
 		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			//BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 
 			/* Search for every motif */
+			int motifCount = 0;
 			for(Entry<String, Integer> m: motifMapOfFileIdxs.entrySet()) {
-
+				motifCount++;
+				
+				if(motifCount%10==0) {
+					System.out.print(motifCount + ".");
+				}
+				
+				if(motifCount%100==0) {
+					System.out.println();
+				}
+				
 				String annotationFile = annotationFilePrefix + m.getValue();
 				String motif = m.getKey();
 
@@ -96,8 +144,8 @@ public class IdentifyMotifs {
 					if(line.split("\t")[0].equals(motif)) {
 						motifMapOfAnnotatedProteins.put(motif, line.split("\t")[2].split("|"));
 						
-						out.write(line + "\n");
-						out.flush();
+						//out.write(line + "\n");
+						//out.flush();
 						break;  
 					}
 					line = input.readLine();
@@ -106,11 +154,39 @@ public class IdentifyMotifs {
 				input.close();
 			}
 
-			out.close();
+			//out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println("Done");
 		return motifMapOfAnnotatedProteins;
 	}
 
+	
+	public static HashMap<String, String[]> getAnnotatedProteinInfoForTesting(String annotationFile){
+
+		HashMap<String, String[]> motifMapOfAnnotatedProteins = new HashMap<>();
+
+		try {
+			//BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+
+			InputStream in = new FileInputStream(new File(annotationFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+			
+			String line = input.readLine();
+
+			while(line!=null) {
+			
+				String[] col = line.split("\t");
+				motifMapOfAnnotatedProteins.put(col[0], col[2].split("\\|"));
+				
+				line = input.readLine();
+			}
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Done");
+		return motifMapOfAnnotatedProteins;
+	}
 }

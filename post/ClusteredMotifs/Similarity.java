@@ -23,47 +23,91 @@ public class Similarity {
 	 * @param outputFile
 	 * @param distanceOutputFile
 	 */
-	public static void computeMotifSimilary(HashMap<String, String[]> motifMapOfAnnotatedProteins, String outputFile, String distanceOutputFile) {
+	public static void computeMotifSimilary(HashMap<String, String[]> motifMapOfAnnotatedProteins, String motifsOutputFile, String distanceOutputFile) {
+
+		double[][] distanceMatrix = new double[motifMapOfAnnotatedProteins.size()][motifMapOfAnnotatedProteins.size()];
 
 		double maxDistance = 0;
 		boolean containsMaxValue = false;
+
+		/* initialize distance matrix */
+		List<String> motifs = new ArrayList<>(motifMapOfAnnotatedProteins.keySet());
+		printMotifOrder(motifs, motifsOutputFile);
+		for(int i=0; i<motifs.size(); i++) {
+			
+			if(i%10 == 0) {
+				System.out.print(i + ".");
+			}
+
+			if(i%100 == 0) {
+				System.out.println();
+			}
+
+			for(int j=i+1; j<motifs.size(); j++) {
+
+				double distance = computeDistanceSimilarity(motifMapOfAnnotatedProteins.get(motifs.get(i)), motifMapOfAnnotatedProteins.get(motifs.get(j)));
+
+				distanceMatrix[i][j] = distance;
+				distanceMatrix[j][i] = distance;
+				
+				if(distance == Double.MAX_VALUE) {
+					containsMaxValue = true;
+				}
+
+				if(distance != Double.MAX_VALUE && distance > maxDistance) {
+					maxDistance = distance;
+				}
+				
+			}	
+
+		}
 		
-		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
-
-			List<String> motifs = new ArrayList<>(motifMapOfAnnotatedProteins.keySet());
-
+		if(containsMaxValue) {
+			System.out.println("**Updating max distance**");
+			
+			double newDistance = maxDistance + 1;
+			
 			for(int i=0; i<motifs.size(); i++) {
+				
+				if(i%10 == 0) {
+					System.out.print(i + ".");
+				}
+
+				if(i%100 == 0) {
+					System.out.println();
+				}
+				
 				for(int j=i+1; j<motifs.size(); j++) {
-
-					double distance = computeDistanceSimilarity(motifMapOfAnnotatedProteins.get(motifs.get(i)), motifMapOfAnnotatedProteins.get(motifs.get(j)));
-					
-					if(distance == Double.MAX_VALUE) {
-						containsMaxValue = true;
+					if(distanceMatrix[i][j] == Double.MAX_VALUE) {
+						distanceMatrix[i][j] = newDistance;
+						distanceMatrix[j][i] = newDistance;
 					}
-					
-					if(distance != Double.MAX_VALUE && distance > maxDistance) {
-						maxDistance = distance;
-					}
-
-					out.write(motifs.get(i) + "\t" + motifs.get(j) + "\t" + distance + "\n");
-					out.flush();
 				}
 			}
+		}
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(distanceOutputFile)));
+			
+			for(int i=0; i<motifs.size(); i++) {
+				for(int j=0; j<motifs.size(); j++) {
+					out.write(distanceMatrix[i][j] + "\t");
+				}
+			out.write("\n");
+			out.flush();
+			}
+
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		if(containsMaxValue) {
-			updateDistanceSimilarity(outputFile, maxDistance, distanceOutputFile);
-		}
 	}
 
 	public static void updateDistanceSimilarity(String distanceMatrixFile, double maxDistance, String distanceOutputFile) {
 
 		double newDistance = maxDistance + 1;
-		
+
 		try {
 			InputStream in = new FileInputStream(new File(distanceMatrixFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
@@ -71,15 +115,15 @@ public class Similarity {
 
 			String line = input.readLine();
 			while(line!=null) {
-				
+
 				String[] col = line.split("\t");
 				if(Double.parseDouble(col[2]) == Double.MAX_VALUE){
 					out.write(col[0] + "\t" +col[1] + "\t" + newDistance + "\n");
 				}
-				
+
 				line = input.readLine();
 			}
-			
+
 			out.close();
 			input.close();
 		} catch (IOException e) {
@@ -88,6 +132,22 @@ public class Similarity {
 
 	}
 
+	private static void printMotifOrder(List<String> motifs, String outputFile) {
+		
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			
+			for(int i=0; i<motifs.size(); i++) {
+				out.write(motifs.get(i) + "\n");
+				out.flush();
+			}
+
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private static double computeDistanceSimilarity(String[] annotatedProteinList1, String[] annotatedProteinList2) {
 
 		HashSet<String> proteinList2 = new HashSet<>(Arrays.asList(annotatedProteinList2)); 
