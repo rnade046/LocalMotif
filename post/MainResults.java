@@ -61,9 +61,15 @@ public class MainResults {
 		HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.getAnnotatedProteinInfoForTesting(extractedAnnotationsFile);
 		System.out.println("Found motif info: " + motifMapOfAnnotatedProteins.size() + "\n");
 		
-		System.out.println("**Computing similarity**");
-		Similarity.computeMotifSimilary(motifMapOfAnnotatedProteins, motifsInMatrixFile, similarityMatrix);
+		if(Boolean.parseBoolean(params.getProperty("computeSimilarity"))) {
+			System.out.println("**Computing similarity**");
+			Similarity.computeMotifSimilary(motifMapOfAnnotatedProteins, motifsInMatrixFile, similarityMatrix);
+		}
+		
+		/* output to R : perform hierarchical clustering*/
 	
+		
+		
 	}
 
 	
