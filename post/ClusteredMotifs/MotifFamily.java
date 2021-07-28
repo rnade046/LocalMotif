@@ -20,24 +20,26 @@ public class MotifFamily {
 
 
 	public static void assessMotifFamilies(String motifFamilyFilePrefix, int numberOfFamilies,
-			String clusteringFilePrefix, int numberOfClusteringFiles, String refSeqToMotifFile, String outputFile) {
+			String clusteringFilePrefix, int numberOfClusteringFiles, String refSeqToMotifFile, String outputFilePrefix) {
 
 		for(int i=1; i<=numberOfFamilies; i++) {
 
-			String motifFamilyFile = motifFamilyFilePrefix + i;
+			String motifFamilyFile = motifFamilyFilePrefix + i + ".tsv";
 
 			/* Load motifs in motif family identified during hierarchical clustering step */ 
 			HashSet<String> motifSet = loadMotifsInFamily(motifFamilyFile);
-			
+
 			/* Obtain significant clustering information for every motif */
 			HashMap<String, Double> motifSignificantMap = getMotifSignificance(motifSet, clusteringFilePrefix, numberOfClusteringFiles);
-			
+
 			/* Identify representative motif from list */
 			String representativeMotif = getRepresentativeMotif(motifSignificantMap);
-		
+
 			HashSet<String> possibleMotifSet = getPossibleInstancesOfMotif(representativeMotif);
-			
+
 			ArrayList<String> motifInstances = getInstancesOfMotifs(possibleMotifSet, refSeqToMotifFile);
+
+			String outputFile = outputFilePrefix + i + ".tsv";
 			printMotifs(motifInstances, outputFile);
 		}
 	}
@@ -79,7 +81,7 @@ public class MotifFamily {
 
 				String clusteringFile = clusteringFilePrefix + i;
 				try {
-					InputStream in = new FileInputStream(new File(clusteringFile));
+					InputStream in = new FileInputStream(new File(clusteringFilePrefix));
 					BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 					String line = input.readLine();
@@ -151,7 +153,7 @@ public class MotifFamily {
 						degenCount++;
 					}
 				}
-				
+
 				if(degenCount < maxDegenCount) {
 					repMotif = motif;
 					maxDegenCount = degenCount;
@@ -166,16 +168,16 @@ public class MotifFamily {
 	}
 
 	private static HashSet<String> getPossibleInstancesOfMotif(String repMotif){
-		
+
 		HashMap<Character, Character[]> charMap = defineDegenCharacterMap();
 		int solutions = calculateSolutions(repMotif, charMap);
-		
+
 		HashSet<String> possibleMotifSet = getAllMotifs(repMotif, solutions, charMap);
-		
-		
+
+
 		return possibleMotifSet;
 	}
-	
+
 	/**
 	 * Define the RNA nucleotide mapping to their possible substitutions (ie. degenerate characters)
 	 * Note: for now this is fix - this could be passed as an input parameter in the future to enable 
@@ -210,10 +212,10 @@ public class MotifFamily {
 		charMap.put('H', h);
 		charMap.put('V', v);
 		charMap.put('*', x);
-		
+
 		return charMap;
 	}
-	
+
 	/**
 	 * Determine the number of possible solutions that will be generated for the given motif length
 	 * This function works simply because there's the same amount of possible letters for each nucleotide
@@ -257,18 +259,18 @@ public class MotifFamily {
 				j *= set.length;
 			}
 
-				motifs.add(seq);
+			motifs.add(seq);
 
 		}	
 		return motifs;
 	}
-	
+
 	private static ArrayList<String> getInstancesOfMotifs(HashSet<String> possibleMotifs, String motifsToRefSeqFile) {
 
 		/* Search fasta sequence; find instance of motif (ie. convert degen motif to non degen) ; print PWM to file */
 
 		ArrayList<String> instanceOfMotifList = new ArrayList<>();
-		
+
 		try {
 			InputStream in = new FileInputStream(new File(motifsToRefSeqFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
@@ -277,14 +279,15 @@ public class MotifFamily {
 
 			while(line != null) {
 
-				HashSet<String> allMotifsSet = new HashSet<>(Arrays.asList(line.split("\t")[1].split("\\|")));
-				
-				for(String motif : possibleMotifs) {
-					if(allMotifsSet.contains(motif)) {
-						instanceOfMotifList.add(motif);
+				if(line.split("\t").length > 1){
+					HashSet<String> allMotifsSet = new HashSet<>(Arrays.asList(line.split("\t")[1].split("\\|")));
+
+					for(String motif : possibleMotifs) {
+						if(allMotifsSet.contains(motif)) {
+							instanceOfMotifList.add(motif);
+						}
 					}
 				}
-				
 				line = input.readLine();
 			}
 
@@ -304,13 +307,13 @@ public class MotifFamily {
 				out.write(motif + "\n");
 				out.flush();
 			}
-			
-			
+
+
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
-	
+
 }
