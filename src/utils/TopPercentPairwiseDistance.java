@@ -1,8 +1,10 @@
 package utils;
 
+import java.security.acl.LastOwnerException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -59,15 +61,25 @@ public class TopPercentPairwiseDistance {
 	 */
 	public static double getTPPD(ArrayList<Integer> annotatedProteinsIndexes, double[][] distanceMatrix, double percentThreshold) {
 		
+		System.out.println("**GET TPPD**");
 		/* Identify core nodes */
 		int nodeThreshold = (int) Math.ceil(annotatedProteinsIndexes.size()*percentThreshold); // determine number of core proteins
+		long startTime = System.currentTimeMillis();
 		ArrayList<Integer> coreProteins = getCoreProteins(annotatedProteinsIndexes, distanceMatrix, nodeThreshold); 	// Identify core proteins
+		long endTime = System.currentTimeMillis();
+		System.out.println("*CoreProteins total: " + (endTime - startTime) + "\n");
 		
 		/* List sorted paths involving  */
+		startTime = System.currentTimeMillis();
 		ArrayList<Double> sortedPaths = getPaths(coreProteins, annotatedProteinsIndexes, distanceMatrix);
+		endTime = System.currentTimeMillis();
+		System.out.println("Getting + sorting shortest paths total : " + (endTime - startTime) + "\n");
 		
 		/* Compute top percent pairwise distance */
+		startTime = System.currentTimeMillis();
 		double tppd = computeTPPD(sortedPaths, percentThreshold);
+		endTime = System.currentTimeMillis();
+		System.out.println("TPPD total: " + (endTime - startTime) + "\n");
 		
 		return (double) Math.round(tppd * 1000d) / 1000d;
 	}
@@ -107,6 +119,7 @@ public class TopPercentPairwiseDistance {
 		ArrayList<Integer> coreProteinsList = new ArrayList<>(); 
 
 		/* Calculate the sum of interaction weights for the protein to all proteins annotated */
+		long startTime = System.currentTimeMillis();
 		HashMap<Integer, Double> mapOfSumInteractionWeights = new HashMap<>();
 		for(int proteinIdx : proteinIndexes) {
 			double sumOfWeights = 0;
@@ -117,16 +130,26 @@ public class TopPercentPairwiseDistance {
 
 			mapOfSumInteractionWeights.put(proteinIdx, sumOfWeights);
 		}
-
+		long endTime = System.currentTimeMillis();
+		System.out.println("coreProts sum: " + (endTime - startTime));
+		
 		/* Sort map by value */
+		
+		startTime = System.currentTimeMillis();
 		List<Entry<Integer, Double>> rankedProteinslist = new ArrayList<>(mapOfSumInteractionWeights.entrySet());
 		rankedProteinslist.sort(Entry.comparingByValue());
-
+		endTime = System.currentTimeMillis();
+		
+		System.out.println("rank sums: " + (endTime - startTime));
+		
+		startTime = System.currentTimeMillis();
 		/* Identify top % nodes */ 
 		for(int i=0; i<nodeThreshold; i++) {
 			coreProteinsList.add(rankedProteinslist.get(i).getKey());
 		}
-
+		endTime = System.currentTimeMillis();
+		System.out.println("get core nodes: " + (endTime -startTime));
+		
 		return coreProteinsList;
 	}
 
@@ -168,6 +191,7 @@ public class TopPercentPairwiseDistance {
 		ArrayList<Double> allPaths = new ArrayList<>();
 		
 		/* sort allIdx */
+		long startTime = System.currentTimeMillis();
 		ArrayList<Integer> orderedIdxs = new ArrayList<>();
 		orderedIdxs.addAll(coreIdxs);
 		
@@ -177,16 +201,89 @@ public class TopPercentPairwiseDistance {
 			}
 		}
 		
+		long endTime = System.currentTimeMillis();
+		System.out.println("order idxs: " + (endTime - startTime));
+		
+		startTime = System.currentTimeMillis();
 		/* get all paths */
 		for(int i=0; i<coreIdxs.size(); i++) {
 			for(int j=i+1; j<orderedIdxs.size(); j++) {
 				allPaths.add(distanceMatrix[coreIdxs.get(i)][orderedIdxs.get(j)]);
 			}
 		}
+		endTime = System.currentTimeMillis();
+		System.out.println("get paths: " + (endTime - startTime));
 		
+		startTime = System.currentTimeMillis();
 		Collections.sort(allPaths);   
+		endTime = System.currentTimeMillis();
+				
+		System.out.println("sort paths: " + (endTime-startTime));
 		
 		return allPaths;
+	}
+	
+	private static ArrayList<Double> getTopPaths(ArrayList<Integer> coreIdxs, ArrayList<Integer> allIdxs, double[][] distanceMatrix, double threshold){
+		ArrayList<Double> sortedPaths = new ArrayList<>();
+		
+		/* sort allIdx */
+		ArrayList<Integer> orderedIdxs = new ArrayList<>();
+		HashSet<Integer> coreIdxSet = new HashSet<>(coreIdxs);
+		orderedIdxs.addAll(coreIdxs);
+		
+		for(int idx: allIdxs) {
+			if(!coreIdxSet.contains(idx)) {
+				orderedIdxs.add(idx);
+			}
+		}
+		
+		/* Calculate total paths */
+		int totalPaths = 0;
+		for(int i=0; i<coreIdxs.size(); i++) {
+			totalPaths += (orderedIdxs.size()-(i+1));
+		}
+		
+		/* determine max number of paths that will be considered */
+		int maxPaths = (int) Math.ceil(totalPaths * threshold);
+		
+		for(int i=0; i<coreIdxs.size(); i++) {
+			for(int j=i+1; j<orderedIdxs.size(); j++) {
+				
+				double currentPath = distanceMatrix[coreIdxs.get(i)][orderedIdxs.get(j)];
+				
+				if(sortedPaths.size() < 1 ) {
+					sortedPaths.add(currentPath);
+				} else if(sortedPaths.size() < maxPaths) {
+					/* add elements to list, ensuring it stays sorted with binary search */
+					int idx = binarySearch_leftmostIdx(sortedPaths, currentPath);
+					sortedPaths.add(idx, currentPath);
+				} else if(currentPath <= sortedPaths.get(maxPaths-1)) {
+					/* add element in a sorted fashion if the current paths value is smaller than the max path + remove max element */
+					int idx = binarySearch_leftmostIdx(sortedPaths, currentPath);
+					sortedPaths.add(idx, currentPath);
+					sortedPaths.remove(maxPaths-1);
+				}
+			}
+		}
+		return sortedPaths;
+	}
+	
+	private static int binarySearch_leftmostIdx(ArrayList<Double> sortedPaths, double currentPath) {
+		
+		int l = 0;
+		int r = sortedPaths.size();
+
+		/* protein corresponding to selected random weight will be the first protein to be greater or equal to the weight */
+		while(l < r) {
+			int m = (int) Math.floor((l+r)/ (double)2);
+			if(sortedPaths.get(m) < currentPath) {
+				l = m + 1;
+			} else { 
+				r = m;
+			}
+		}
+		
+		return l;
 	}
 	
 	/**

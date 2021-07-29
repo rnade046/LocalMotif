@@ -2,8 +2,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -23,6 +25,7 @@ public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 
+		
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
 		params.load(new FileInputStream(args[0]));		
@@ -30,6 +33,7 @@ public class Main {
 		String wd = params.getProperty("working_directory");
 		String projectName = params.getProperty("project_name");
 
+		System.setOut(new PrintStream(new FileOutputStream(wd + "tppd-test-n1985-s1000-terminal.txt")));
 		String fastaFile = wd + params.getProperty("fastaFile");
 		String mapProtToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds");
 
