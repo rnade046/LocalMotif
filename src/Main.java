@@ -33,7 +33,6 @@ public class Main {
 		String wd = params.getProperty("working_directory");
 		String projectName = params.getProperty("project_name");
 
-		System.setOut(new PrintStream(new FileOutputStream(wd + "tppd-test-n1985-s1000-terminal.txt")));
 		String fastaFile = wd + params.getProperty("fastaFile");
 		String mapProtToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds");
 
