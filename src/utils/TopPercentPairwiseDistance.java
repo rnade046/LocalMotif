@@ -10,7 +10,6 @@ import java.util.PriorityQueue;
 
 public class TopPercentPairwiseDistance {
 
-	
     /**
      * Computes the total pairwise distance from a list of protein indexes of
      * interest corresponding to proteins in the network, using the distances found
@@ -263,9 +262,8 @@ public class TopPercentPairwiseDistance {
 	private static double computeTPPD(ArrayList<Double> sortedPaths, double percentThreshold) {
 		
 		double tppd = 0;
-		int threshold = (int) Math.ceil(sortedPaths.size()*percentThreshold);
 		
-		for(int i=0; i<threshold; i++) {
+		for(int i=0; i<sortedPaths.size(); i++) {
 			tppd += sortedPaths.get(i);
 		}
 		
