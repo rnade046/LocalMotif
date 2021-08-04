@@ -15,13 +15,22 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class MotifFamily {
 
 
 	public static void assessMotifFamilies(String motifFamilyFilePrefix, int numberOfFamilies,
-			String clusteringFilePrefix, int numberOfClusteringFiles, String refSeqToMotifFile, String outputFilePrefix) {
+			String clusteringFilePrefix, int numberOfClusteringFiles, String refSeqToMotifFile, 
+			String proteinToRefSeqIDsFile, String outputFilePrefix) {
 
+		
+		/* Load protein : refseqId list */
+		HashMap<String, HashSet<String>> proteinToRefSeqIDsMap = loadProteinsToRefSeqIdsMap(proteinToRefSeqIDsFile);
+		
+		/* Load refSeqID : motif list */
+		HashMap<String, HashSet<String>> refSeqIdToMotifsMap = loadRefSeqIDToMotifsMap(refSeqToMotifFile);
+		
 		for(int i=1; i<=numberOfFamilies; i++) {
 
 			String motifFamilyFile = motifFamilyFilePrefix + i + ".tsv";
@@ -37,12 +46,77 @@ public class MotifFamily {
 
 			HashSet<String> possibleMotifSet = getPossibleInstancesOfMotif(representativeMotif);
 
-			ArrayList<String> motifInstances = getInstancesOfMotifs(possibleMotifSet, refSeqToMotifFile);
+			ArrayList<String> motifInstances = getInstancesOfMotifs(possibleMotifSet, proteinToRefSeqIDsMap, refSeqIdToMotifsMap);
 
 			String outputFile = outputFilePrefix + i + ".tsv";
 			printMotifs(motifInstances, outputFile);
 		}
 	}
+
+	/**
+	 * Load the list of proteins in the network and their contributing refSeq Ids. 
+	 * @param proteinInfoFile	String - proteinName \t ID1|ID2|..|IDn
+	 * 
+	 * @return loadProteinsToRefSeqIdsMap	HashMap<String, HashSet<String>> - map {protein: Set<IDs>}
+	 */
+	private static HashMap<String, HashSet<String>> loadProteinsToRefSeqIdsMap(String proteinInfoFile){
+
+		HashMap<String, HashSet<String>> proteinToRefSeqIdsMap = new HashMap<>();
+
+		try {
+			InputStream in = new FileInputStream(new File(proteinInfoFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+
+			while(line != null) {
+				String[] col = line.split("\t");
+				proteinToRefSeqIdsMap.put(col[0], new HashSet<String>(Arrays.asList(col[1].split("\\|")))); // col[0] = protein, col[1] = ID1|ID2|ID3
+
+				line = input.readLine();
+			}
+
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return proteinToRefSeqIdsMap;
+	}
+
+	
+	/**
+	 * Load list of RefSeqIDs and their contributing motifs. 
+	 * 
+	 * @param refSeqIDToMotifsFile
+	 * @return
+	 */
+	private static HashMap<String, HashSet<String>> loadRefSeqIDToMotifsMap(String refSeqIDToMotifsFile){
+
+		HashMap<String, HashSet<String>> refSeqIdToMotifsMap = new HashMap<>();
+
+		try {
+			InputStream in = new FileInputStream(new File(refSeqIDToMotifsFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+
+			while(line != null) {
+				String[] col = line.split("\t");
+				refSeqIdToMotifsMap.put(col[0], new HashSet<String>(Arrays.asList(col[1].split("\\|")))); // col[0] = refSeqId, col[1] = motif1|motif2|motif3
+
+				line = input.readLine();
+			}
+
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return refSeqIdToMotifsMap;
+
+	}
+
 	/**
 	 * Load motifs in motif family. Store in set. 
 	 * @param motifFamilyFile
@@ -265,36 +339,28 @@ public class MotifFamily {
 		return motifs;
 	}
 
-	private static ArrayList<String> getInstancesOfMotifs(HashSet<String> possibleMotifs, String motifsToRefSeqFile) {
+	private static ArrayList<String> getInstancesOfMotifs(HashSet<String> possibleMotifs, HashMap<String, HashSet<String>> proteinToRefSeqIdsMap,
+			HashMap<String, HashSet<String>> refSeqIdToMotifsMap) {
 
 		/* Search fasta sequence; find instance of motif (ie. convert degen motif to non degen) ; print PWM to file */
-
 		ArrayList<String> instanceOfMotifList = new ArrayList<>();
 
-		try {
-			InputStream in = new FileInputStream(new File(motifsToRefSeqFile));
-			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-
-			String line = input.readLine();
-
-			while(line != null) {
-
-				if(line.split("\t").length > 1){
-					HashSet<String> allMotifsSet = new HashSet<>(Arrays.asList(line.split("\t")[1].split("\\|")));
-
-					for(String motif : possibleMotifs) {
-						if(allMotifsSet.contains(motif)) {
-							instanceOfMotifList.add(motif);
-						}
+		/* Search for motif in a given protein; only one instance of a motif will be kept if found 
+		 * multiple times in sequence or in different refseqIds (variants)*/
+		for(Entry<String, HashSet<String>> proteinEntry : proteinToRefSeqIdsMap.entrySet()) {
+			HashSet<String> currentInstancesOfMotif = new HashSet<>();
+			
+			for(String id: proteinEntry.getValue()) {
+				for(String motif: refSeqIdToMotifsMap.get(id)) {
+					if(possibleMotifs.contains(motif)) {
+						currentInstancesOfMotif.add(motif);
 					}
 				}
-				line = input.readLine();
+				
 			}
-
-			input.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+			instanceOfMotifList.addAll(currentInstancesOfMotif);
 		}
+
 		return instanceOfMotifList;
 	}
 
