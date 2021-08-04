@@ -36,7 +36,8 @@ public class Main {
 
 		String correlationRepository = wd + params.getProperty("networkRepositoryFile");
 		String proteinsInNetworkOutputFile = wd + projectName +"_listOfProteinNames.tsv";
-
+		String protInfoFile = wd + projectName + "_proteinsInNetwork_info.tsv";
+		
 		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt";
 		String distanceMatrix2File = wd +  projectName + "_distanceMatrix2.txt";
 
@@ -100,8 +101,8 @@ public class Main {
 		/* Determine which proteins are disconnected*/ 
 		boolean[] proteinsToKeep = Calculator.determineConnectedProteins(distanceMatrix);
 		/* Update proteins to keep in the network (ie. those that contribute to the most connected component) */
-		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep);
-
+		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
+		
 		if(proteinList.size() != proteinList2.size()) {
 			System.out.println("**Checking for disconnected components**");
 			File f1 = new File(distanceMatrix2File);
