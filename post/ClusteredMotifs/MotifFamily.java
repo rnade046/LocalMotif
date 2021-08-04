@@ -15,22 +15,20 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 
 public class MotifFamily {
 
 
 	public static void assessMotifFamilies(String motifFamilyFilePrefix, int numberOfFamilies,
 			String clusteringFilePrefix, int numberOfClusteringFiles, String refSeqToMotifFile, 
-			String proteinToRefSeqIDsFile, String outputFilePrefix) {
+			String proteinToRefSeqIDsFile, String outputFilePrefix, String motifsInfoFile) {
 
-		
 		/* Load protein : refseqId list */
 		HashMap<String, HashSet<String>> proteinToRefSeqIDsMap = loadProteinsToRefSeqIdsMap(proteinToRefSeqIDsFile);
-		
+
 		/* Load refSeqID : motif list */
 		HashMap<String, HashSet<String>> refSeqIdToMotifsMap = loadRefSeqIDToMotifsMap(refSeqToMotifFile);
-		
+
 		for(int i=1; i<=numberOfFamilies; i++) {
 
 			String motifFamilyFile = motifFamilyFilePrefix + i + ".tsv";
@@ -50,6 +48,8 @@ public class MotifFamily {
 
 			String outputFile = outputFilePrefix + i + ".tsv";
 			printMotifs(motifInstances, outputFile);
+
+			printMotifInfo(motifsInfoFile, i, representativeMotif, motifInstances.size());
 		}
 	}
 
@@ -71,8 +71,9 @@ public class MotifFamily {
 
 			while(line != null) {
 				String[] col = line.split("\t");
-				proteinToRefSeqIdsMap.put(col[0], new HashSet<String>(Arrays.asList(col[1].split("\\|")))); // col[0] = protein, col[1] = ID1|ID2|ID3
-
+				if(col.length == 2) {
+					proteinToRefSeqIdsMap.put(col[0], new HashSet<String>(Arrays.asList(col[1].split("\\|")))); // col[0] = protein, col[1] = ID1|ID2|ID3
+				}
 				line = input.readLine();
 			}
 
@@ -84,7 +85,7 @@ public class MotifFamily {
 		return proteinToRefSeqIdsMap;
 	}
 
-	
+
 	/**
 	 * Load list of RefSeqIDs and their contributing motifs. 
 	 * 
@@ -103,8 +104,9 @@ public class MotifFamily {
 
 			while(line != null) {
 				String[] col = line.split("\t");
-				refSeqIdToMotifsMap.put(col[0], new HashSet<String>(Arrays.asList(col[1].split("\\|")))); // col[0] = refSeqId, col[1] = motif1|motif2|motif3
-
+				if(col.length == 2) {
+					refSeqIdToMotifsMap.put(col[0], new HashSet<String>(Arrays.asList(col[1].split("\\|")))); // col[0] = refSeqId, col[1] = motif1|motif2|motif3
+				}
 				line = input.readLine();
 			}
 
@@ -349,14 +351,16 @@ public class MotifFamily {
 		 * multiple times in sequence or in different refseqIds (variants)*/
 		for(Entry<String, HashSet<String>> proteinEntry : proteinToRefSeqIdsMap.entrySet()) {
 			HashSet<String> currentInstancesOfMotif = new HashSet<>();
-			
+
 			for(String id: proteinEntry.getValue()) {
-				for(String motif: refSeqIdToMotifsMap.get(id)) {
-					if(possibleMotifs.contains(motif)) {
-						currentInstancesOfMotif.add(motif);
+
+				if(refSeqIdToMotifsMap.containsKey(id)) {
+					for(String motif: refSeqIdToMotifsMap.get(id)) {
+						if(possibleMotifs.contains(motif)) {
+							currentInstancesOfMotif.add(motif);
+						}
 					}
 				}
-				
 			}
 			instanceOfMotifList.addAll(currentInstancesOfMotif);
 		}
@@ -381,5 +385,25 @@ public class MotifFamily {
 		}
 
 	}
+
+	private static void printMotifInfo(String outputFile, int family, String repMotif, int numInstances) {
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile), true));
+
+			if(new File(outputFile).length() == 0) {
+				out.write("Family\tRepMotif\t#Instances\n");
+			}
+
+			out.write(family + "\t" + repMotif + "\t" + numInstances + "\n");
+			out.flush();
+			out.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 
 }

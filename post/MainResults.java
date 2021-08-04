@@ -54,7 +54,10 @@ public class MainResults {
 		int numberOfFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups"));
 		
 		String enumeratedMotifs = wd + projectName + "_enumeratedMotifsPerRefSeqId.tsv";
+		String proteinToRefSeqIdFile = wd + projectName + "_proteinsInNetwork_info.tsv";
+		
 		String motifInstancesPrefix = wd + projectName + "_realMotifInstances_motifFamilyGroup";
+		String motifInfoFile = wd + projectName + "_motifFamiliesInfo.tsv";
 		
 		//System.out.println("**Identifying significant motifs**");
 		/* Identify motifs that pass significant threshold: (1) print details to separate file, (2) store motif and file # in map */ 
@@ -79,7 +82,7 @@ public class MainResults {
 		/* Assess motif families */ 
 		if(Boolean.parseBoolean(params.getProperty("assessMotifFamilies"))) {
 			System.out.println("**Assessing motif families**");
-			MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, 1, enumeratedMotifs, motifInstancesPrefix);
+			MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, 1, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifInfoFile);
 
 		}
 		
