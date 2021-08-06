@@ -42,22 +42,22 @@ public class MainResults {
 
 		double pvalThreshold = Double.parseDouble(params.getProperty("significantThreshold"));
 		
-		String significantMotifsFile = wd + projectName + clusteringName +"_signficantMotifs_p" + pvalThreshold +".tsv";
+		String significantMotifsFile = wd + "motifFamilies/" +  projectName + clusteringName +"_signficantMotifs_p" + pvalThreshold +".tsv";
 
 		//String annotationPrefixFile = params.getProperty("degenAnnotationPrefix");
-		String extractedAnnotationsFile = wd + projectName + clusteringName + "_annotationSubset.tsv";
+		String extractedAnnotationsFile = wd +  "motifFamilies/" + projectName + clusteringName + "_annotationSubset.tsv";
 		
-		String motifsInMatrixFile = wd + projectName + clusteringName + "_motifsMatrix_p" + pvalThreshold + ".tsv";
-		String similarityMatrix = wd + projectName + clusteringName + "_similarity_DistanceMatrix_p" + pvalThreshold + ".tsv" ;
+		String motifsInMatrixFile = wd +  "motifFamilies/" + projectName + clusteringName + "_motifsMatrix_p" + pvalThreshold + ".tsv";
+		String similarityMatrix = wd + "motifFamilies/" +  projectName + clusteringName + "_similarity_DistanceMatrix_p" + pvalThreshold + ".tsv" ;
 		
-		String motifFamilyFilePrefix = wd + "motifFamily_ward_group";
+		String motifFamilyFilePrefix = wd +  "motifFamilies/" + "motifFamily_ward_group";
 		int numberOfFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups"));
 		
-		String enumeratedMotifs = wd + projectName + "_enumeratedMotifsPerRefSeqId.tsv";
-		String proteinToRefSeqIdFile = wd + projectName + "_proteinsInNetwork_info.tsv";
+		String enumeratedMotifs = wd +  "motifFamilies/" + projectName + "_enumeratedMotifsPerRefSeqId.tsv";
+		String proteinToRefSeqIdFile = wd + "motifFamilies/" +  projectName + "_proteinsInNetwork_info.tsv";
 		
-		String motifInstancesPrefix = wd + projectName + "_realMotifInstances_motifFamilyGroup";
-		String motifInfoFile = wd + projectName + "_motifFamiliesInfo.tsv";
+		String motifInstancesPrefix = wd +  "motifFamilies/" +  projectName + "_ppm_motifFamilyGroup";
+		String motifInfoFile = wd +  "motifFamilies/" + projectName + "_motifFamiliesInfo.tsv";
 		
 		//System.out.println("**Identifying significant motifs**");
 		/* Identify motifs that pass significant threshold: (1) print details to separate file, (2) store motif and file # in map */ 

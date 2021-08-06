@@ -45,11 +45,12 @@ public class MotifFamily {
 			HashSet<String> possibleMotifSet = getPossibleInstancesOfMotif(representativeMotif);
 
 			ArrayList<String> motifInstances = getInstancesOfMotifs(possibleMotifSet, proteinToRefSeqIDsMap, refSeqIdToMotifsMap);
-
+			double[][] ppm = calculatePPM(motifInstances, motifInstances.get(0).length());
+			
 			String outputFile = outputFilePrefix + i + ".tsv";
-			printMotifs(motifInstances, outputFile);
-
-			printMotifInfo(motifsInfoFile, i, representativeMotif, motifInstances.size());
+			//printMotifs(motifInstances, outputFile);
+			printPPM(ppm, outputFile);
+			//printMotifInfo(motifsInfoFile, i, representativeMotif, motifInstances.size());
 		}
 	}
 
@@ -368,6 +369,41 @@ public class MotifFamily {
 		return instanceOfMotifList;
 	}
 
+	private static double[][] calculatePPM(ArrayList<String> motifInstances, int motifLength){
+		
+		double[][] pfm = new double[4][motifLength];
+		double[][] ppm = new double[4][motifLength];
+		
+		/* compute position frequency matrix */
+		for(String motif: motifInstances) {
+			for(int i=0; i<motifLength; i++) {
+				switch(motif.charAt(i)) {
+				case 'A': 
+					pfm[0][i] += 1;
+					break;
+				case 'C': 
+					pfm[1][i] += 1;
+					break;
+				case 'G':
+					pfm[2][i] += 1;
+					break;
+				case 'T':
+					pfm[3][i] += 1;
+					break;
+				}
+			}
+		}
+		
+		/* convert position frequency matrix to position probability matrix */
+		for(int i=0; i<4; i++) {
+			for(int j=0; j<motifLength; j++) {
+				ppm[i][j] = pfm[i][j]/ (double) motifInstances.size();
+			}
+		}
+		
+		return ppm;
+	}
+	
 	private static void printMotifs(ArrayList<String> motifInstances, String outputFile) {
 
 		try {
@@ -386,6 +422,24 @@ public class MotifFamily {
 
 	}
 
+	private static void printPPM(double[][] ppm, String outputFile) {
+		
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+
+			for(int i=0; i<ppm.length; i++) {
+				for(int j=0;j<ppm[i].length; j++) {
+					out.write(ppm[i][j] + "\t");
+				}
+				out.write("\n");
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+	
 	private static void printMotifInfo(String outputFile, int family, String repMotif, int numInstances) {
 
 		try {
