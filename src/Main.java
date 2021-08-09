@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import graph.Interaction;
 import graph.Protein;
+import opt.CheckDegreeDistributions;
 import sampling.ApproximateNormalDistribuiton;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
@@ -102,6 +103,7 @@ public class Main {
 		boolean[] proteinsToKeep = Calculator.determineConnectedProteins(distanceMatrix);
 		/* Update proteins to keep in the network (ie. those that contribute to the most connected component) */
 		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
+		CheckDegreeDistributions.assessDegreeDistribution(proteinList2, interactionList, (wd + projectName + "_degreesInNetwork.tsv"));
 		
 		if(proteinList.size() != proteinList2.size()) {
 			System.out.println("**Checking for disconnected components**");
