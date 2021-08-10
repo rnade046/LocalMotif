@@ -16,12 +16,13 @@ public class RBPDBFormatter {
 
 		String db = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_human_PFMDir\\";
 		String outputFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_formatted.txt"; 
-
-		printFormattedDB(db, outputFile);
-
+		String tomtomDB = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_TomTomformatted.txt";
+		
+		printFormattedDBforMotifComp(db, outputFile);
+		printFormattedDBForTomTom(db, tomtomDB);
 	}
 
-	private static void printFormattedDB(String databaseDir, String outputFile) {
+	private static void printFormattedDBforMotifComp(String databaseDir, String outputFile) {
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
@@ -38,6 +39,45 @@ public class RBPDBFormatter {
 
 				out.write("#ID = " + path + "\n");
 				out.write("#W = " + ppm.get(0).size() + "\n");
+				
+
+				
+				for(int k=0; k<ppm.get(0).size(); k++) {
+					for(int j=0; j<ppm.size(); j++) {
+						out.write(ppm.get(j).get(k) + "\t");
+					}
+					out.write("\n");
+					out.flush();
+				}
+				out.write("\n");
+			}
+			out.write("\n"); // end signal
+
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+	
+	private static void printFormattedDBForTomTom(String databaseDir, String outputFile) {
+		
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+
+			out.write("MEME version 4\n\n" + "ALPHABET= ACGT\n\n" + 
+			"Background letter frequencies\nA 0.25 C 0.25 G 0.25 T 0.25\n\n"); // header
+
+			File f = new File(databaseDir);
+			String[] pathnames = f.list();
+			for(String path : pathnames) {
+
+				/* Load the ppm (position probability matrix) for every family*/
+				String fileX = databaseDir + path;
+				ArrayList<ArrayList<Double>> ppm = loadPPM(fileX);
+
+				out.write("MOTIF" + path + "\n");
+				out.write("letter-probability matrix: alength= 4 w= " + ppm.get(0).size() +"\n");
 
 				for(int k=0; k<ppm.get(0).size(); k++) {
 					for(int j=0; j<ppm.size(); j++) {
@@ -54,7 +94,7 @@ public class RBPDBFormatter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		
 	}
 
 	private static ArrayList<ArrayList<Double>> loadPPM(String inputFile) {
