@@ -20,11 +20,16 @@ public class CheckNetworkTopology {
 		
 		/* Check distribution of shortest paths 
 		 * 	Load dm; get top triangle; print values to file; histogram in R */
-		String distanceMatrixFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\corrNetTop2_distanceMatrix2.txt";
-		String pathsFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\corrNetTop2_listOfShortestPathsBinning.tsv";
+		String distanceMatrixFile = "C:\\Users\\Rachel\\Documents\\PIGNON\\IO_files\\Her2vTN_BioGRID_DistanceMatrix_FullConnected.txt";
+		String pathsFile = "C:\\Users\\Rachel\\Documents\\PIGNON\\IO_files\\Her2vTN_BioGRID_shortestPathDistribution.txt";
 		
+		System.out.println("Load distance matrix");
 		ArrayList<Double> allPaths = loadPaths(distanceMatrixFile);
+		
+		System.out.println("Compute Binning");
 		int[] pathsBinning = computeBinning(allPaths);
+		
+		System.out.println("Print binning");
 		printBinning(pathsBinning, pathsFile);
 		
 	}
@@ -43,8 +48,14 @@ public class CheckNetworkTopology {
 			while(line != null) {
 				String[] col = line.split("\t");
 				
-				/* Add elements to list */
+				if(index%100 == 0) {
+					System.out.print(index + ".");
+				}
+				if(index%1000 == 0) {
+					System.out.println();
+				}
 				
+				/* Add elements to list */
 				for(int i=index; i<col.length; i++) {
 					
 					if(Double.parseDouble(col[i]) != 0) {
@@ -58,7 +69,7 @@ public class CheckNetworkTopology {
 			}
 	
 			input.close();
-			
+			System.out.println("Done\n");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -69,12 +80,20 @@ public class CheckNetworkTopology {
 		
 		int maxBin = (int) Math.ceil(Collections.max(allPaths)); // find max bin 
 		int[] pathsBinning = new int[maxBin];
-
-		for(Double path : allPaths) {
-			int idx = (int) Math.ceil(path); // find 
+		System.out.println("Max bin: " + maxBin);
+		for(int i=0; i< allPaths.size(); i++) {
+			
+			if(i%100 == 0) {
+				System.out.print(i + ".");
+			} 
+			if(i%1000 == 0) {
+				System.out.println();
+			}
+			
+			int idx = (int) Math.ceil(allPaths.get(i)); // find 
 			pathsBinning[idx-1] += 1; // increase number of occurrence by 1
 		}
-		
+		System.out.println("Done");
 		return pathsBinning;
 	}
 
