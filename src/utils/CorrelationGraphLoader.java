@@ -10,22 +10,36 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 
 import graph.Interaction;
 
 
 public class CorrelationGraphLoader {
 
-	public static ArrayList<Interaction> loadGraphFromCorrelationNetwork(String inputRepository, String fastaFile, String mapProtToRefSeqIdsFile,String proteinsInNetworkFile, double threshold) {
+	public static ArrayList<Interaction> loadGraphFromCorrelationNetwork(String inputRepository, String fastaFile, String mapProtToRefSeqIdsFile,
+			String proteinsInNetworkFile, double threshold, boolean removeOverlyConnectedProteins, int maxInteractions) {
 		
 		HashMap<String, Double> confidentInteractionsMap = getConfidentInteractions(inputRepository, threshold);
 		//HashSet<String> confidentProteinSet = getConfidentProteins(confidentInteractionsMap);
 		//printProteinsInNetwork(confidentProteinSet, proteinsInNetworkFile);
 		
+		
+		
 		HashSet<String> possibleRefSeqIds = generateRefSeqSet(fastaFile);
 		HashMap<String, ArrayList<String>> mapProtToRefSeqIds = getRefSeqIdsInNetwork(mapProtToRefSeqIdsFile, possibleRefSeqIds);
 		
-		ArrayList<Interaction> confidentInteractions = formatInteractionList(confidentInteractionsMap, mapProtToRefSeqIds);
+		ArrayList<Interaction> confidentInteractions;
+		
+		if(removeOverlyConnectedProteins) {
+			/* Check number of interactions each protein is involved in; return Set of proteins to remove */
+			HashSet<String> proteinsToRemove = getOverlyConnectedProteins(confidentInteractionsMap, maxInteractions);
+			System.out.println("Number of proteins with >= " + maxInteractions + ": " + proteinsToRemove.size());
+			confidentInteractions = formatInteractionListWithoutOverelyConnectedProteins(confidentInteractionsMap, mapProtToRefSeqIds, proteinsToRemove);
+		} else {
+			confidentInteractions = formatInteractionList(confidentInteractionsMap, mapProtToRefSeqIds);
+		}
+		
 		return confidentInteractions;
 	}
 	
@@ -149,6 +163,41 @@ public class CorrelationGraphLoader {
 		return mapRefSeqIds;
 	}
 	
+	private static HashSet<String> getOverlyConnectedProteins(HashMap<String, Double> confidentInteractionsMap, int maxInteractions){
+		
+		HashSet<String> proteinsToRemove = new HashSet<>();
+		
+		/* Count number of interactions each protein is involved in */
+		HashMap<String, Integer> interactionCountByProtein = new HashMap<>();
+		for(String interaction : confidentInteractionsMap.keySet()) {
+			String interactor1 = interaction.split("\\_")[0];
+			String interactor2 = interaction.split("\\_")[1];
+			
+			/* update count for first interactor */
+			if(interactionCountByProtein.containsKey(interactor1)){
+				interactionCountByProtein.put(interactor1, interactionCountByProtein.get(interactor1) + 1);
+			} else {
+				interactionCountByProtein.put(interactor1, 1);
+			}
+			
+			/* update count for second interactor */
+			if(interactionCountByProtein.containsKey(interactor2)){
+				interactionCountByProtein.put(interactor2, interactionCountByProtein.get(interactor2) + 1);
+			} else {
+				interactionCountByProtein.put(interactor2, 1);
+			}
+		}
+
+		/* Check if protein is involved in more than the accepted number of interactions */
+		for(Entry<String, Integer> entry : interactionCountByProtein.entrySet()) {
+			if(entry.getValue() >= maxInteractions) {
+				proteinsToRemove.add(entry.getKey());
+			}
+		}
+		
+		return proteinsToRemove;
+	}
+	
 	private static ArrayList<Interaction> formatInteractionList(HashMap<String, Double> confidentInteractions, HashMap<String, ArrayList<String>> mapProtToRefSeqIds ){
 
 		ArrayList<Interaction> interactionList = new ArrayList<>(); // list to contain formated interactions
@@ -166,6 +215,33 @@ public class CorrelationGraphLoader {
 			Interaction ppi = new Interaction(prot1, prot2, mapProtToRefSeqIds.get(prot1), mapProtToRefSeqIds.get(prot2), (1-confidentInteractions.get(interaction)));
 			
 			interactionList.add(ppi);
+		}
+
+		return interactionList;
+	}
+	
+	private static ArrayList<Interaction> formatInteractionListWithoutOverelyConnectedProteins(HashMap<String, Double> confidentInteractions, 
+			HashMap<String, ArrayList<String>> mapProtToRefSeqIds, HashSet<String> proteinsToRemove){
+
+		ArrayList<Interaction> interactionList = new ArrayList<>(); // list to contain formated interactions
+
+		for(String interaction: confidentInteractions.keySet()) {
+
+			/* bait and prey identifiers for significant saint PPI */
+			String prot1 = interaction.split("\\_")[0];
+			String prot2 = interaction.split("\\_")[1];
+
+			/* add interaction if both protein interactors aren't involved in more than the max number of acceptable interactions */
+			if(!proteinsToRemove.contains(prot1) && !proteinsToRemove.contains(prot2)) {
+				/* Interaction constructor: 
+				 * Interaction(String _Protein1, String _Protein2, List<String> _ID1, List<String> _ID2, double _w)
+				 * Interaction(Bait-gene-symbol, Prey-gene-symbol, Bait-RefSeq-mRNA-Acc, Prey-RefSeq-mRNA-Acc, weight)*/
+				Interaction ppi = new Interaction(prot1, prot2, mapProtToRefSeqIds.get(prot1), mapProtToRefSeqIds.get(prot2), (1-confidentInteractions.get(interaction)));
+				interactionList.add(ppi);
+			}
+			
+			
+			
 		}
 
 		return interactionList;

@@ -9,7 +9,6 @@ import java.util.Properties;
 
 import graph.Interaction;
 import graph.Protein;
-import opt.CheckDegreeDistributions;
 import sampling.ApproximateNormalDistribuiton;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
@@ -22,8 +21,10 @@ import utils.NetworkProteins;
 
 public class Main {
 
+	final static boolean removeOverlyConnectedProteins = true;
+	final static int maxInteraactions = 350;
+	
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-
 		
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
@@ -39,9 +40,14 @@ public class Main {
 		String proteinsInNetworkOutputFile = wd + projectName +"_listOfProteinNames.tsv";
 		String protInfoFile = wd + projectName + "_proteinsInNetwork_info.tsv";
 		
-		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt";
+		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt"; 
 		String distanceMatrix2File = wd +  projectName + "_distanceMatrix2.txt";
 
+		if(removeOverlyConnectedProteins) {
+			distanceMatrixFile = wd + projectName + "_removedOverConnectedProteins_" + maxInteraactions + "_distanceMatrix.txt";
+			distanceMatrix2File = wd + projectName + "_removedOverConnectedProteins_" + maxInteraactions + "_distanceMatrix2.txt";
+		}
+		
 		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix");
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
@@ -79,7 +85,9 @@ public class Main {
 		}
 
 		System.out.println("**Loading interaction repository**");
-		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")));
+		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, 
+				mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")), 
+				removeOverlyConnectedProteins, maxInteraactions);
 		System.out.println("Number of interactions:" + interactionList.size() + "\n");
 
 		System.out.println("**Getting list of proteins in network**");
@@ -87,7 +95,9 @@ public class Main {
 		System.out.println("Number of Proteins: " + proteinList.size() + "\n");
 		//printProtAndRefSeqIdsInNetwork(rnaIdListFile, proteinList);
 		//printRefSeqIdsInNetwork(rnaIdListFile, proteinList);
-
+		
+		//CheckDegreeDistributions.assessDegreeDistribution(proteinList2, interactionList, (wd + projectName + "_degreesInNetwork.tsv"));
+		
 		File f = new File(distanceMatrixFile);
 		if(!f.exists() && !f.isDirectory()) {
 			System.out.println("**Generating distance matrix**");
@@ -103,7 +113,6 @@ public class Main {
 		boolean[] proteinsToKeep = Calculator.determineConnectedProteins(distanceMatrix);
 		/* Update proteins to keep in the network (ie. those that contribute to the most connected component) */
 		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
-		CheckDegreeDistributions.assessDegreeDistribution(proteinList2, interactionList, (wd + projectName + "_degreesInNetwork.tsv"));
 		
 		if(proteinList.size() != proteinList2.size()) {
 			System.out.println("**Checking for disconnected components**");
