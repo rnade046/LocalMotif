@@ -20,8 +20,8 @@ public class CheckNetworkTopology {
 		
 		/* Check distribution of shortest paths 
 		 * 	Load dm; get top triangle; print values to file; histogram in R */
-		String distanceMatrixFile = "C:\\Users\\Rachel\\Documents\\PIGNON\\IO_files\\Her2vTN_BioGRID_DistanceMatrix_FullConnected.txt";
-		String pathsFile = "C:\\Users\\Rachel\\Documents\\PIGNON\\IO_files\\Her2vTN_BioGRID_shortestPathDistribution.txt";
+		String distanceMatrixFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\corrNetTop2_removedOverConnectedProteins_300_distanceMatrix2.txt";
+		String pathsFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\corrNetTop2_removedOverConnectedProteins_300_paths.txt";
 		
 		System.out.println("Load distance matrix");
 		ArrayList<Double> allPaths = loadPaths(distanceMatrixFile);

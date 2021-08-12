@@ -21,8 +21,8 @@ import utils.NetworkProteins;
 
 public class Main {
 
-	final static boolean removeOverlyConnectedProteins = true;
-	final static int maxInteraactions = 350;
+	final static boolean removeOverlyConnectedProteins = false;
+	final static int maxInteraactions = 300;
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		
