@@ -21,8 +21,7 @@ import utils.NetworkProteins;
 
 public class Main {
 
-	final static boolean removeOverlyConnectedProteins = false;
-	final static int maxInteraactions = 300;
+
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		
@@ -33,6 +32,9 @@ public class Main {
 		String wd = params.getProperty("working_directory");
 		String projectName = params.getProperty("project_name");
 
+		boolean removeOverlyConnectedProteins = false;
+		int maxInteractions = 300;
+		
 		String fastaFile = wd + params.getProperty("fastaFile");
 		String mapProtToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds");
 
@@ -42,10 +44,10 @@ public class Main {
 		
 		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt"; 
 		String distanceMatrix2File = wd +  projectName + "_distanceMatrix2.txt";
-
+		
 		if(removeOverlyConnectedProteins) {
-			distanceMatrixFile = wd + projectName + "_removedOverConnectedProteins_" + maxInteraactions + "_distanceMatrix.txt";
-			distanceMatrix2File = wd + projectName + "_removedOverConnectedProteins_" + maxInteraactions + "_distanceMatrix2.txt";
+			distanceMatrixFile = wd + projectName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix.txt";
+			distanceMatrix2File = wd + projectName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix2.txt";
 		}
 		
 		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix");
@@ -87,7 +89,7 @@ public class Main {
 		System.out.println("**Loading interaction repository**");
 		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, 
 				mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold")), 
-				removeOverlyConnectedProteins, maxInteraactions);
+				removeOverlyConnectedProteins, maxInteractions);
 		System.out.println("Number of interactions:" + interactionList.size() + "\n");
 
 		System.out.println("**Getting list of proteins in network**");
