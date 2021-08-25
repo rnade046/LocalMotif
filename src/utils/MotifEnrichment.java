@@ -149,7 +149,11 @@ public class MotifEnrichment {
 
 			while(line!=null) {
 				String[] col = line.split("\t"); // [0] = number of proteins, [1] = mean, [2] = standard deviation
-
+				
+				if(Double.parseDouble(col[2]) == 0) {
+					System.out.println("For n = " + col[0] + " stdv = 0");
+				}
+				
 				double[] params = new double[] {Double.parseDouble(col[1]), Double.parseDouble(col[2])};
 				ndParams.put(Integer.parseInt(col[0]), params);
 
