@@ -24,8 +24,6 @@ public class CorrelationGraphLoader {
 		//HashSet<String> confidentProteinSet = getConfidentProteins(confidentInteractionsMap);
 		//printProteinsInNetwork(confidentProteinSet, proteinsInNetworkFile);
 		
-		
-		
 		HashSet<String> possibleRefSeqIds = generateRefSeqSet(fastaFile);
 		HashMap<String, ArrayList<String>> mapProtToRefSeqIds = getRefSeqIdsInNetwork(mapProtToRefSeqIdsFile, possibleRefSeqIds);
 		
