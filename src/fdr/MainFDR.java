@@ -28,11 +28,11 @@ public class MainFDR {
 		String clusteringName = "";
 
 		switch(clusteringMeasure) {
-		case 0: clusteringName = "";
+		case 0: clusteringName = "_TPD";
 		break;
-		case 1: clusteringName = "_TPPD" + percentThreshold;
+		case 1: clusteringName = "_TPPD_p" + percentThreshold;
 		break;
-		case 2: clusteringName = "_coreTPD" + percentThreshold;
+		case 2: clusteringName = "_coreTPD_p" + percentThreshold;
 		break;
 		}
 		
