@@ -21,8 +21,6 @@ import utils.NetworkProteins;
 
 public class Main {
 
-
-	
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		
 		System.out.println("**Loading parameters file** \n");
@@ -138,7 +136,7 @@ public class Main {
 			// For MC sampling 
 			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
 			System.out.println("**Enumerating protein annotation frequency file**");
-			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound);
+			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound, proteinList2);
 			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
 		}
 
