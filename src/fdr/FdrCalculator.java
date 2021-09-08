@@ -26,6 +26,10 @@ public class FdrCalculator {
     public FdrCalculator(String motifSignificanceScoresFile, String nullSignificanceScoresFile) {
         this.motifsSignificanceScores = loadSignificanceScores(motifSignificanceScoresFile);
         this.nullSignificanceScores = loadSignificanceScores(nullSignificanceScoresFile);
+        
+        System.out.println("Total tested null motifs: " + nullSignificanceScores.size());
+        System.out.println("Total tested motifs: " + motifsSignificanceScores.size());
+        
         this.minPval = Math.min(motifsSignificanceScores.get(0), nullSignificanceScores.get(0));
     }
 
@@ -43,14 +47,14 @@ public class FdrCalculator {
         	
         	double[] info = computeFDR(pVal); // info [0] = FDR, [1] = annotation that pass threshold\
         	
-        	fdrs.add(new FalseDiscoveryRate(info[0], pVal, (int) info[1]));
+        	fdrs.add(new FalseDiscoveryRate(info[0], pVal, (int) info[1], (int) info[2]));
         }
         
         for (double pVal = 0.1; pVal <= 1.01; pVal += 0.05) {
         	
         	double[] info = computeFDR(pVal); // info [0] = FDR, [1] = annotation that pass threshold
         	
-        	fdrs.add(new FalseDiscoveryRate(info[0], pVal, (int) info[1]));
+        	fdrs.add(new FalseDiscoveryRate(info[0], pVal, (int) info[1], (int) info[2]));
         }
         
         System.out.println("Performing monotonic transformation");
@@ -140,7 +144,7 @@ public class FdrCalculator {
          * FDR = nOfShuffledGo_pval that passed / nGo_pval that passed
          ***************************************************************************************************/
 
-        double[] info = new double[2];
+        double[] info = new double[3];
 
         int motifCount = 0;
         int nullCount = 0;
@@ -165,6 +169,7 @@ public class FdrCalculator {
 
         info[0] = fdr;
         info[1] = motifCount;
+        info[2] = nullCount;
         
         return info;
     }
