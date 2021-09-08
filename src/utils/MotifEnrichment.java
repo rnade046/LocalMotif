@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 
@@ -39,7 +40,7 @@ public class MotifEnrichment {
 		this.percentThreshold = percent_threshold;
 	}
 
-	public void testMotifClustering(String annotationFilePrefix, String outputPrefix, int currentLowerBoundToTest, int currentUpperBoundToTest) {
+	public void testMotifClustering(String annotationFilePrefix, String annotationCompanionFilePrefix, String outputPrefix, int currentLowerBoundToTest, int currentUpperBoundToTest) {
 
 		for(int i=currentLowerBoundToTest; i<=currentUpperBoundToTest; i++) {
 			
@@ -49,7 +50,8 @@ public class MotifEnrichment {
 			 * 3rd check: confirm 1st check */ 
 			String annotationFile = annotationFilePrefix + i;
 			String annotationOutputFile = outputPrefix + i;
-			
+						
+			HashSet<String> motifsToTest = loadMotifsToTest(annotationCompanionFilePrefix + i);
 			try {
 				InputStream in = new FileInputStream(new File(annotationFile));
 				BufferedReader input = new BufferedReader(new InputStreamReader(in));
@@ -69,13 +71,12 @@ public class MotifEnrichment {
 					String col[] = line.split("\t");
 					
 					/* check the number of proteins annotated by motifs is within our set bounds of n proteins to be tested */
-					int numProt = Integer.parseInt(col[1]);
-					if(numProt>=lowerBound && numProt<=upperBound) {
+					if(motifsToTest.contains(line.split("\\t")[0])) {
 
 						/* get list of proteins in Network */
 						ArrayList<String> proteinInNetworkAssociatedToMotif = getListOfProteinsInNetwork(col[2].split("\\|"));
 						
-						/* check againt that the number of proteins annotated by motifs is within our set bounds of n proteins to be tested */
+						/* check against that the number of proteins annotated by motifs is within our set bounds of n proteins to be tested */
 						if(proteinInNetworkAssociatedToMotif.size()>=lowerBound && proteinInNetworkAssociatedToMotif.size() <= upperBound) {
 							
 							/* compute TPD */
@@ -218,5 +219,25 @@ public class MotifEnrichment {
 		
 	}
 
-	
+	private HashSet<String> loadMotifsToTest(String annotationCompanionFile){
+
+		HashSet<String> motifSet = new HashSet<>();
+
+		try {
+			InputStream in = new FileInputStream(new File(annotationCompanionFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+
+			while(line != null) {
+				motifSet.add(line.split("\t")[0]);
+				line = input.readLine();
+			}
+
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return motifSet;
+	}
 }

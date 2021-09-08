@@ -32,8 +32,8 @@ public class Main {
 		String wd = params.getProperty("working_directory");
 		String projectName = params.getProperty("project_name");
 
-		boolean removeOverlyConnectedProteins = false;
-		int maxInteractions = 300;
+		boolean removeOverlyConnectedProteins = Boolean.parseBoolean(params.getProperty("removeOverlyConnectedProteins"));
+		int maxInteractions = Integer.parseInt(params.getProperty("maxInteractions"));
 		
 		String fastaFile = wd + params.getProperty("fastaFile");
 		String mapProtToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds");
@@ -51,7 +51,6 @@ public class Main {
 		}
 		
 		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_degenMotifMappedToProteinsInNetwork_";
-		
 		
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
 
@@ -149,13 +148,12 @@ public class Main {
 					Integer.parseInt(params.getProperty("numDegenMotifFiles")), lowerBound, upperBound);
 		}
 		
-		
 		if(Boolean.parseBoolean(params.getProperty("calculateProteinAnnotationFreq"))) {	
 			// For MC sampling 
 			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
 			System.out.println("**Enumerating protein annotation frequency file**");
 			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound, proteinSet);
-			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
+			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, annotationCompanionFilePrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
 		}
 
 		/* Perform Monte Carlo Sampling procedure */
@@ -173,7 +171,7 @@ public class Main {
 		if(Boolean.parseBoolean(params.getProperty("testMotifs"))) {
 			System.out.println("**Assessing motif clustering**");
 			MotifEnrichment m = new MotifEnrichment(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound,clusteringMeasure, percentThreshold);
-			m.testMotifClustering(degenAnnotationPrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+			m.testMotifClustering(degenAnnotationPrefix, annotationCompanionFilePrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 		}
 
 		/* Look at the overall distribution of significance scores once all annotations have been tested */

@@ -7,6 +7,7 @@ import java.io.OutputStreamWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,7 +26,8 @@ public class ProteinAnnotations {
 		this.proteinSet = _proteinSet;
 	}
 
-	public void calculateProteinAnnotationFrequency(String degenMotifAnnotationPrefix, int numDegenFiles, String outputProteinFrequencyFile) {
+	public void calculateProteinAnnotationFrequency(String degenMotifAnnotationPrefix, String annotationCompanionFileString,
+			int numDegenFiles, String outputProteinFrequencyFile) {
 
 		/***
 		 * Given an annotation list of type 
@@ -48,7 +50,10 @@ public class ProteinAnnotations {
 			}
 
 			String degenAnnotationFile = degenMotifAnnotationPrefix + i;
-			computeFrequencyOfProteins(degenAnnotationFile, proteinToFrequencyMap);
+			String annotationCompanionFile = annotationCompanionFileString + i;
+
+			HashSet<String> motifsToTest = loadMotifsToTest(annotationCompanionFile);
+			computeFrequencyOfProteins(degenAnnotationFile, motifsToTest, proteinToFrequencyMap);
 		}
 
 		System.out.println("Printing protein annotation frequencies");
@@ -61,7 +66,7 @@ public class ProteinAnnotations {
 	 * @param inputFile					text file containing annotation list {annotation; protein id list; protein symbol list}
 	 * @return proteinToFrequencyMap	HashMap<String, Integer> {protein id: number of occurrence}
 	 */
-	private void computeFrequencyOfProteins(String inputFile, HashMap<String, Integer> proteinToFrequencyMap){
+	private void computeFrequencyOfProteins(String inputFile, HashSet<String> motifsToTest, HashMap<String, Integer> proteinToFrequencyMap){
 
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(inputFile))));
@@ -70,15 +75,13 @@ public class ProteinAnnotations {
 			String line = in.readLine(); // no header
 
 			while(line!=null) {
-
-				int numOfAnnotatedProteins = Integer.parseInt(line.split("\\t")[1]);
-				if(numOfAnnotatedProteins >= this.lowerBoundToSample && numOfAnnotatedProteins<= this.upperBoundToSample) {
-
+				
+				if(motifsToTest.contains(line.split("\\t")[0])) {
 
 					String[] protein_ids = line.split("\\t")[2].split("\\|"); // idx[2] = protein (name) list 
 					ArrayList<String> proteinList = checkProteinsInNetwork(protein_ids);
 
-					if(proteinList.size() >= this.lowerBoundToSample && proteinList.size() <= this.upperBoundToSample) {
+					if(proteinList.size() >= lowerBoundToSample && proteinList.size() <= upperBoundToSample) {
 						/* For all proteins of a given annotation; if in list update number of occurrence, otherwise initialize */
 						for(int i=0; i<proteinList.size(); i++) {
 							if(proteinToFrequencyMap.containsKey(proteinList.get(i))) {
@@ -131,5 +134,26 @@ public class ProteinAnnotations {
 		return finalProteinList;
 	}
 
+	private HashSet<String> loadMotifsToTest(String annotationCompanionFile){
+
+		HashSet<String> motifSet = new HashSet<>();
+
+		try {
+			InputStream in = new FileInputStream(new File(annotationCompanionFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+
+			while(line != null) {
+				motifSet.add(line.split("\t")[0]);
+				line = input.readLine();
+			}
+
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return motifSet;
+	}
 
 }
