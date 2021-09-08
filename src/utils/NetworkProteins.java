@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import graph.Interaction;
 import graph.Protein;
@@ -129,6 +130,17 @@ public class NetworkProteins {
 		}
 
 		return proteinsIdxInNetworkMap;
+	}
+	
+	public static HashSet<String> getProteinSet(ArrayList<Protein> proteinList){
+
+		HashSet<String> proteinSet = new HashSet<>();
+
+		for(Protein prot: proteinList) {
+			proteinSet.add(prot.getProteinName());
+		}
+
+		return proteinSet;
 	}
 
 }

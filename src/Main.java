@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Properties;
 
 import graph.Interaction;
@@ -12,6 +13,7 @@ import graph.Protein;
 import sampling.ApproximateNormalDistribuiton;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
+import utils.AnnotationCompanionFiles;
 import utils.AssessEnrichment;
 import utils.Calculator;
 import utils.CorrelationGraphLoader;
@@ -48,8 +50,9 @@ public class Main {
 			distanceMatrix2File = wd + projectName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix2.txt";
 		}
 		
-		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix");
-
+		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_degenMotifMappedToProteinsInNetwork_";
+		
+		
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
 
 		int clusteringMeasure = Integer.parseInt(params.getProperty("clusteringMeasure", "0"));
@@ -113,6 +116,7 @@ public class Main {
 		boolean[] proteinsToKeep = Calculator.determineConnectedProteins(distanceMatrix);
 		/* Update proteins to keep in the network (ie. those that contribute to the most connected component) */
 		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
+		HashSet<String> proteinSet = NetworkProteins.getProteinSet(proteinList2);
 		
 		if(proteinList.size() != proteinList2.size()) {
 			System.out.println("**Checking for disconnected components**");
@@ -131,12 +135,26 @@ public class Main {
 		int lowerBound = Integer.parseInt(params.getProperty("lowerBoundToSample", "3"));
 		int upperBound = Integer.parseInt(params.getProperty("upperBoundToSample", "2000"));
 		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
-
+		
+		/* Check annotation files and create companion file */
+		String annotationCompanionFilePrefix = params.getProperty("degenAnnotationPrefix") + projectName + "_n" + lowerBound + "_" + upperBound + "_motifAnnotationsCompanionFile_";
+		
+		File directory3 = new File(params.getProperty("degenAnnotationPrefix") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound); 
+		if (! directory3.exists()){
+			System.out.println("creating directory for companion files");
+			directory3.mkdir();
+			
+			System.out.println("Creating companion files");
+			AnnotationCompanionFiles.assessAnnotationFile(degenAnnotationPrefix, annotationCompanionFilePrefix, proteinSet, 
+					Integer.parseInt(params.getProperty("numDegenMotifFiles")), lowerBound, upperBound);
+		}
+		
+		
 		if(Boolean.parseBoolean(params.getProperty("calculateProteinAnnotationFreq"))) {	
 			// For MC sampling 
 			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
 			System.out.println("**Enumerating protein annotation frequency file**");
-			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound, proteinList2);
+			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound, proteinSet);
 			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
 		}
 

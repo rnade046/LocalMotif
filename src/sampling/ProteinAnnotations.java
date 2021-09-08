@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import graph.Protein;
-
 public class ProteinAnnotations {
 
 	private int lowerBoundToSample;
@@ -20,11 +18,11 @@ public class ProteinAnnotations {
 
 	private HashSet<String> proteinSet;
 
-	public ProteinAnnotations(int _lowerBoundToSample, int _upperBoundToSample, ArrayList<Protein> proteinList) {
+	public ProteinAnnotations(int _lowerBoundToSample, int _upperBoundToSample, HashSet<String> _proteinSet) {
 		this.lowerBoundToSample = _lowerBoundToSample;
 		this.upperBoundToSample = _upperBoundToSample;
 
-		this.proteinSet = getProteinsInNetwork(proteinList);
+		this.proteinSet = _proteinSet;
 	}
 
 	public void calculateProteinAnnotationFrequency(String degenMotifAnnotationPrefix, int numDegenFiles, String outputProteinFrequencyFile) {
@@ -133,14 +131,5 @@ public class ProteinAnnotations {
 		return finalProteinList;
 	}
 
-	private static HashSet<String> getProteinsInNetwork(ArrayList<Protein> proteinList){
 
-		HashSet<String> proteinSet = new HashSet<>();
-
-		for(Protein prot: proteinList) {
-			proteinSet.add(prot.getProteinName());
-		}
-
-		return proteinSet;
-	}
 }
