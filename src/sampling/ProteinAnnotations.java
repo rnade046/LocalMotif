@@ -27,7 +27,7 @@ public class ProteinAnnotations {
 	}
 
 	public void calculateProteinAnnotationFrequency(String degenMotifAnnotationPrefix, String annotationCompanionFileString,
-			int numDegenFiles, String outputProteinFrequencyFile) {
+			int index1, int index2, String outputProteinFrequencyFilePrefix) {
 
 		/***
 		 * Given an annotation list of type 
@@ -40,25 +40,28 @@ public class ProteinAnnotations {
 
 		HashMap<String, Integer> proteinToFrequencyMap = new HashMap<>();
 
-		System.out.print("Searching degen motif annotation files:");
-		for(int i=0; i<numDegenFiles; i++) {
-			if(i%100==0) {
-				System.out.println();
-			}
-			if(i%10==0) {
-				System.out.print(i +".");
-			}
-
+//		System.out.print("Searching degen motif annotation files:");
+		//for(int i=0; i<numDegenFiles; i++) {
+		for(int i=index1; i<= index2; i++) {	
+//			if(i%100==0) {
+//				System.out.println();
+//			}
+//			if(i%10==0) {
+//				System.out.print(i +".");
+//			}
+			
+			System.out.println("Searching degen motif annotation files: " + i );
+			
 			String degenAnnotationFile = degenMotifAnnotationPrefix + i;
 			String annotationCompanionFile = annotationCompanionFileString + i;
 
 			HashSet<String> motifsToTest = loadMotifsToTest(annotationCompanionFile);
 			computeFrequencyOfProteins(degenAnnotationFile, motifsToTest, proteinToFrequencyMap);
+
+
+			System.out.println("Printing protein annotation frequencies");
+			printProteinsToOccurence(outputProteinFrequencyFilePrefix + i , proteinToFrequencyMap);
 		}
-
-		System.out.println("Printing protein annotation frequencies");
-		printProteinsToOccurence(outputProteinFrequencyFile, proteinToFrequencyMap);
-
 	}
 
 	/**
@@ -75,7 +78,7 @@ public class ProteinAnnotations {
 			String line = in.readLine(); // no header
 
 			while(line!=null) {
-				
+
 				if(motifsToTest.contains(line.split("\\t")[0])) {
 
 					String[] protein_ids = line.split("\\t")[2].split("\\|"); // idx[2] = protein (name) list 
@@ -156,4 +159,38 @@ public class ProteinAnnotations {
 		return motifSet;
 	}
 
+	public void combineProteinFrequencyData(String protFreqFilePrefix, int numFiles, String outputFile) {
+		
+		HashMap<String, Integer> proteinToOccurrenceMap = new HashMap<>();
+		
+		for(int i=0; i<numFiles; i++) {
+			
+			/* Load individual file protein frequencies and update proteinToOccurenceMap */
+			String protFreqFile = protFreqFilePrefix + i;
+			try {
+				InputStream in = new FileInputStream(new File(protFreqFile));
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+				String line = input.readLine();
+
+				while(line != null) {
+					String[] col = line.split("\t");
+					
+					if(proteinToOccurrenceMap.containsKey(col[0])) {
+						proteinToOccurrenceMap.put(col[0], proteinToOccurrenceMap.get(col[0]) + Integer.parseInt(col[1]));
+					} else {
+						proteinToOccurrenceMap.put(col[0], Integer.parseInt(col[1]));
+					}
+					line = input.readLine();
+				}
+
+				input.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			printProteinsToOccurence(outputFile, proteinToOccurrenceMap);
+		}
+	}
+	
 }

@@ -24,34 +24,45 @@ import utils.NetworkProteins;
 public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-		
+
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
 		params.load(new FileInputStream(args[0]));		
 
 		String wd = params.getProperty("working_directory");
-		String projectName = params.getProperty("project_name");
+		String networkName = params.getProperty("network_name");
+
+		String projectName = "";
+
+		if(Boolean.parseBoolean(params.getProperty("nullModel"))){
+			projectName = networkName + "_nullModel";
+		} else {
+			projectName = networkName;
+		}
 
 		boolean removeOverlyConnectedProteins = Boolean.parseBoolean(params.getProperty("removeOverlyConnectedProteins"));
 		int maxInteractions = Integer.parseInt(params.getProperty("maxInteractions"));
-		
+
 		String fastaFile = wd + params.getProperty("fastaFile");
 		String mapProtToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds");
 
 		String correlationRepository = wd + params.getProperty("networkRepositoryFile");
-		String proteinsInNetworkOutputFile = wd + projectName +"_listOfProteinNames.tsv";
-		String protInfoFile = wd + projectName + "_proteinsInNetwork_info.tsv";
-		
-		String distanceMatrixFile = wd + projectName + "_distanceMatrix.txt"; 
-		String distanceMatrix2File = wd +  projectName + "_distanceMatrix2.txt";
-		
+		String proteinsInNetworkOutputFile = wd + networkName +"_listOfProteinNames.tsv";
+		String protInfoFile = wd + networkName + "_proteinsInNetwork_info.tsv";
+
+		String distanceMatrixFile = wd + networkName + "_distanceMatrix.txt"; 
+		String distanceMatrix2File = wd +  networkName + "_distanceMatrix2.txt";
+
 		if(removeOverlyConnectedProteins) {
-			distanceMatrixFile = wd + projectName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix.txt";
-			distanceMatrix2File = wd + projectName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix2.txt";
+			distanceMatrixFile = wd + networkName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix.txt";
+			distanceMatrix2File = wd + networkName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix2.txt";
 		}
-		
+
 		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_degenMotifMappedToProteinsInNetwork_";
-		
+		if(Boolean.parseBoolean(params.getProperty("nullModel"))){
+			degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_nullModel_degenMotifMappedToProteinsInNetwork_";
+		}
+
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
 
 		int clusteringMeasure = Integer.parseInt(params.getProperty("clusteringMeasure", "0"));
@@ -97,9 +108,9 @@ public class Main {
 		System.out.println("Number of Proteins: " + proteinList.size() + "\n");
 		//printProtAndRefSeqIdsInNetwork(rnaIdListFile, proteinList);
 		//printRefSeqIdsInNetwork(rnaIdListFile, proteinList);
-		
+
 		//CheckDegreeDistributions.assessDegreeDistribution(proteinList2, interactionList, (wd + projectName + "_degreesInNetwork.tsv"));
-		
+
 		File f = new File(distanceMatrixFile);
 		if(!f.exists() && !f.isDirectory()) {
 			System.out.println("**Generating distance matrix**");
@@ -116,7 +127,7 @@ public class Main {
 		/* Update proteins to keep in the network (ie. those that contribute to the most connected component) */
 		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
 		HashSet<String> proteinSet = NetworkProteins.getProteinSet(proteinList2);
-		
+
 		if(proteinList.size() != proteinList2.size()) {
 			System.out.println("**Checking for disconnected components**");
 			File f1 = new File(distanceMatrix2File);
@@ -134,26 +145,48 @@ public class Main {
 		int lowerBound = Integer.parseInt(params.getProperty("lowerBoundToSample", "3"));
 		int upperBound = Integer.parseInt(params.getProperty("upperBoundToSample", "2000"));
 		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
-		
+
 		/* Check annotation files and create companion file */
-		String annotationCompanionFilePrefix = params.getProperty("degenAnnotationPrefix") + projectName + "_n" + lowerBound + "_" + upperBound + "_motifAnnotationsCompanionFile_";
-		
-		File directory3 = new File(params.getProperty("degenAnnotationPrefix") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound); 
+
+		File directory3 = new File(params.getProperty("degenAnnotationPrefix") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
+
+		String annotationCompanionFilePrefix = params.getProperty("degenAnnotationPrefix") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
+				+ projectName + "_n" + lowerBound + "_" + upperBound + "_motifAnnotationsCompanionFile_";
+
 		if (! directory3.exists()){
-			System.out.println("creating directory for companion files");
+			System.out.println("creating directory: /CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound);
 			directory3.mkdir();
-			
+		}
+
+		//if(directory3.list().length < Integer.parseInt(params.getProperty("numDegenMotifFiles"))) {
+		if(Boolean.parseBoolean(params.getProperty("generateCompanionFiles"))) {
+
 			System.out.println("Creating companion files");
 			AnnotationCompanionFiles.assessAnnotationFile(degenAnnotationPrefix, annotationCompanionFilePrefix, proteinSet, 
-					Integer.parseInt(params.getProperty("numDegenMotifFiles")), lowerBound, upperBound);
+					Integer.parseInt(args[1]), Integer.parseInt(args[2]), lowerBound, upperBound);
 		}
+
+		File directory4 = new File(params.getProperty("degenAnnotationPrefix") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
+		String protFreqFilePrefix = params.getProperty("degenAnnotationPrefix") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
+				+"/" + projectName + "_n" + lowerBound + "_" + upperBound + "_proteinAnnotationFreq_" ;
 		
+		if (! directory4.exists()){
+			System.out.println("creating directory: /ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound);
+			directory4.mkdir();
+		}
+
 		if(Boolean.parseBoolean(params.getProperty("calculateProteinAnnotationFreq"))) {	
 			// For MC sampling 
 			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
-			System.out.println("**Enumerating protein annotation frequency file**");
+
+			System.out.println("**Enumerating protein annotation frequency files**");
 			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound, proteinSet);
-			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, annotationCompanionFilePrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
+			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, annotationCompanionFilePrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]), protFreqFilePrefix);
+		
+			if(directory4.list().length == Integer.parseInt(params.getProperty("numDegenMotifFiles"))) {
+				System.out.println("Combining protein annotation frequency data /n");
+				freq.combineProteinFrequencyData(protFreqFilePrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
+			}
 		}
 
 		/* Perform Monte Carlo Sampling procedure */

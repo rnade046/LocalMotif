@@ -24,46 +24,57 @@ public class AnnotationCompanionFiles {
 	 * @param lowerBound
 	 * @param upperBound
 	 */
-	public static void assessAnnotationFile(String annotationPrefix, String companionFilePrefix, HashSet<String> proteinSet, int numFiles, int lowerBound, int upperBound) {
+	public static void assessAnnotationFile(String annotationPrefix, String companionFilePrefix, HashSet<String> proteinSet, 
+			int args1, int args2, int lowerBound, int upperBound) {
 
-		for(int i=0; i<numFiles; i++) {
-
-			try {
-				InputStream in = new FileInputStream(new File(annotationPrefix + i));
-				BufferedReader input = new BufferedReader(new InputStreamReader(in));
-
-				BufferedWriter out = new BufferedWriter(new FileWriter(new File(companionFilePrefix + i)));
-
-				String line = input.readLine(); // no header
-
-				while(line!= null) {
-
-					String[] col = line.split("\t");
-					String motif = col[0];
-					String[] proteins = col[2].split("\\|");
-
-					/* Count proteins in network */
-					int protCount = 0;
-					for(String protein: proteins) {
-						if(proteinSet.contains(protein)) {
-							protCount++;
-						}
-					}
-
-					/* print motif info if it respects upper and lower bound */
-					if(protCount >= lowerBound && protCount <= upperBound) {
-						out.write(motif + "\t" + proteins.length + "\t" + protCount + "\n");
-						out.flush();
-					}
-
-					line = input.readLine();
-				}
-				input.close();
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+		//for(int i=0; i<numFiles; i++) {
+		for(int i=args1; i <= args2; i++) {
+			
+			System.out.print(i+ ".");
+			
+			if(i%10 == 0) {
+				System.out.println();
 			}
 
+			File f = new File(companionFilePrefix + i);
+			if(!f.exists()) { 
+
+				try {
+					InputStream in = new FileInputStream(new File(annotationPrefix + i));
+					BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+					BufferedWriter out = new BufferedWriter(new FileWriter(new File(companionFilePrefix + i)));
+
+					String line = input.readLine(); // no header
+
+					while(line!= null) {
+
+						String[] col = line.split("\t");
+						String motif = col[0];
+						String[] proteins = col[2].split("\\|");
+
+						/* Count proteins in network */
+						int protCount = 0;
+						for(String protein: proteins) {
+							if(proteinSet.contains(protein)) {
+								protCount++;
+							}
+						}
+
+						/* print motif info if it respects upper and lower bound */
+						if(protCount >= lowerBound && protCount <= upperBound) {
+							out.write(motif + "\t" + proteins.length + "\t" + protCount + "\n");
+							out.flush();
+						}
+
+						line = input.readLine();
+					}
+					input.close();
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }
