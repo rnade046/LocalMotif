@@ -17,7 +17,7 @@ public class MainFDR {
 		params.load(new FileInputStream(args[0]));		
 
 		String wd = params.getProperty("working_directory");
-		String projectName = params.getProperty("project_name");
+		String projectName = params.getProperty("network_name");
 
 		//String motifsPrefix = wd + "motifClustering/" + projectName + "_testedDegenMotifClustering_";
 		//String nullMotifsPrefix = wd + "motifClustering/" + projectName + "_testedDegenMotifClustering_";
