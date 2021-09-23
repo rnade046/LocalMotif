@@ -1,9 +1,11 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Properties;
 
+import ClusteredMotifs.FunctionalEnrichment;
 import ClusteredMotifs.IdentifyMotifs;
 import ClusteredMotifs.MotifFamily;
 import ClusteredMotifs.Similarity;
@@ -47,7 +49,7 @@ public class MainResults {
 		String annotationPrefixFile = params.getProperty("degenAnnotationPrefix");
 		String protAnnotationFreqFile = params.getProperty("");
 		
-		String extractedAnnotationsFile = wd +  "motifFamilies/" + networkName + clusteringName + "_annotationSubset.tsv";
+		String extractedAnnotationsFile = wd + networkName + clusteringName + "_annotationSubset.tsv";
 		
 		String motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_motifsMatrix_p" + pvalThreshold + ".tsv";
 		String similarityMatrix = wd + "motifFamilies/" +  networkName + clusteringName + "_similarity_DistanceMatrix_p" + pvalThreshold + ".tsv" ;
@@ -70,7 +72,28 @@ public class MainResults {
 		System.out.println("**Identifying annotated proteins**");
 		IdentifyMotifs.getAnnotatedProteinInfo(motifMapOfFileIdx, protAnnotationFreqFile, extractedAnnotationsFile,	annotationPrefixFile);
 		
+		if(Boolean.parseBoolean(params.getProperty("goEnrich"))) {
+			
+			File directory = new File(wd + "/Ontologizer/"); 
+			if (! directory.exists()){
+				System.out.println("creating directory: Ontologizer/");
+				directory.mkdir();
+			}
+			
+			String proteinsInNetworkFile = wd + "Ontologizer/" + networkName + "_proteinsInNetwork.txt";
+			String annotatedProteinsPrefix = wd + "Ontologizer/" + networkName + clusteringMeasure + "_annotatedProteinsByMotif_";
+			System.out.println("**Formatting files for ontologizer analysis**");
+			FunctionalEnrichment.formatFilesForOntologizer(protAnnotationFreqFile, extractedAnnotationsFile, proteinsInNetworkFile, annotatedProteinsPrefix);
+		}
+		
+		
 		if(Boolean.parseBoolean(params.getProperty("computeSimilarity"))) {
+			
+			File directory2 = new File(wd + "/motifFamilies/"); 
+			if (! directory2.exists()){
+				System.out.println("creating directory: motifFamilies/");
+				directory2.mkdir();
+			}
 			
 			System.out.println("**Loading annotation info**");
 			/* Search through annotation Files to get proteins annotated by significant motifs: (1) store in map for similarity measuring, (2) print to file for local testing */
