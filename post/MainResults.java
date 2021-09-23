@@ -44,7 +44,9 @@ public class MainResults {
 		
 		String significantMotifsFile = wd +  networkName + clusteringName +"_signficantMotifs_p" + pvalThreshold +".tsv";
 
-		//String annotationPrefixFile = params.getProperty("degenAnnotationPrefix");
+		String annotationPrefixFile = params.getProperty("degenAnnotationPrefix");
+		String protAnnotationFreqFile = params.getProperty("");
+		
 		String extractedAnnotationsFile = wd +  "motifFamilies/" + networkName + clusteringName + "_annotationSubset.tsv";
 		
 		String motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_motifsMatrix_p" + pvalThreshold + ".tsv";
@@ -65,13 +67,15 @@ public class MainResults {
 		//HashMap<String, Integer> motifMapOfFileIdx = IdentifyMotifs.loadSignificantMotifs(significantMotifsFile);
 		System.out.println("Number of significant motifs: " + motifMapOfFileIdx.size() + "\n");
 		
+		System.out.println("**Identifying annotated proteins**");
+		IdentifyMotifs.getAnnotatedProteinInfo(motifMapOfFileIdx, protAnnotationFreqFile, extractedAnnotationsFile,	annotationPrefixFile);
 		
 		if(Boolean.parseBoolean(params.getProperty("computeSimilarity"))) {
 			
 			System.out.println("**Loading annotation info**");
 			/* Search through annotation Files to get proteins annotated by significant motifs: (1) store in map for similarity measuring, (2) print to file for local testing */
 			//HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.getAnnotatedProteinInfo(motifMapOfFileIdx, annotationPrefixFile);
-			HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.getAnnotatedProteinInfoForTesting(extractedAnnotationsFile);
+			HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.loadAnnotatedProteinInfo(extractedAnnotationsFile);
 			System.out.println("Found motif info: " + motifMapOfAnnotatedProteins.size() + "\n");
 			System.out.println("**Computing similarity**");
 			Similarity.computeMotifSimilary(motifMapOfAnnotatedProteins, motifsInMatrixFile, similarityMatrix);
