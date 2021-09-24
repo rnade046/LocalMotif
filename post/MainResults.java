@@ -46,8 +46,8 @@ public class MainResults {
 		
 		String significantMotifsFile = wd +  networkName + clusteringName +"_signficantMotifs_p" + pvalThreshold +".tsv";
 
-		String annotationPrefixFile = params.getProperty("degenAnnotationPrefix");
-		String protAnnotationFreqFile = params.getProperty("");
+		String annotationPrefixFile = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_degenMotifMappedToProteinsInNetwork_";
+		String protAnnotationFreqFile = wd + networkName + "_protFreqAnnotation.tsv";
 		
 		String extractedAnnotationsFile = wd + networkName + clusteringName + "_annotationSubset.tsv";
 		
@@ -63,14 +63,23 @@ public class MainResults {
 		String motifInstancesPrefix = wd +  "motifFamilies/" +  networkName + "_ppm_motifFamilyGroup";
 		String motifInfoFile = wd +  "motifFamilies/" + networkName + "_motifFamiliesInfo.tsv";
 		
-		System.out.println("**Identifying significant motifs**");
+		
 		/* Identify motifs that pass significant threshold: (1) print details to separate file, (2) store motif and file # in map */ 
-		HashMap<String, Integer> motifMapOfFileIdx = IdentifyMotifs.getSignificantMotifs(motifClusteringPrefix, numOfFiles, pvalThreshold, significantMotifsFile);
-		//HashMap<String, Integer> motifMapOfFileIdx = IdentifyMotifs.loadSignificantMotifs(significantMotifsFile);
+		File f = new File(significantMotifsFile);
+		if(!f.exists() && !f.isDirectory()) { 
+			System.out.println("**Identifying significant motifs**");
+			IdentifyMotifs.getSignificantMotifs(motifClusteringPrefix, numOfFiles, pvalThreshold, significantMotifsFile);
+		}
+		
+		System.out.println("**Loading significant motifs**");
+		HashMap<String, Integer> motifMapOfFileIdx = IdentifyMotifs.loadSignificantMotifs(significantMotifsFile);
 		System.out.println("Number of significant motifs: " + motifMapOfFileIdx.size() + "\n");
 		
-		System.out.println("**Identifying annotated proteins**");
-		IdentifyMotifs.getAnnotatedProteinInfo(motifMapOfFileIdx, protAnnotationFreqFile, extractedAnnotationsFile,	annotationPrefixFile);
+		File f2 = new File(extractedAnnotationsFile);
+		if(!f2.exists() && !f2.isDirectory()) { 
+			System.out.println("**Identifying annotated proteins**");
+			IdentifyMotifs.getAnnotatedProteinInfo(motifMapOfFileIdx, protAnnotationFreqFile, extractedAnnotationsFile,	annotationPrefixFile);
+		}
 		
 		if(Boolean.parseBoolean(params.getProperty("goEnrich"))) {
 			
@@ -81,7 +90,7 @@ public class MainResults {
 			}
 			
 			String proteinsInNetworkFile = wd + "Ontologizer/" + networkName + "_proteinsInNetwork.txt";
-			String annotatedProteinsPrefix = wd + "Ontologizer/" + networkName + clusteringMeasure + "_annotatedProteinsByMotif_";
+			String annotatedProteinsPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_annotatedProteinsByMotif_";
 			System.out.println("**Formatting files for ontologizer analysis**");
 			FunctionalEnrichment.formatFilesForOntologizer(protAnnotationFreqFile, extractedAnnotationsFile, proteinsInNetworkFile, annotatedProteinsPrefix);
 		}

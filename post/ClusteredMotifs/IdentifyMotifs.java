@@ -28,9 +28,7 @@ public class IdentifyMotifs {
 	 * 
 	 * @return	motifsMapFileIdx		Map<String, Integer> - list of significant motifs and the file index that contains them
 	 */
-	public static HashMap<String, Integer> getSignificantMotifs(String motifClusteringPrefix, int numOfFiles, double pvalThreshold, String outputFile) {
-
-		HashMap<String, Integer> motifsMapFileIdx = new HashMap<>();
+	public static void getSignificantMotifs(String motifClusteringPrefix, int numOfFiles, double pvalThreshold, String outputFile) {
 
 		try {
 
@@ -60,7 +58,6 @@ public class IdentifyMotifs {
 					/* motif that pass significant threshold have their info printed to file and stored in map */
 					double pval = Double.parseDouble(line.split("\t")[3]);
 					if(pval <= pvalThreshold) {
-						motifsMapFileIdx.put(line.split("\t")[0], i);
 						out.write(line + "\t" + i + "\n");
 					}
 					line = input.readLine();
@@ -73,7 +70,6 @@ public class IdentifyMotifs {
 		}
 		
 		System.out.println("Done");
-		return motifsMapFileIdx;
 	}
 	
 	
@@ -86,11 +82,12 @@ public class IdentifyMotifs {
 				InputStream in = new FileInputStream(new File(motifClusteringFile));
 				BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
-				String line = input.readLine();
+				String line = input.readLine(); // header
+				line = input.readLine();
 
 				while(line!=null) {
 
-					motifsMapFileIdx.put(line.split("\t")[0], 1);
+					motifsMapFileIdx.put(line.split("\t")[0], Integer.parseInt(line.split("\t")[4])); // [0] = motif, [4] = file number
 					
 					line = input.readLine();
 				}

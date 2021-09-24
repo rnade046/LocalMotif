@@ -63,7 +63,7 @@ public class FunctionalEnrichment {
 				System.out.println(motifCount);
 				BufferedWriter out = new BufferedWriter(new FileWriter(new File(annotatedProteinByMotifPrefix + motifCount)));
 
-				String[] protList = line.split("\t")[1].split("\\|");
+				String[] protList = line.split("\t")[2].split("\\|");
  				
 				for(String prot: protList) {
 					out.write(prot + "\n"); // protein name
