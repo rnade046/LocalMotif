@@ -46,8 +46,8 @@ public class FdrCalculator {
 		this.regMotifSize = (int) regMotifInfo[1];
 		this.nullMotifSize = (int) nullMotifInfo[1];
 		
-        System.out.println("Total tested null motifs: " + regMotifSize);
-        System.out.println("Total tested motifs: " + nullMotifSize);
+        System.out.println("Total tested motifs: " + regMotifSize);
+        System.out.println("Total tested null motifs: " + nullMotifSize);
      
 	}
 

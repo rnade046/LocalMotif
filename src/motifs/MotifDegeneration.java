@@ -130,7 +130,7 @@ public class MotifDegeneration {
 	 */
 	private HashSet<String> getAllMotifs(String motif, int solutions) {
 		HashSet<String> motifs = new HashSet<>();
-;
+
 		/* generate all solutions */ 
 		for(int i = 0; i < solutions; i++) {
 			int j = 1;

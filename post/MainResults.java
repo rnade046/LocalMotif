@@ -8,6 +8,7 @@ import java.util.Properties;
 import ClusteredMotifs.FunctionalEnrichment;
 import ClusteredMotifs.IdentifyMotifs;
 import ClusteredMotifs.MotifFamily;
+import ClusteredMotifs.PositionConservation;
 import ClusteredMotifs.Similarity;
 
 public class MainResults {
@@ -51,6 +52,8 @@ public class MainResults {
 		
 		String extractedAnnotationsFile = wd + networkName + clusteringName + "_annotationSubset.tsv";
 		
+		String proteinToRefSeqIdFile = wd +  networkName + "_proteinsInNetwork_info.tsv";
+		
 		String motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_motifsMatrix_p" + pvalThreshold + ".tsv";
 		String similarityMatrix = wd + "motifFamilies/" +  networkName + clusteringName + "_similarity_DistanceMatrix_p" + pvalThreshold + ".tsv" ;
 		
@@ -58,7 +61,7 @@ public class MainResults {
 		int numberOfFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups", "10"));
 		
 		String enumeratedMotifs = wd +  "motifFamilies/" + networkName + "_enumeratedMotifsPerRefSeqId.tsv";
-		String proteinToRefSeqIdFile = wd + "motifFamilies/" +  networkName + "_proteinsInNetwork_info.tsv";
+		
 		
 		String motifInstancesPrefix = wd +  "motifFamilies/" +  networkName + "_ppm_motifFamilyGroup";
 		String motifInfoFile = wd +  "motifFamilies/" + networkName + "_motifFamiliesInfo.tsv";
@@ -95,6 +98,19 @@ public class MainResults {
 			FunctionalEnrichment.formatFilesForOntologizer(protAnnotationFreqFile, extractedAnnotationsFile, proteinsInNetworkFile, annotatedProteinsPrefix);
 		}
 		
+		if(Boolean.parseBoolean(params.getProperty("motifPositions"))) {
+			
+			File directory = new File(wd + "/MotifPosition/"); 
+			if (! directory.exists()){
+				System.out.println("creating directory: MotifPosition/");
+				directory.mkdir();
+			}
+			
+			String fastaFile = wd + params.getProperty("fastaFile");
+			String motifOutputPrefixFile = wd + "MotifPoisition/motifPositionConservation_"; 
+			PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, 8);
+			p.getMotifPositions(extractedAnnotationsFile, motifOutputPrefixFile);
+		}
 		
 		if(Boolean.parseBoolean(params.getProperty("computeSimilarity"))) {
 			
