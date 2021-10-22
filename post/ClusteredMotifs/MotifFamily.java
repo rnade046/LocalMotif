@@ -158,7 +158,7 @@ public class MotifFamily {
 
 				String clusteringFile = clusteringFilePrefix + i;
 				try {
-					InputStream in = new FileInputStream(new File(clusteringFilePrefix));
+					InputStream in = new FileInputStream(new File(clusteringFile));
 					BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 					String line = input.readLine();
@@ -404,6 +404,7 @@ public class MotifFamily {
 		return ppm;
 	}
 	
+	@SuppressWarnings("unused")
 	private static void printMotifs(ArrayList<String> motifInstances, String outputFile) {
 
 		try {
@@ -440,6 +441,7 @@ public class MotifFamily {
 
 	}
 	
+	@SuppressWarnings("unused")
 	private static void printMotifInfo(String outputFile, int family, String repMotif, int numInstances) {
 
 		try {

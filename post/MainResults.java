@@ -107,9 +107,9 @@ public class MainResults {
 			}
 			
 			String fastaFile = wd + params.getProperty("fastaFile");
-			String motifOutputPrefixFile = wd + "MotifPoisition/motifPositionConservation_"; 
-			PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, 8);
-			p.getMotifPositions(extractedAnnotationsFile, motifOutputPrefixFile);
+			String motifOutputPrefixFile = wd + "MotifPosition/motifPositionConservation_"; 
+			PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8);
+			p.getMotifPositions(extractedAnnotationsFile, motifOutputPrefixFile, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 		}
 		
 		if(Boolean.parseBoolean(params.getProperty("computeSimilarity"))) {

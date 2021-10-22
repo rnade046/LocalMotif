@@ -19,9 +19,10 @@ public class PositionConservation {
 	private int motifLength;
 	private HashMap<String, Integer> fastaIdx;
 	private HashMap<String, String[]> proteinInfoMap;
+	private HashSet<String> annotatedProteins;
 
 	// Constructor
-	public PositionConservation(String fastaFile, String proteinInfoFile, int l) {
+	public PositionConservation(String fastaFile, String proteinInfoFile, String protFreqFile, int l) {
 
 		this.fasta = fastaFile;
 		this.motifLength = l;
@@ -29,9 +30,10 @@ public class PositionConservation {
 		this.fastaIdx = generateFastaFileIdx(fastaFile); // generate index for FASTA file
 		System.out.println("Load protein info file");
 		this.proteinInfoMap = loadProteinInfoFile(proteinInfoFile); // load protein info file
+		this.annotatedProteins = loadAnnotatedProteinsInNetwork(protFreqFile);
 	}
 
-	public void getMotifPositions(String extractedAnnotationsFile, String motifOutputPrefixFile) {
+	public void getMotifPositions(String extractedAnnotationsFile, String motifOutputPrefixFile, int lowerIdx, int upperIdx) {
 
 		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */ 
 		InputStream in;
@@ -40,42 +42,47 @@ public class PositionConservation {
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 			String line = input.readLine();
-
+			int lineCount = 1;
 			while(line != null) {
 
-				String[] col = line.split("\t"); // [0] = motif, [1] = proteinList
-				int motifCount = 1;
-				/* For every protein get list of refseqIDs*/
-				for(String prot: col[1].split("\\|")) {
+				if(lineCount >= lowerIdx && lineCount <= upperIdx) {
+					String[] col = line.split("\t"); // [0] = motif, [1] = proteinList
 
-					if(this.proteinInfoMap.containsKey(prot)) {
+					System.out.println(lineCount + ": ");
+					/* For every protein get list of refseqIDs*/
+					int protCount =1;
+					for(String prot: col[2].split("\\|")) {
 
-						String[] refSeqIDs = this.proteinInfoMap.get(prot);
-						ArrayList<ArrayList<Integer>> listMotifPositionsByRefSeqId = new ArrayList<>();
+						if(this.annotatedProteins.contains(prot) && this.proteinInfoMap.containsKey(prot)) {
 
-						for(String id: refSeqIDs) {
-							if(this.fastaIdx.containsKey(id)) {
-								int indexOfFasta = this.fastaIdx.get(id);
+							System.out.print(protCount + ".");
+							String[] refSeqIDs = this.proteinInfoMap.get(prot);
+							ArrayList<ArrayList<Integer>> listMotifPositionsByRefSeqId = new ArrayList<>();
 
-								/* Load sequence */
-								String sequence = loadRNAsequence(indexOfFasta);
+							for(String id: refSeqIDs) {
+								if(this.fastaIdx.containsKey(id)) {
+									int indexOfFasta = this.fastaIdx.get(id);
 
-								/* Search for motif in sequence */
-								listMotifPositionsByRefSeqId.add(searchForMotifPositionsInSequence(col[0], sequence)); // col[0] = motifs
-							} else {
-								listMotifPositionsByRefSeqId.add(new ArrayList<Integer>());
+									/* Load sequence */
+									String sequence = loadRNAsequence(indexOfFasta);
+
+									/* Search for motif in sequence */
+									listMotifPositionsByRefSeqId.add(searchForMotifPositionsInSequence(col[0], sequence)); // col[0] = motifs
+								} else {
+									listMotifPositionsByRefSeqId.add(new ArrayList<Integer>());
+								}
 							}
-						}
 
-						/* Print results 1 file per motif; protein \t position \t RefSeqId1=[Position,Position,etc.], RefSeqID2=[Position, Position]  */
-						/* Protein position is decided as the median, mode or smallest possible or random? */ 
-						String motifOutputFile = motifOutputPrefixFile + col[0] + "_motif" + motifCount;
-						printMotifPositions(prot, refSeqIDs, listMotifPositionsByRefSeqId, motifOutputFile);
+							/* Print results 1 file per motif; protein \t position \t RefSeqId1=[Position,Position,etc.], RefSeqID2=[Position, Position]  */
+							/* Protein position is decided as the median, mode or smallest possible or random? */ 
+							String motifOutputFile = motifOutputPrefixFile+ "motif" + lineCount;
+							printMotifPositions(prot, refSeqIDs, listMotifPositionsByRefSeqId, motifOutputFile);
+							protCount++;
+						}
 					}
 				}
-
 				line = input.readLine();
-				motifCount++;
+				lineCount++;
 			}
 			input.close();
 		} catch (IOException e) {
@@ -133,11 +140,12 @@ public class PositionConservation {
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 			String line = input.readLine();
-
 			while(line != null) {
 
 				String[] col = line.split("\t");
-				proteinToRefSeqIDMap.put(col[0], col[1].split("\\|")); // [0] = motif, [1] = list of refSeqIDs
+				if(col.length>1) { // some proteins in the network don't have an associated RefSeqID
+					proteinToRefSeqIDMap.put(col[0], col[1].split("\\|")); // [0] = motif, [1] = list of refSeqIDs
+				}
 				line = input.readLine();
 			}
 			input.close();
@@ -146,6 +154,30 @@ public class PositionConservation {
 		}
 
 		return proteinToRefSeqIDMap;
+	}
+
+
+	private static HashSet<String> loadAnnotatedProteinsInNetwork(String proteinFreqFile){
+
+		HashSet<String> annotatedProteinSet = new HashSet<>();
+
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(proteinFreqFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+			while(line != null) {
+
+				annotatedProteinSet.add(line.split("\t")[0]); // [0] = protein names
+
+				line = input.readLine();
+			}
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return annotatedProteinSet;
 	}
 
 	/**
@@ -194,7 +226,6 @@ public class PositionConservation {
 		int currentPosition = 0;
 
 		for(int i=(sequence.length() - this.motifLength); i>=0; i--) {
-
 			String subSeq = sequence.substring(i, i+8);
 			if(possibleInstances.contains(subSeq)) {
 				motifPositions.add(currentPosition);
@@ -294,13 +325,20 @@ public class PositionConservation {
 		/* Decide on motif position */
 		int minPosition = Integer.MAX_VALUE; // min
 
+		/* Map of positions and their frequencies */
 		HashMap<Integer, Integer> positionMode = new HashMap<>(); // mode 
-		int modeMax = 0;
+		int modeMax = 1;
 
+		HashMap<String, Integer> utrModeMap = new HashMap<>(); // mode of entire 3'utr positions
+		int utrModeMax = 1;
+		
 		ArrayList<Integer> allPositions = new ArrayList<>();
 
 		for(ArrayList<Integer> motifPositions: motifPositionByRefSeqID) {
 			if(!motifPositions.isEmpty()) {
+			
+				String utrPositions = ""; // utr mode initializaion
+				
 				for(int position: motifPositions) {
 
 					// minimum
@@ -321,6 +359,19 @@ public class PositionConservation {
 
 					// median
 					allPositions.add(position);
+					
+					utrPositions += position + ",";
+				}
+				
+				// update utr mode 
+				if(utrModeMap.containsKey(utrPositions)) {
+					int currentUtrPositionFrq = utrModeMap.get(utrPositions);
+					if(currentUtrPositionFrq + 1 > utrModeMax) {
+						utrModeMax++;
+					}
+					utrModeMap.put(utrPositions, currentUtrPositionFrq +1);
+				} else {
+					utrModeMap.put(utrPositions, 1);
 				}
 			}
 
@@ -335,29 +386,45 @@ public class PositionConservation {
 		}
 
 		int mode = Integer.MAX_VALUE;
-		if(modes.size() > 1) {
-			Collections.sort(modes);	
-		}
-		mode = modes.get(0);
+		if(!modes.isEmpty()) {
+			if(modes.size() > 1) {
+				Collections.sort(modes);	
+			}
 
+			mode = modes.get(0);
+		} 
+		
+		// utr mode 
+		String utrMode = "";
+		for(String utrPositions : utrModeMap.keySet()) {
+			if(utrModeMap.get(utrPositions) == utrModeMax) {
+				utrMode = utrPositions;
+			}
+		}
+		
 		// median
 		Collections.sort(allPositions);
-		int median = allPositions.get((int) Math.ceil(allPositions.size()/ (double) 2));
+		int median = Integer.MAX_VALUE;
+		if(!allPositions.isEmpty()) {
+			median = allPositions.get(((int) Math.ceil(allPositions.size()/ (double) 2)) -1);	
+		} 
+
 
 		try {
+
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile), true));
+
 			File f = new File(outputFile);
-			BufferedWriter out = new BufferedWriter(new FileWriter(f, true));
-			
 			if (f.length() == 0) {
-				out.write("ProteinName\tPositionMedian\tPositionMode\tPositionMin\tDetails");
+				out.write("ProteinName\tPositions\tPositionMedian\tPositionMode\tPositionMin\tDetails\n");
 			}
-			out.write(proteinName + "\t" + median + "\t" + mode +"\t" + minPosition + "\t");
-			
-			
+			out.write(proteinName + "\t" + utrMode + "\t" + median + "\t" + mode +"\t" + minPosition + "\t");
+
+
 			for(int i=0; i<refSeqIds.length; i++) {
 				ArrayList<Integer> positions = motifPositionByRefSeqID.get(i);
 				if(!positions.isEmpty()) {
-				
+
 					out.write(refSeqIds[i] + "=[");
 					Collections.sort(positions);
 					for(int j=0; j<positions.size(); j++){
@@ -366,6 +433,7 @@ public class PositionConservation {
 					out.write("],");
 				}
 			}
+			out.write("\n");
 
 			out.flush();
 			out.close();
@@ -374,5 +442,6 @@ public class PositionConservation {
 		}
 
 	}
+
 
 }
