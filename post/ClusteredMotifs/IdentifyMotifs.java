@@ -154,7 +154,7 @@ public class IdentifyMotifs {
 						/* output {motif	#proteins	proteinList} */
 						out.write(motif + "\t" + annotatedProteinsInNetwork.size() + "\t");
 						
-						for(String prot: proteinsInNetwork) {
+						for(String prot: annotatedProteinsInNetwork) {
 							out.write(prot + "|");
 						}
 						out.write("\n");

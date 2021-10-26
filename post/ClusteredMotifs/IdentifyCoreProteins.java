@@ -175,9 +175,10 @@ public class IdentifyCoreProteins {
 
 			out.write(motif + "\t" + numProts + "\t");
 			for(int protIdx : annotatedProtsIdxs) {
-				out.write(proteinsInNetwork.get(protIdx));
+				out.write(proteinsInNetwork.get(protIdx) + "|");
 				out.flush();
 			}
+			out.write("\n");
 			
 			out.close();
 		} catch (Exception e) {
