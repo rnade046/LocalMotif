@@ -13,12 +13,12 @@ public class QueryFormatter {
 
 	public static void main(String[] args) {
 
-		String motifFamilyPrefix = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm\\corrNetTop2_ppm_motifFamilyGroup";
-		String queryMotifCompOutput = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm\\queryMotifs.txt";
-		String queryMotifTomTom = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm\\queryMotifsTomTom.txt";
+		String motifFamilyPrefix = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm2\\corrNetTop2-400_TPPD_p0.3_ppm_motifFamilyGroup";
+		String queryMotifCompOutput = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm2\\queryMotifs.txt";
+		String queryMotifTomTom = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm2\\queryMotifsTomTom.txt";
 		
-		printFormatedQueryMotifsForMotifComp(motifFamilyPrefix, 10, queryMotifCompOutput);
-		printFormattedQueryMotifsForTomTom(motifFamilyPrefix, 10, queryMotifTomTom);
+		//printFormatedQueryMotifsForMotifComp(motifFamilyPrefix, 10, queryMotifCompOutput);
+		printFormattedQueryMotifsForTomTom(motifFamilyPrefix, 9, queryMotifTomTom);
 	}
 
 	private static void printFormatedQueryMotifsForMotifComp(String familyPrefix, int numFamilies, String outputFile) {

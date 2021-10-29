@@ -20,8 +20,7 @@ public class MotifFamily {
 
 
 	public static void assessMotifFamilies(String motifFamilyFilePrefix, int numberOfFamilies,
-			String clusteringFilePrefix, int numberOfClusteringFiles, String refSeqToMotifFile, 
-			String proteinToRefSeqIDsFile, String outputFilePrefix, String motifsInfoFile) {
+			String significantMotifFile, String refSeqToMotifFile, String proteinToRefSeqIDsFile, String motifInstancesPrefix, String outputFilePrefix, String motifsInfoFile) {
 
 		/* Load protein : refseqId list */
 		HashMap<String, HashSet<String>> proteinToRefSeqIDsMap = loadProteinsToRefSeqIdsMap(proteinToRefSeqIDsFile);
@@ -30,14 +29,14 @@ public class MotifFamily {
 		HashMap<String, HashSet<String>> refSeqIdToMotifsMap = loadRefSeqIDToMotifsMap(refSeqToMotifFile);
 
 		for(int i=1; i<=numberOfFamilies; i++) {
-
+			System.out.println("Motif family : " + i);
 			String motifFamilyFile = motifFamilyFilePrefix + i + ".tsv";
 
 			/* Load motifs in motif family identified during hierarchical clustering step */ 
 			HashSet<String> motifSet = loadMotifsInFamily(motifFamilyFile);
 
 			/* Obtain significant clustering information for every motif */
-			HashMap<String, Double> motifSignificantMap = getMotifSignificance(motifSet, clusteringFilePrefix, numberOfClusteringFiles);
+			HashMap<String, Double> motifSignificantMap = getMotifSignificance(motifSet, significantMotifFile);
 
 			/* Identify representative motif from list */
 			String representativeMotif = getRepresentativeMotif(motifSignificantMap);
@@ -48,9 +47,10 @@ public class MotifFamily {
 			double[][] ppm = calculatePPM(motifInstances, motifInstances.get(0).length());
 			
 			String outputFile = outputFilePrefix + i + ".tsv";
-			//printMotifs(motifInstances, outputFile);
+			String motifInstancesFile = motifInstancesPrefix + i;
+			printMotifs(motifInstances, motifInstancesFile);
 			printPPM(ppm, outputFile);
-			//printMotifInfo(motifsInfoFile, i, representativeMotif, motifInstances.size());
+			printMotifInfo(motifsInfoFile, i, representativeMotif, motifInstances.size());
 		}
 	}
 
@@ -148,17 +148,13 @@ public class MotifFamily {
 		return motifSet;
 	}
 
-	private static HashMap<String, Double> getMotifSignificance(HashSet<String> motifSet, String clusteringFilePrefix, int numberOfClusteringFiles){
+	private static HashMap<String, Double> getMotifSignificance(HashSet<String> motifSet, String significantMotifsFile){
 
 		HashMap<String, Double> motifSignificanceMap = new HashMap<>();
 
 		/* Get p-value for all motifs in this family */ /* rank in ascending order; take smallest one; if tie take motif with least amount of degen characters */ 
-		outerloop:
-			for(int i=0; i<numberOfClusteringFiles; i++) {
-
-				String clusteringFile = clusteringFilePrefix + i;
 				try {
-					InputStream in = new FileInputStream(new File(clusteringFile));
+					InputStream in = new FileInputStream(new File(significantMotifsFile));
 					BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 					String line = input.readLine();
@@ -169,10 +165,6 @@ public class MotifFamily {
 
 						if(motifSet.contains(motif)) {
 							motifSignificanceMap.put(motif, Double.parseDouble(line.split("\t")[3])); // [3] = p-value
-
-							if(motifSignificanceMap.size() == motifSet.size()) {
-								break outerloop;
-							}
 						}
 
 						line = input.readLine();
@@ -183,7 +175,6 @@ public class MotifFamily {
 					e.printStackTrace();
 				}
 
-			}
 
 		return motifSignificanceMap;
 	}

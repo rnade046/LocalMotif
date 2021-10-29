@@ -58,14 +58,14 @@ public class MainResults {
 		String motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_motifsMatrix_p" + pvalThreshold + ".tsv";
 		String similarityMatrix = wd + "motifFamilies/" +  networkName + clusteringName + "_similarity_DistanceMatrix_p" + pvalThreshold + ".tsv" ;
 
-		String motifFamilyFilePrefix = wd +  "motifFamilies/" + "motifFamily_ward_group";
+		String motifFamilyFilePrefix = wd +  "motifFamilies/" + "motifFamily_complte_group";
 		int numberOfFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups", "10"));
 
 		String enumeratedMotifs = wd +  "motifFamilies/" + networkName + "_enumeratedMotifsPerRefSeqId.tsv";
 
-
-		String motifInstancesPrefix = wd +  "motifFamilies/" +  networkName + "_ppm_motifFamilyGroup";
-		String motifInfoFile = wd +  "motifFamilies/" + networkName + "_motifFamiliesInfo.tsv";
+		String motifInstancesPrefix = wd + "motifFamilies/" + networkName + clusteringName + "_motifInstances_motifFamily";
+		String motifPPMPrefix = wd +  "motifFamilies/" +  networkName + clusteringName + "_ppm_motifFamilyGroup";
+		String motifInfoFile = wd +  "motifFamilies/" + networkName + clusteringName + "_motifFamiliesInfo.tsv";
 
 
 		/* Identify motifs that pass significant threshold: (1) print details to separate file, (2) store motif and file # in map */ 
@@ -149,7 +149,7 @@ public class MainResults {
 		/* Assess motif families */ 
 		if(Boolean.parseBoolean(params.getProperty("assessMotifFamilies"))) {
 			System.out.println("**Assessing motif families**");
-			MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, 1, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifInfoFile);
+			MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile);
 
 		}
 
