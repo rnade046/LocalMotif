@@ -10,7 +10,7 @@ public class ExportFdrDetails {
 
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter(fdrExportFile));
-            out.write("FDR" + "\t" + "Pval" + "\t" + "#Motifs" + "#NullMotifs" + "\n");
+            out.write("FDR" + "\t" + "Pval" + "\t" + "#Motifs" + "\t" + "#NullMotifs" + "\n");
 
             for (FalseDiscoveryRate fdr : falseDiscoveryRates) {
                 out.write(fdr.getFalseDiscoveryRate() + "\t" + fdr.getPvalue() + "\t" + fdr.getPassingAnnotation() + "\t" + fdr.getNullAnnotations() + "\n");
