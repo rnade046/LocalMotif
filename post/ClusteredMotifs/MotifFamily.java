@@ -20,7 +20,8 @@ public class MotifFamily {
 
 
 	public static void assessMotifFamilies(String motifFamilyFilePrefix, int numberOfFamilies,
-			String significantMotifFile, String refSeqToMotifFile, String proteinToRefSeqIDsFile, String motifInstancesPrefix, String outputFilePrefix, String motifsInfoFile) {
+			String significantMotifFile, String refSeqToMotifFile, String proteinToRefSeqIDsFile, 
+			String motifInstancesPrefix, String outputFilePrefix, String motifsInfoFile, String annotatedProteinsFile) {
 
 		/* Load protein : refseqId list */
 		HashMap<String, HashSet<String>> proteinToRefSeqIDsMap = loadProteinsToRefSeqIdsMap(proteinToRefSeqIDsFile);
@@ -40,10 +41,14 @@ public class MotifFamily {
 
 			/* Identify representative motif from list */
 			String representativeMotif = getRepresentativeMotif(motifSignificantMap);
-
+			
+			/* Generate list of non degenerate motifs from representative motif */
 			HashSet<String> possibleMotifSet = getPossibleInstancesOfMotif(representativeMotif);
+			
+			/* Load list of proteins annotated by representative motif */
+			HashSet<String> annotatedProteinSet = loadProteinsAnnotatedByRepresentativeMotif(representativeMotif, annotatedProteinsFile);
 
-			ArrayList<String> motifInstances = getInstancesOfMotifs(possibleMotifSet, proteinToRefSeqIDsMap, refSeqIdToMotifsMap);
+			ArrayList<String> motifInstances = getInstancesOfMotifs(possibleMotifSet, proteinToRefSeqIDsMap, refSeqIdToMotifsMap, annotatedProteinSet);
 			double[][] ppm = calculatePPM(motifInstances, motifInstances.get(0).length());
 			
 			String outputFile = outputFilePrefix + i + ".tsv";
@@ -152,7 +157,9 @@ public class MotifFamily {
 
 		HashMap<String, Double> motifSignificanceMap = new HashMap<>();
 
-		/* Get p-value for all motifs in this family */ /* rank in ascending order; take smallest one; if tie take motif with least amount of degen characters */ 
+		/* Get p-value for all motifs in this family 
+		 * rank in ascending order; take smallest one; 
+		 * if tie take motif with least amount of degen characters */ 
 				try {
 					InputStream in = new FileInputStream(new File(significantMotifsFile));
 					BufferedReader input = new BufferedReader(new InputStreamReader(in));
@@ -332,21 +339,57 @@ public class MotifFamily {
 		}	
 		return motifs;
 	}
+	
+	private static HashSet<String> loadProteinsAnnotatedByRepresentativeMotif(String representativeMotif, String annotatedProteinsFile){
+
+		HashSet<String> proteinSet = new HashSet<>();
+		
+		try {
+			InputStream in = new FileInputStream(new File(annotatedProteinsFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+
+			while(line != null) {
+				String motif = line.split("\t")[0];
+				
+				/* if line corresponds to representative motif, store all it's annotated proteins to set */
+				if(motif.equals(representativeMotif)) {
+					
+					String[] annotatedProteins = line.split("\t")[2].split("\\|");
+					proteinSet.addAll(Arrays.asList(annotatedProteins));
+				}
+				line = input.readLine();
+			}
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return proteinSet;
+	}
 
 	private static ArrayList<String> getInstancesOfMotifs(HashSet<String> possibleMotifs, HashMap<String, HashSet<String>> proteinToRefSeqIdsMap,
-			HashMap<String, HashSet<String>> refSeqIdToMotifsMap) {
+			HashMap<String, HashSet<String>> refSeqIdToMotifsMap, HashSet<String> annotatedProteinSet) {
 
 		/* Search fasta sequence; find instance of motif (ie. convert degen motif to non degen) ; print PWM to file */
 		ArrayList<String> instanceOfMotifList = new ArrayList<>();
 
 		/* Search for motif in a given protein; only one instance of a motif will be kept if found 
-		 * multiple times in sequence or in different refseqIds (variants)*/
-		for(Entry<String, HashSet<String>> proteinEntry : proteinToRefSeqIdsMap.entrySet()) {
+		 * multiple times in sequence or in different refseqIds (variants) > this is accomplished by 
+		 * making a hash set for every protein (therefore only one instance of any possible motif will
+		 * be kept per protein (from all 3'UTR variants) */ 
+		
+		for(Entry<String, HashSet<String>> proteinEntry : proteinToRefSeqIdsMap.entrySet()) { // Entry<Protein, List of RefSeqIDs>
+			
+			/* check if protein is associated to representative motif */
+			if(annotatedProteinSet.contains(proteinEntry.getKey())) {
 			HashSet<String> currentInstancesOfMotif = new HashSet<>();
 
-			for(String id: proteinEntry.getValue()) {
+			for(String id: proteinEntry.getValue()) { // iterating over every RefSeq Id associated to protein
 
-				if(refSeqIdToMotifsMap.containsKey(id)) {
+				if(refSeqIdToMotifsMap.containsKey(id)) {  // Map: RefSeqID = list of Motifs
+					
+					/* Iterate through motifs associated to refseq Id, store motif if corresponds to a possible motif instance */
 					for(String motif: refSeqIdToMotifsMap.get(id)) {
 						if(possibleMotifs.contains(motif)) {
 							currentInstancesOfMotif.add(motif);
@@ -355,8 +398,9 @@ public class MotifFamily {
 				}
 			}
 			instanceOfMotifList.addAll(currentInstancesOfMotif);
+		
+			}
 		}
-
 		return instanceOfMotifList;
 	}
 
