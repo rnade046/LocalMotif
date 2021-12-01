@@ -20,6 +20,7 @@ import utils.CorrelationGraphLoader;
 import utils.DistanceMatrix;
 import utils.MotifEnrichment;
 import utils.NetworkProteins;
+import utils.RandomizeProteinAnnotations;
 
 public class Main {
 
@@ -142,6 +143,13 @@ public class Main {
 			distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrix2File, proteinList2);
 		} 
 
+		/* Output protein list and 3'UTRs */ 
+		String nullMapFile = wd + projectName + "_nullModel_ProteinToRefseqIds.tsv";
+		File f2 = new File(nullMapFile);
+		if(!f2.exists() && !f2.isDirectory()) {
+			RandomizeProteinAnnotations.generateNullModel(proteinList2, nullMapFile);
+		}
+		
 		int lowerBound = Integer.parseInt(params.getProperty("lowerBoundToSample", "3"));
 		int upperBound = Integer.parseInt(params.getProperty("upperBoundToSample", "2000"));
 		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
