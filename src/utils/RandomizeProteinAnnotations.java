@@ -55,8 +55,9 @@ public class RandomizeProteinAnnotations {
 
 		/* Randomize array indexes */
 		Random ran = new Random();
-		for(int i=0; i<numProteins*1000; i++) {
-
+		
+		int maxShuffle = ((numProteins*(numProteins-1))/2)*100;
+		for(int i=0; i<maxShuffle; i++) {
 			// Select two indexes
 			int idx1 = ran.nextInt(numProteins);
 			int idx2 = ran.nextInt(numProteins);
@@ -111,8 +112,8 @@ public class RandomizeProteinAnnotations {
 		mapProteinsToMotifs(proteinToRefSeqIdsMap, motifToRefSeqIDsMap, outputProteinFile);
 	}
 
-
-
+	
+	
 	private static HashMap<String, String> loadProtToRefSeq(String mapFile){
 
 		HashMap<String, String> map = new HashMap<>();
@@ -126,13 +127,13 @@ public class RandomizeProteinAnnotations {
 
 			while(line != null) {
 				String prot = line.split("\t")[0];
-
+				
 				if(line.split("\t").length > 1 ) {
-					String[] values = line.split("\t")[1].split("\\|");
-					for(String id : values) {
-						map.put(id, prot);
-					}
-
+				String[] values = line.split("\t")[1].split("\\|");
+				for(String id : values) {
+					map.put(id, prot);
+				}
+				
 				}
 				line = input.readLine();
 			}
@@ -143,7 +144,7 @@ public class RandomizeProteinAnnotations {
 		}
 		return map;
 	}
-
+	
 	/**
 	 * Load motifs and their associated RefSeq Ids contained in text file into HashMap
 	 * Map should contain 65,466 motifs. 
@@ -207,24 +208,24 @@ public class RandomizeProteinAnnotations {
 						proteinSet.add(proteinToRefSeqIdsMap.get(id)); // get protein name
 					}
 				}
-
+			
 				if(!proteinSet.isEmpty()) {
-					out.write(motifEntry.getKey() + "\t"); // motif
-
-					for(String protein: proteinSet) {
-						out.write(protein + "|");
-					}
-					out.write("\n");
-
-					out.flush();
-
+				out.write(motifEntry.getKey() + "\t"); // motif
+				
+				for(String protein: proteinSet) {
+					out.write(protein + "|");
+				}
+				out.write("\n");
+				
+				out.flush();
+			
 				}
 			}
 
-			out.close();
-		} catch(IOException e) {
-			e.printStackTrace();
-		}
-
+		out.close();
+	} catch(IOException e) {
+		e.printStackTrace();
 	}
+
+}
 }
