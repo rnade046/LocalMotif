@@ -61,7 +61,7 @@ public class Main {
 
 		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_degenMotifMappedToProteinsInNetwork_";
 		if(Boolean.parseBoolean(params.getProperty("nullModel"))){
-			degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_nullModel_degenMotifMappedToProteinsInNetwork_";
+			degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "annotation_nullModel_";
 		}
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
@@ -143,13 +143,24 @@ public class Main {
 			distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrix2File, proteinList2);
 		} 
 
-		/* Output protein list and 3'UTRs */ 
-		String nullMapFile = wd + projectName + "_nullModel_ProteinToRefseqIds.tsv";
-		File f2 = new File(nullMapFile);
-		if(!f2.exists() && !f2.isDirectory()) {
-			RandomizeProteinAnnotations.generateNullModel(proteinList2, nullMapFile);
+		if(Boolean.parseBoolean(params.getProperty("generateNullModel"))) {
+			/* Output protein list and 3'UTRs */ 
+			String nullMapFile = wd + projectName + "_nullModel_ProteinToRefseqIds.tsv";
+			File f2 = new File(nullMapFile);
+			if(!f2.exists() && !f2.isDirectory()) {
+				System.out.println("**Randomizing protein-3'UTR associaions**");
+				RandomizeProteinAnnotations.generateNullModel(proteinList2, nullMapFile);
+			}
+			
+			String refSeqIdToMotifsFile = wd + "enumeratedMotifsPerRefSeqId.tsv";
+			String outputProteinFile = wd + projectName + "_proteinToMotifs.tsv";
+			File f3 = new File(outputProteinFile);
+			if(!f3.exists() && !f3.isDirectory()) {
+				System.out.println("**Generating map of proteins to motifs for annotation files**");
+				RandomizeProteinAnnotations.generateProteinToMotifMap(nullMapFile, refSeqIdToMotifsFile, outputProteinFile);
+			}
 		}
-		
+
 		int lowerBound = Integer.parseInt(params.getProperty("lowerBoundToSample", "3"));
 		int upperBound = Integer.parseInt(params.getProperty("upperBoundToSample", "2000"));
 		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
@@ -177,7 +188,7 @@ public class Main {
 		File directory4 = new File(params.getProperty("degenAnnotationPrefix") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
 		String protFreqFilePrefix = params.getProperty("degenAnnotationPrefix") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
 				+"/" + projectName + "_n" + lowerBound + "_" + upperBound + "_proteinAnnotationFreq_" ;
-		
+
 		if (! directory4.exists()){
 			System.out.println("creating directory: /ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound);
 			directory4.mkdir();
@@ -190,7 +201,7 @@ public class Main {
 			System.out.println("**Enumerating protein annotation frequency files**");
 			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound, proteinSet);
 			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, annotationCompanionFilePrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]), protFreqFilePrefix);
-		
+
 			if(directory4.list().length == Integer.parseInt(params.getProperty("numDegenMotifFiles"))) {
 				System.out.println("Combining protein annotation frequency data /n");
 				freq.combineProteinFrequencyData(protFreqFilePrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);

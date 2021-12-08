@@ -98,7 +98,8 @@ public class MapDegenMotifs {
 
 			while(line != null) {
 				String motif = line.split("\t")[0];
-				String[] proteinList = line.split("\t")[4].split("\\|");
+				// String[] proteinList = line.split("\t")[4].split("\\|");
+				String[] proteinList = line.split("\t")[1].split("\\|");
 
 				motifToProteinMap.put(motif, proteinList);
 

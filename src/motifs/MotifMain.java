@@ -72,7 +72,7 @@ public class MotifMain {
 		/* Output Files */
 		String mapMotifsToRefSeqIdsFile = wd + projectName + "_enumeratedMotifsPerRefSeqId.tsv"; // output from motif enumeration
 		String listOfUniqueMotifsFile = wd + projectName + "_ListOfUniqueMotifs.txt"; // output from motif enumeration
-		String motifMappedToProteinsFile = wd + projectName + "_motifMappedToProteinsInNetwork"; // output from motif enumeration
+		String motifMappedToProteinsFile = wd + projectName + "_nullModel_proteinToMotifs.tsv"; // output from motif enumeration
 		
 		String degenMotifSetPrefix = wd + params.getProperty("degenMotifsToTestPrefix").replace("\\s+", "");
 		String motifSetToTest = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
