@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class GetSequencesInNetworkForMEME {
@@ -32,15 +33,15 @@ public class GetSequencesInNetworkForMEME {
 			while(line !=null) {
 				System.out.println(lineCount);
 				HashSet<String> proteins = new HashSet<>(Arrays.asList(line.split("\t")));
+				if(proteins.size() >= 3) {
+					// Load refSeqIds associated to proteins in cluster
+					HashMap<String, Boolean> refSeqIdSet = loadRefSeqIdsFromNetworkInfoFile(proteins, proteinInfoFile);
 
-				// Load refSeqIds associated to proteins in cluster
-				HashSet<String> refSeqIdSet = loadRefSeqIdsFromNetworkInfoFile(proteins, proteinInfoFile);
+					// Iterate through FASTA file, printing lines if corresponds to refSeqId in network
+					String outputFile = wd + "benchmark//fasta//corrNet2-400_sequences_fasta_MEME_mclCluster_"+ lineCount+".txt";
 
-				// Iterate through FASTA file, printing lines if corresponds to refSeqId in network
-				String outputFile = wd + "benchmark//fasta//corrNet2-400_sequences_fasta_MEME_mclCluster_"+ lineCount+".txt";
-
-				printSequencesInNetwork(fastaFile, refSeqIdSet, outputFile);
-
+					printSequencesInNetwork(fastaFile, refSeqIdSet, outputFile);
+				}
 				line = input.readLine();
 				lineCount++;
 			}
@@ -52,9 +53,9 @@ public class GetSequencesInNetworkForMEME {
 
 	}
 
-	private static HashSet<String> loadRefSeqIdsFromNetworkInfoFile(HashSet<String> proteinsInCluster, String networkInfoFile){
+	private static HashMap<String, Boolean> loadRefSeqIdsFromNetworkInfoFile(HashSet<String> proteinsInCluster, String networkInfoFile){
 
-		HashSet<String> refSeqIDSet = new HashSet<>();
+		HashMap<String, Boolean> refSeqIDSet = new HashMap<>();
 
 		try {
 			InputStream in = new FileInputStream(new File(networkInfoFile));
@@ -67,7 +68,7 @@ public class GetSequencesInNetworkForMEME {
 					if(line.split("\t").length > 1) {
 						String[] refSeqIds = line.split("\t")[1].split("\\|");
 						for(String id : refSeqIds) {
-							refSeqIDSet.add(id);
+							refSeqIDSet.put(id, true);
 						}
 
 					}
@@ -82,7 +83,7 @@ public class GetSequencesInNetworkForMEME {
 		return refSeqIDSet;
 	}
 
-	public static void printSequencesInNetwork(String fastaFile, HashSet<String> refSeqIdSet, String outputFile) {
+	public static void printSequencesInNetwork(String fastaFile, HashMap<String, Boolean> refSeqIdSet, String outputFile) {
 
 		try {
 			InputStream in = new FileInputStream(new File(fastaFile));
@@ -98,8 +99,11 @@ public class GetSequencesInNetworkForMEME {
 				/* check if refseq Id is in network*/
 				if(line.startsWith(">")) {
 					String id = line.split("\\_")[2] + "_" + line.split("\\_|\\.")[3];
-					if(refSeqIdSet.contains(id)) {
-						print = true;
+					if(refSeqIdSet.containsKey(id)) {
+						if(refSeqIdSet.get(id)) {
+							print = true;
+							refSeqIdSet.put(id, false);
+						}
 					} else {
 						print = false;
 					}
