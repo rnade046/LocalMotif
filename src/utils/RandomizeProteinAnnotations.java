@@ -58,9 +58,14 @@ public class RandomizeProteinAnnotations {
 		
 		int maxShuffle = ((numProteins*(numProteins-1))/2)*100;
 		for(int i=0; i<maxShuffle; i++) {
+			
 			// Select two indexes
-			int idx1 = ran.nextInt(numProteins);
-			int idx2 = ran.nextInt(numProteins);
+			int idx1, idx2 = 0;
+			do {
+				idx1 = ran.nextInt(numProteins);
+				idx2 = ran.nextInt(numProteins);
+			} while (idx1 == idx2);
+			
 
 			// swap the indexes
 			proteins[idx1] = idx2;
