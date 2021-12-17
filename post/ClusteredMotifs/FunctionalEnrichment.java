@@ -22,6 +22,13 @@ public class FunctionalEnrichment {
 		formatAnnotatedProteinsByMotif(extractedAnnotationFile, annotatedProteinByMotifPrefix);
 	}
 	
+	public static void formatCoreFilesForOntologizer(String coreProteinAnnotationFile, String outputFilePrefix) {
+		
+		/* Create 1 file per motif with the list of annotated core proteins */
+		System.out.println("Format core proteins by motif:");
+		formatAnnotatedProteinsByMotif(coreProteinAnnotationFile, outputFilePrefix);
+		
+	}
 	
 	private static void formatProteinsInNetworkFile(String proteinAnnotatedFreqFile, String proteinNetworkOutputFile) {
 		

@@ -108,6 +108,14 @@ public class MainResults {
 			String annotatedProteinsPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_annotatedProteinsByMotif_";
 			System.out.println("**Formatting files for ontologizer analysis**");
 			FunctionalEnrichment.formatFilesForOntologizer(protAnnotationFreqFile, extractedAnnotationsFile, proteinsInNetworkFile, annotatedProteinsPrefix);
+		
+			/* Go enrichment of core proteins */
+			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
+				
+				String coreProteinsForOntologizerPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_coreProteinsByMotif_";
+				FunctionalEnrichment.formatCoreFilesForOntologizer(corePorteinsFile, coreProteinsForOntologizerPrefix);
+
+			}
 		}
 
 		if(Boolean.parseBoolean(params.getProperty("motifPositions"))) {
@@ -122,6 +130,14 @@ public class MainResults {
 			String motifOutputPrefixFile = wd + "MotifPosition/motifPositionConservation_"; 
 			PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8);
 			p.getMotifPositions(extractedAnnotationsFile, motifOutputPrefixFile, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+		
+			/* Go enrichment of core proteins */
+			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
+				motifOutputPrefixFile = wd + "MotifPositionConservation_coreProteins_";
+				p.getMotifPositions(corePorteinsFile, motifOutputPrefixFile, Integer.parseInt(args[1]), Integer.parseInt(args[2]));				
+				
+			}
+		
 		}
 
 		if(Boolean.parseBoolean(params.getProperty("computeSimilarity"))) {
