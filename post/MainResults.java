@@ -131,7 +131,7 @@ public class MainResults {
 			PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8);
 			p.getMotifPositions(extractedAnnotationsFile, motifOutputPrefixFile, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
 		
-			/* Go enrichment of core proteins */
+			/* motif positions of core proteins */
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 				motifOutputPrefixFile = wd + "MotifPositionConservation_coreProteins_";
 				p.getMotifPositions(corePorteinsFile, motifOutputPrefixFile, Integer.parseInt(args[1]), Integer.parseInt(args[2]));				

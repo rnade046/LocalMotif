@@ -28,11 +28,28 @@ public class RandomizeProteinAnnotations {
 		/* Randomize proteins and their 3'UTRs */
 		int[] proteinOrder = randomizeProteinsOrder(annotatedProteinsMap.size());
 
+		printOrder(proteinOrder);
+		
 		/* Generate null map of proteins to refSeq IDs*/
 		generateMapProteinToRefSeqIDs(annotatedProteinsMap, annotatedProteinList, proteinOrder, nullMapFile);
 
 	}
-
+	private static void printOrder(int[] proteinOrder) {
+		
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File("C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\proteinOrder.txt")));
+			
+			for(int i=0; i<proteinOrder.length; i++) {
+				out.write(proteinOrder[i] + "\n");
+				out.flush();
+			}
+			
+			out.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
 	private static HashMap<String, List<String>> getAnnotatedProteins(ArrayList<Protein> proteinList){
 
 		HashMap<String,	List<String>> proteinMap = new HashMap<>();
@@ -66,10 +83,13 @@ public class RandomizeProteinAnnotations {
 				idx2 = ran.nextInt(numProteins);
 			} while (idx1 == idx2);
 			
-
-			// swap the indexes
-			proteins[idx1] = idx2;
-			proteins[idx2] = idx1; 
+			// get values
+			int value1 = proteins[idx1];
+			int value2 = proteins[idx2];
+			
+			// swap the index values
+			proteins[idx1] = value2;
+			proteins[idx2] = value1; 
 		}
 
 		return proteins;

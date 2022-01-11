@@ -153,7 +153,7 @@ public class Main {
 		
 		if(Boolean.parseBoolean(params.getProperty("generateNullModel"))) {
 			/* Output protein list and 3'UTRs */ 
-			String nullMapFile = wd + projectName + "_nullModel_ProteinToRefseqIds.tsv";
+			String nullMapFile = wd + projectName + "_nullModel_ProteinToRefseqIds2.tsv";
 			File f2 = new File(nullMapFile);
 			if(!f2.exists() && !f2.isDirectory()) {
 				System.out.println("**Randomizing protein-3'UTR associaions**");
@@ -161,7 +161,7 @@ public class Main {
 			}
 			
 			String refSeqIdToMotifsFile = wd + "enumeratedMotifsPerRefSeqId.tsv";
-			String outputProteinFile = wd + projectName + "_proteinToMotifs.tsv";
+			String outputProteinFile = wd + projectName + "_nullModel_proteinToMotifs2.tsv";
 			File f3 = new File(outputProteinFile);
 			if(!f3.exists() && !f3.isDirectory()) {
 				System.out.println("**Generating map of proteins to motifs for annotation files**");
