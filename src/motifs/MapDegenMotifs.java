@@ -25,7 +25,8 @@ public class MapDegenMotifs {
 		try {
 			in = new FileInputStream(new File(listDegenMotifsToMotifsTestFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(degenMotifAnnotationFile)));
+			
 			String line = input.readLine(); //no header
 			int countMotifs = 0; 
 			while(line != null) {
@@ -41,7 +42,27 @@ public class MapDegenMotifs {
 				String degenMotif = line.split("\t")[0];
 				String[] motifList = line.split("\t")[1].split("\\|");
 				
-				mapAnnotationFiles(degenMotifAnnotationFile, degenMotif, motifList, motifToProteinMap);
+				/* For every motif, identify list of annotating proteins */
+				HashSet<String> proteinSet = new HashSet<>();
+				for(String motif: motifList) {
+					
+					if(motifToProteinMap.containsKey(motif)) {
+						for(String protein: motifToProteinMap.get(motif)) {
+							proteinSet.add(protein);
+						}
+					}
+				}
+				
+				/* if at least one protein is annotated by the motif, the motif will be printed to annotation file */
+				if(!proteinSet.isEmpty()) {
+					out.write(degenMotif + "\t" + proteinSet.size() + "\t");
+
+					for(String protein: proteinSet) {
+						out.write(protein + "|");
+					}
+					out.write("\n");
+					out.flush();
+				}
 
 				line = input.readLine();
 				countMotifs++;
@@ -49,6 +70,7 @@ public class MapDegenMotifs {
 			System.out.println("Done");
 			System.out.println("Total tested motifs: " + countMotifs);
 			
+			out.close();
 			input.close();
 		} catch(IOException e) {
 			e.printStackTrace();
@@ -113,35 +135,4 @@ public class MapDegenMotifs {
 		return motifToProteinMap;
 	}
 
-	private static void mapAnnotationFiles(String outputFile, String degenMotif, String[] motifSet, HashMap<String, String[]> motifToProteinMap) {
-
-		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile), true));
-
-			/* For every motif, identify list of annotating proteins */
-			HashSet<String> proteinSet = new HashSet<>();
-			for(String motif: motifSet) {
-				
-				if(motifToProteinMap.containsKey(motif)) {
-					for(String protein: motifToProteinMap.get(motif)) {
-						proteinSet.add(protein);
-					}
-				}
-			}
-			
-			/* if at least one protein is annotated by the motif, the motif will be printed to annotation file */
-			if(!proteinSet.isEmpty()) {
-				out.write(degenMotif + "\t" + proteinSet.size() + "\t");
-
-				for(String protein: proteinSet) {
-					out.write(protein + "|");
-				}
-				out.write("\n");
-			}
-
-			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 }
