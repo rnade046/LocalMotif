@@ -1,16 +1,67 @@
-package ClusteredMotifs;
+package functionalEnrichment;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Properties;
 
 public class FunctionalEnrichment {
 
+	public static void main(String[] args) throws FileNotFoundException, IOException {
+	
+		System.out.println("**Loading parameters file** \n");
+		Properties params = new Properties();
+		params.load(new FileInputStream(args[0]));		
+
+		String wd = params.getProperty("working_directory");
+		String networkName = params.getProperty("network_name");
+		
+		int clusteringMeasure = Integer.parseInt(params.getProperty("clusteringMeasure", "0"));
+		double percentThreshold = Double.parseDouble(params.getProperty("percentThreshold", "0.2"));
+
+		String clusteringName = "";
+
+		switch(clusteringMeasure) {
+		case 0: clusteringName = "_TPD";
+		break;
+		case 1: clusteringName = "_TPPD_p" + percentThreshold;
+		break;
+		case 2: clusteringName = "_coreTPD_p" + percentThreshold;
+		break;
+		}
+		
+		File directory = new File(wd + "/Ontologizer/"); 
+		if (! directory.exists()){
+			System.out.println("creating directory: Ontologizer/");
+			directory.mkdir();
+		}
+
+		String protAnnotationFreqFile = wd + networkName + "_protFreqAnnotation.tsv";
+
+		String extractedAnnotationsFile = wd + networkName + clusteringName + "_annotationSubset.tsv";
+		String corePorteinsFile = wd + networkName + clusteringName +"_coreProteinsByMotif.tsv";
+
+		String proteinsInNetworkFile = wd + "Ontologizer/" + networkName + "_proteinsInNetwork.txt";
+		String annotatedProteinsPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_annotatedProteinsByMotif_";
+		System.out.println("**Formatting files for ontologizer analysis**");
+		FunctionalEnrichment.formatFilesForOntologizer(protAnnotationFreqFile, extractedAnnotationsFile, proteinsInNetworkFile, annotatedProteinsPrefix);
+	
+		/* Go enrichment of core proteins */
+		if(clusteringMeasure == 1 || clusteringMeasure == 2) {
+			
+			String coreProteinsForOntologizerPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_coreProteinsByMotif_";
+			FunctionalEnrichment.formatCoreFilesForOntologizer(corePorteinsFile, coreProteinsForOntologizerPrefix);
+
+		}
+		
+	}
+	
 	public static void formatFilesForOntologizer(String proteinAnnotatedFreqFile, String extractedAnnotationFile, String proteinNetworkOutFile,	String annotatedProteinByMotifPrefix) {
 		
 		/* Create list of proteins in network from protein frequency file */

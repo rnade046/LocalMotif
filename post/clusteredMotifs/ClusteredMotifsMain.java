@@ -1,3 +1,5 @@
+package clusteredMotifs;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -5,21 +7,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Properties;
 
-import clusteredMotifs.IdentifyCoreProteins;
-import clusteredMotifs.IdentifyMotifs;
-import clusteredMotifs.MotifFamily;
-import clusteredMotifs.Similarity;
-import functionalEnrichment.FunctionalEnrichment;
-import positionConservation.PositionConservation;
-
-public class MainResults {
-
-	/**
-	 * Note: making changes for local testing
-	 */
+public class ClusteredMotifsMain {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-
+		
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
 		params.load(new FileInputStream(args[0]));		
@@ -40,24 +31,23 @@ public class MainResults {
 		case 2: clusteringName = "_coreTPD_p" + percentThreshold;
 		break;
 		}
-
+		
 		String motifClusteringPrefix = wd + "motifClustering/" + networkName + clusteringName + "_testedDegenMotifClustering_";
 		int numOfFiles = Integer.parseInt(params.getProperty("numDegenMotifFiles"));
-
 		double pvalThreshold = Double.parseDouble(params.getProperty("significantThreshold"));
 
 		String significantMotifsFile = wd +  networkName + clusteringName +"_signficantMotifs_p" + pvalThreshold +".tsv";
-
+		
 		String annotationPrefixFile = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_degenMotifMappedToProteinsInNetwork_";
 		String protAnnotationFreqFile = wd + networkName + "_protFreqAnnotation.tsv";
-
+		
 		String extractedAnnotationsFile = wd + networkName + clusteringName + "_annotationSubset.tsv";
 		String corePorteinsFile = wd + networkName + clusteringName +"_coreProteinsByMotif.tsv";
 
 		String proteinToRefSeqIdFile = wd +  networkName + "_proteinsInNetwork_info.tsv";
-
 		String enumeratedMotifs = wd +  "motifFamilies/" + networkName + "_enumeratedMotifsPerRefSeqId.tsv";
 
+		
 		/* Identify motifs that pass significant threshold: (1) print details to separate file, (2) store motif and file # in map */ 
 		File f = new File(significantMotifsFile);
 		if(!f.exists() && !f.isDirectory()) { 
@@ -68,17 +58,18 @@ public class MainResults {
 		System.out.println("**Loading significant motifs**");
 		HashMap<String, Integer> motifMapOfFileIdx = IdentifyMotifs.loadSignificantMotifs(significantMotifsFile);
 		System.out.println("Number of significant motifs: " + motifMapOfFileIdx.size() + "\n");
-
+		
+		/* Get annotations (motif = protein1|protein2|...|proteinN) of significant motifs for easy access in future analysis */ 
 		File f2 = new File(extractedAnnotationsFile);
 		if(!f2.exists() && !f2.isDirectory()) { 
 			System.out.println("**Identifying annotated proteins**");
 			IdentifyMotifs.getAnnotatedProteinInfo(motifMapOfFileIdx, protAnnotationFreqFile, extractedAnnotationsFile,	annotationPrefixFile);
 		}
 
-
 		File f3 = new File(corePorteinsFile);
 		if(!f3.exists() && !f3.isDirectory()) {
-			/* For CoreTPD and TPPD; load annotation subset and determine core proteins; print */
+			
+			/* For CoreTPD and TPPD; load annotation subset and determine core proteins; print to seperate file */
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 				
 				System.out.println("**Identifying Core Proteins**");
@@ -89,51 +80,8 @@ public class MainResults {
 						proteinToRefSeqIdFile, distanceMatrixFile, corePorteinsFile);
 			}
 		}
-
-		if(Boolean.parseBoolean(params.getProperty("goEnrich"))) {
-
-			File directory = new File(wd + "/Ontologizer/"); 
-			if (! directory.exists()){
-				System.out.println("creating directory: Ontologizer/");
-				directory.mkdir();
-			}
-
-			String proteinsInNetworkFile = wd + "Ontologizer/" + networkName + "_proteinsInNetwork.txt";
-			String annotatedProteinsPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_annotatedProteinsByMotif_";
-			System.out.println("**Formatting files for ontologizer analysis**");
-			FunctionalEnrichment.formatFilesForOntologizer(protAnnotationFreqFile, extractedAnnotationsFile, proteinsInNetworkFile, annotatedProteinsPrefix);
 		
-			/* Go enrichment of core proteins */
-			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
-				
-				String coreProteinsForOntologizerPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_coreProteinsByMotif_";
-				FunctionalEnrichment.formatCoreFilesForOntologizer(corePorteinsFile, coreProteinsForOntologizerPrefix);
-
-			}
-		}
-
-		if(Boolean.parseBoolean(params.getProperty("motifPositions"))) {
-
-			File directory = new File(wd + "/MotifPosition/"); 
-			if (! directory.exists()){
-				System.out.println("creating directory: MotifPosition/");
-				directory.mkdir();
-			}
-
-			String fastaFile = wd + params.getProperty("fastaFile");
-			String motifOutputPrefixFile = wd + "MotifPosition/motifPositionConservation_"; 
-			PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8);
-			p.getMotifPositions(extractedAnnotationsFile, motifOutputPrefixFile, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-		
-			/* motif positions of core proteins */
-			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
-				motifOutputPrefixFile = wd + "MotifPositionConservation_coreProteins_";
-				p.getMotifPositions(corePorteinsFile, motifOutputPrefixFile, Integer.parseInt(args[1]), Integer.parseInt(args[2]));				
-				
-			}
-		
-		}
-
+		/* Compute similarity between significant proteins for determination of motif family*/
 		if(Boolean.parseBoolean(params.getProperty("computeSimilarity"))) {
 
 			File directory2 = new File(wd + "/motifFamilies/"); 
@@ -182,7 +130,7 @@ public class MainResults {
 			int numberOfFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups", "10"));
 			
 			System.out.println("**Assessing motif families**");
-			//MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, extractedAnnotationsFile);
+			MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, extractedAnnotationsFile);
 
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 				
@@ -201,6 +149,5 @@ public class MainResults {
 		}
 
 	}
-
 
 }

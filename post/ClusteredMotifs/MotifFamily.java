@@ -1,4 +1,4 @@
-package ClusteredMotifs;
+package clusteredMotifs;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -439,7 +439,6 @@ public class MotifFamily {
 		return ppm;
 	}
 	
-	@SuppressWarnings("unused")
 	private static void printMotifs(ArrayList<String> motifInstances, String outputFile) {
 
 		try {
@@ -476,7 +475,6 @@ public class MotifFamily {
 
 	}
 	
-	@SuppressWarnings("unused")
 	private static void printMotifInfo(String outputFile, int family, String repMotif, int numInstances) {
 
 		try {

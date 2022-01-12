@@ -1,4 +1,4 @@
-package MotifComparaison;
+package motifComparaison;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

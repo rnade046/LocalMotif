@@ -1,4 +1,4 @@
-package ClusteredMotifs;
+package clusteredMotifs;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
