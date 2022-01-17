@@ -10,7 +10,7 @@ import java.util.Properties;
 public class ClusteredMotifsMain {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-		
+
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
 		params.load(new FileInputStream(args[0]));		
@@ -31,23 +31,23 @@ public class ClusteredMotifsMain {
 		case 2: clusteringName = "_coreTPD_p" + percentThreshold;
 		break;
 		}
-		
+
 		String motifClusteringPrefix = wd + "motifClustering/" + networkName + clusteringName + "_testedDegenMotifClustering_";
 		int numOfFiles = Integer.parseInt(params.getProperty("numDegenMotifFiles"));
 		double pvalThreshold = Double.parseDouble(params.getProperty("significantThreshold"));
 
 		String significantMotifsFile = wd +  networkName + clusteringName +"_signficantMotifs_p" + pvalThreshold +".tsv";
-		
+
 		String annotationPrefixFile = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_degenMotifMappedToProteinsInNetwork_";
 		String protAnnotationFreqFile = wd + networkName + "_protFreqAnnotation.tsv";
-		
+
 		String extractedAnnotationsFile = wd + networkName + clusteringName + "_annotationSubset.tsv";
 		String corePorteinsFile = wd + networkName + clusteringName +"_coreProteinsByMotif.tsv";
 
 		String proteinToRefSeqIdFile = wd +  networkName + "_proteinsInNetwork_info.tsv";
 		String enumeratedMotifs = wd +  "motifFamilies/" + networkName + "_enumeratedMotifsPerRefSeqId.tsv";
 
-		
+
 		/* Identify motifs that pass significant threshold: (1) print details to separate file, (2) store motif and file # in map */ 
 		File f = new File(significantMotifsFile);
 		if(!f.exists() && !f.isDirectory()) { 
@@ -58,7 +58,7 @@ public class ClusteredMotifsMain {
 		System.out.println("**Loading significant motifs**");
 		HashMap<String, Integer> motifMapOfFileIdx = IdentifyMotifs.loadSignificantMotifs(significantMotifsFile);
 		System.out.println("Number of significant motifs: " + motifMapOfFileIdx.size() + "\n");
-		
+
 		/* Get annotations (motif = protein1|protein2|...|proteinN) of significant motifs for easy access in future analysis */ 
 		File f2 = new File(extractedAnnotationsFile);
 		if(!f2.exists() && !f2.isDirectory()) { 
@@ -68,19 +68,19 @@ public class ClusteredMotifsMain {
 
 		File f3 = new File(corePorteinsFile);
 		if(!f3.exists() && !f3.isDirectory()) {
-			
+
 			/* For CoreTPD and TPPD; load annotation subset and determine core proteins; print to seperate file */
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
-				
+
 				System.out.println("**Identifying Core Proteins**");
-				
+
 				String distanceMatrixFile = wd + networkName + "_removedOverConnectedProteins_" + params.getProperty("maxInteractions") + "_distanceMatrix2.txt";
 
 				IdentifyCoreProteins.getCoreProteins(extractedAnnotationsFile, Double.parseDouble(params.getProperty("percentThreshold")), 
 						proteinToRefSeqIdFile, distanceMatrixFile, corePorteinsFile);
 			}
 		}
-		
+
 		/* Compute similarity between significant proteins for determination of motif family*/
 		if(Boolean.parseBoolean(params.getProperty("computeSimilarity"))) {
 
@@ -89,65 +89,96 @@ public class ClusteredMotifsMain {
 				System.out.println("creating directory: motifFamilies/");
 				directory2.mkdir();
 			}
-			
-			String motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_motifsMatrix_p" + pvalThreshold + ".tsv";
-			String similarityMatrix = wd + "motifFamilies/" +  networkName + clusteringName + "_similarity_DistanceMatrix_p" + pvalThreshold + ".tsv" ;
-			
-			System.out.println("**Loading annotation info**");
-			/* Search through annotation Files to get proteins annotated by significant motifs: (1) store in map for similarity measuring, (2) print to file for local testing */
-			//HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.getAnnotatedProteinInfo(motifMapOfFileIdx, annotationPrefixFile);
-			HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.loadAnnotatedProteinInfo(extractedAnnotationsFile);
-			System.out.println("Found motif info: " + motifMapOfAnnotatedProteins.size() + "\n");
-			System.out.println("**Computing similarity**");
-			Similarity.computeMotifSimilary(motifMapOfAnnotatedProteins, motifsInMatrixFile, similarityMatrix);
-			
-			/* For CoreTPD and TPPD; load annotation subset and determine core proteins; print */
-			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
-				
-				System.out.println("**Similarity calculation for Core Proteins**");
-				
-				motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_CorePorteins_motifsMatrix_p" + pvalThreshold + ".tsv";
-				similarityMatrix = wd + "motifFamilies/" +  networkName + clusteringName + "_CoreProteins_similarity_DistanceMatrix_p" + pvalThreshold + ".tsv" ;
-				
-				motifMapOfAnnotatedProteins = IdentifyMotifs.loadAnnotatedProteinInfo(corePorteinsFile);
+
+			String motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_p" + pvalThreshold + "_MotifsInMatrix.tsv";
+			String similarityMatrix = wd + "motifFamilies/" +  networkName + clusteringName + "_p" + pvalThreshold + "_DistanceMatrix.tsv" ;
+			f3 = new File(similarityMatrix);
+			if(!f3.exists() && !f3.isDirectory()) { 
+				System.out.println("**Loading annotation info**");
+				/* Search through annotation Files to get proteins annotated by significant motifs: (1) store in map for similarity measuring, (2) print to file for local testing */
+				//HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.getAnnotatedProteinInfo(motifMapOfFileIdx, annotationPrefixFile);
+				HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.loadAnnotatedProteinInfo(extractedAnnotationsFile);
 				System.out.println("Found motif info: " + motifMapOfAnnotatedProteins.size() + "\n");
+
+
 				System.out.println("**Computing similarity**");
 				Similarity.computeMotifSimilary(motifMapOfAnnotatedProteins, motifsInMatrixFile, similarityMatrix);
-
 			}
-		}
-
-		/* output to R : perform hierarchical clustering*/
-
-		/* Assess motif families */ 
-		if(Boolean.parseBoolean(params.getProperty("assessMotifFamilies"))) {
-			
-			String motifInstancesPrefix = wd + "motifFamilies/" + networkName + clusteringName + "_motifInstances_motifFamily";
-			String motifPPMPrefix = wd +  "motifFamilies/" +  networkName + clusteringName + "_ppm_motifFamilyGroup";
-			String motifInfoFile = wd +  "motifFamilies/" + networkName + clusteringName + "_motifFamiliesInfo.tsv";
-
-			String motifFamilyFilePrefix = wd +  "motifFamilies/" + "motifFamily_CoreTPD40_ward2_group";
-			int numberOfFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups", "10"));
-			
-			System.out.println("**Assessing motif families**");
-			MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, extractedAnnotationsFile);
-
+			/* For CoreTPD and TPPD; load annotation subset and determine core proteins; print */
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
+
 				
-				motifInstancesPrefix = wd + "motifFamilies/" + networkName + clusteringName + "_coreProteins_motifInstances_motifFamily";
-				motifPPMPrefix = wd +  "motifFamilies/" +  networkName + clusteringName + "_coreProteins_ppm_motifFamilyGroup";
-				motifInfoFile = wd +  "motifFamilies/" + networkName + clusteringName + "_coreProteins_motifFamiliesInfo.tsv";
+
+				motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_CorePorteins_p" + pvalThreshold + "_MotifsInMatrix.tsv";
+				similarityMatrix = wd + "motifFamilies/" +  networkName + clusteringName + "_CoreProteins_p" + pvalThreshold + "_DistanceMatrix.tsv" ;
+
+				f3 = new File(similarityMatrix);
+				if(!f3.exists() && !f3.isDirectory()) { 
+					System.out.println("**Similarity calculation for Core Proteins**");
+					HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.loadAnnotatedProteinInfo(corePorteinsFile);
+					System.out.println("Found motif info: " + motifMapOfAnnotatedProteins.size() + "\n");
+
+					System.out.println("**Computing similarity**");
+					Similarity.computeMotifSimilary(motifMapOfAnnotatedProteins, motifsInMatrixFile, similarityMatrix);
+
+				}
+
+
+				/* output to R : perform hierarchical clustering*/
+				String wd4r = wd + "motifFamilies/";
+				String projectName = networkName + clusteringName;
+				//Runtime.getRuntime().exec("Rscript HierarchicalClustering_1.R " + wd4r + " " + projectName + " " + pvalThreshold + " ward.D2"); 
+				Runtime.getRuntime().exec("Rscript HierarchicalClustering_1.R C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies/ corrNetTop2-400_coreTPD_p0.4 5.41545109270352E-7 ward.D2");
 				
-				motifFamilyFilePrefix = wd +  "motifFamilies/" + "motifFamily_CoreTPD40_CoreProteins_ward2_group";
-				int numberOfCoreFamilies = Integer.parseInt(params.getProperty("coreFamilyGroups", "10"));
-				
-				System.out.println("**Assessing motif instances for Core Proteins**");
-				MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfCoreFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, corePorteinsFile);
+				// run second R script when ready (e.g. h is set)
+				double height = Double.parseDouble(params.getProperty("height", "0"));
+				if(height != 0) {
+					Runtime.getRuntime().exec("Rscript HierarchicalClustering_2.R" + wd4r + " " + projectName + " " + pvalThreshold + " ward2" + height); 
+				}
+
+				if(clusteringMeasure == 1 || clusteringMeasure == 2) {
+
+					/* output to R : perform hierarchical clustering for CoreProteins */
+					projectName = networkName + clusteringName + "_CoreProteins";
+					Runtime.getRuntime().exec("Rscript HierarchicalClustering_1.R" + wd4r + " " + projectName + " " + pvalThreshold + " ward2"); 
+
+					// run second R script when ready (e.g. h is set)
+					double height2 = Double.parseDouble(params.getProperty("coreHeight", "0"));
+					if(height != 0) {
+						Runtime.getRuntime().exec("Rscript HierarchicalClustering_2.R" + wd4r + " " + projectName + " " + pvalThreshold + " ward2" + height2); 
+					}
+				}
+			}
+			/* Assess motif families */ 
+			if(Boolean.parseBoolean(params.getProperty("assessMotifFamilies"))) {
+
+				String motifInstancesPrefix = wd + "motifFamilies/" + networkName + clusteringName + "_motifInstances_motifFamily";
+				String motifPPMPrefix = wd +  "motifFamilies/" +  networkName + clusteringName + "_ppm_motifFamilyGroup";
+				String motifInfoFile = wd +  "motifFamilies/" + networkName + clusteringName + "_motifFamiliesInfo.tsv";
+
+				String motifFamilyFilePrefix = wd +  "motifFamilies/" + "motifFamily_CoreTPD40_ward2_group";
+				int numberOfFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups", "10"));
+
+				System.out.println("**Assessing motif families**");
+				MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, extractedAnnotationsFile);
+
+				if(clusteringMeasure == 1 || clusteringMeasure == 2) {
+
+					motifInstancesPrefix = wd + "motifFamilies/" + networkName + clusteringName + "_coreProteins_motifInstances_motifFamily";
+					motifPPMPrefix = wd +  "motifFamilies/" +  networkName + clusteringName + "_coreProteins_ppm_motifFamilyGroup";
+					motifInfoFile = wd +  "motifFamilies/" + networkName + clusteringName + "_coreProteins_motifFamiliesInfo.tsv";
+
+					motifFamilyFilePrefix = wd +  "motifFamilies/" + "motifFamily_CoreTPD40_CoreProteins_ward2_group";
+					int numberOfCoreFamilies = Integer.parseInt(params.getProperty("coreFamilyGroups", "10"));
+
+					System.out.println("**Assessing motif instances for Core Proteins**");
+					MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfCoreFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, corePorteinsFile);
+
+				}
 
 			}
-			
+
 		}
 
 	}
-
 }

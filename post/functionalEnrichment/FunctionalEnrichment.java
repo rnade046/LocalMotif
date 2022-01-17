@@ -50,13 +50,13 @@ public class FunctionalEnrichment {
 		String proteinsInNetworkFile = wd + "Ontologizer/" + networkName + "_proteinsInNetwork.txt";
 		String annotatedProteinsPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_annotatedProteinsByMotif_";
 		System.out.println("**Formatting files for ontologizer analysis**");
-		FunctionalEnrichment.formatFilesForOntologizer(protAnnotationFreqFile, extractedAnnotationsFile, proteinsInNetworkFile, annotatedProteinsPrefix);
+		formatFilesForOntologizer(protAnnotationFreqFile, extractedAnnotationsFile, proteinsInNetworkFile, annotatedProteinsPrefix);
 	
 		/* Go enrichment of core proteins */
 		if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 			
 			String coreProteinsForOntologizerPrefix = wd + "Ontologizer/" + networkName + clusteringName + "_coreProteinsByMotif_";
-			FunctionalEnrichment.formatCoreFilesForOntologizer(corePorteinsFile, coreProteinsForOntologizerPrefix);
+			formatCoreFilesForOntologizer(corePorteinsFile, coreProteinsForOntologizerPrefix);
 
 		}
 		
