@@ -13,16 +13,16 @@ args = commandArgs(trailingOnly=TRUE)
 wd <- args[1]
 projectName <- args[2]
 pval <- args[3]
-height <- args[4]
-clustMeasure <- args[5]
-lowerLimit <- args[6]
-upperLimit <- args[7]
+clustMeasure <- args[4]
+lowerLimit <- args[5]
+upperLimit <- args[6]
+interval <- args[7]
 
 
-wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies/"
-projectName <- "corrNetTop2-400_coreTPD_p0.4"
-pval <- "5.41545109270352E-7"
-clustMeasure <- "ward.D2"
+# wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies/corrNetTop2-400_coreTPD_p0.4_p5.41545109270352E-7/"
+# projectName <- "corrNetTop2-400_coreTPD_p0.4"
+# pval <- "5.41545109270352E-7"
+# clustMeasure <- "ward.D2"
 
 setwd(wd)
 
@@ -32,13 +32,14 @@ dm <- as.matrix(read.csv(inputFile, sep = "\t", header = F))
 dm2 <- dm[,-ncol(dm)]
 dm_dist <- as.dist(dm2)
 
-lowerLimit <- 0.5
-upperLimit <- 1
+# lowerLimit <- 0.5
+# upperLimit <- 1
+# interval <- 0.1
 
 
 dend <- hclust(dm_dist, method = "ward.D2")
 
-v <- seq(lowerLimit, upperLimit, 0.1)
+v <- seq(as.double(lowerLimit), as.double(upperLimit), as.double(interval))
 dm <- as.data.frame(v)
 f <- function(x) {length(table(cutree(dend, h=x)))}
 dm$groupSize <- apply(dm, 1, f)
@@ -50,21 +51,23 @@ dend <- hclust(dm_dist, method = "ward.D2")%>%
   as.dendrogram %>% 
   set("labels", NULL) %>%
   plot()%>%
-  abline(h = v, lty = 2, col= )
+  abline(h = v, lty = 2, col= brewer.pal(length(v), "Set2")) %>%
+  text(x = ncol(dm2) + 15, y = v, labels = dm$groupSize) %>%
+  axis(side = 2, at = v, labels = F)
 dev.off()
-
-motifsFile <- paste(projectName, "_p", pval, "_MotifsInMatrix.tsv", sep="")
-groupsFile <- paste(projectName, "_p", pval, "_", clustMeasure, "_group", sep="")
-
-groups<-cutree(dend, h= height)
-motifs <- as.vector(read.csv(motifsFile, header = F))
-motifs$group<- groups
-
-for (i in c(1:length(table(groups)))){
-  groupX <- motifs$V1[motifs$group == i]
-  fileName = paste(groupsFile, i, ".tsv", sep = "")
-  write.table(groupX, fileName, sep = "\t", quote= F, col.names = F, row.names = F)
-}
+# 
+# motifsFile <- paste(projectName, "_p", pval, "_MotifsInMatrix.tsv", sep="")
+# groupsFile <- paste(projectName, "_p", pval, "_", clustMeasure, "_h", height, "_group", sep="")
+# 
+# groups<-cutree(dend, h= height)
+# motifs <- as.vector(read.csv(motifsFile, header = F))
+# motifs$group<- groups
+# 
+# for (i in c(1:length(table(groups)))){
+#   groupX <- motifs$V1[motifs$group == i]
+#   fileName = paste(groupsFile, i, ".tsv", sep = "")
+#   write.table(groupX, fileName, sep = "\t", quote= F, col.names = F, row.names = F)
+# }
 
 
 

@@ -13,9 +13,17 @@ args = commandArgs(trailingOnly=TRUE)
 wd <- args[1]
 projectName <- args[2]
 pval <- args[3]
-height <- args[4]
-clustMeasure <- args[5]
+condition <- args[4]
+height <- args[5]
+clustMeasure <- args[6]
 
+
+# wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies/corrNetTop2-400_coreTPD_p0.4_p5.41545109270352E-7/"
+# projectName <- "corrNetTop2-400_coreTPD_p0.4"
+# pval <- "5.41545109270352E-7"
+# clustMeasure <- "ward.D2"
+# height<-0.9
+# condition<-"Groups"
 setwd(wd)
 
 # Load matrix 
@@ -25,7 +33,7 @@ dm2 <- dm[,-ncol(dm)]
 dm_dist <- as.dist(dm2)
 
 # Plot dendrogram
-outputFile <- paste(projectName, "_p", pval,"_", clustMeasure ,"_Dendrogram2.png", sep="")
+outputFile <- paste(projectName, "_p", pval,"_", clustMeasure, "_h", height ,"_Dendrogram3.png", sep="")
 png(outputFile, res=400, units = "in", width = 10, height = 7)
 dend <- hclust(dm_dist, method = "ward.D2")%>% 
   as.dendrogram %>% 
@@ -35,8 +43,9 @@ dend <- hclust(dm_dist, method = "ward.D2")%>%
 dev.off()
 
 motifsFile <- paste(projectName, "_p", pval, "_MotifsInMatrix.tsv", sep="")
-groupsFile <- paste(projectName, "_p", pval, "_", clustMeasure, "_group", sep="")
+groupsFile <- paste(condition, "_h", height, "/", projectName, "_p", pval, "_", clustMeasure,"_h", height, "_group", sep="")
 
+dend <- hclust(dm_dist, method = "ward.D2")
 groups<-cutree(dend, h= height)
 motifs <- as.vector(read.csv(motifsFile, header = F))
 motifs$group<- groups
