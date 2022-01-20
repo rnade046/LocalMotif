@@ -115,8 +115,6 @@ public class ClusteredMotifsMain {
 			/* For CoreTPD and TPPD; load annotation subset and determine core proteins; print */
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 
-
-
 				motifsInMatrixFile = wd +  "motifFamilies/" + familyFolder + networkName + clusteringName + "_CoreProteins_p" + pvalThreshold + "_MotifsInMatrix.tsv";
 				similarityMatrix = wd + "motifFamilies/" + familyFolder +  networkName + clusteringName + "_CoreProteins_p" + pvalThreshold + "_DistanceMatrix.tsv" ;
 
@@ -131,6 +129,8 @@ public class ClusteredMotifsMain {
 				}
 			}
 			/* output to R : perform hierarchical clustering*/
+			System.out.println("Launching initial hierarchical clustering analysis");
+			
 			String wd4r = wd + "motifFamilies/" + familyFolder;
 			String projectName = networkName + clusteringName;
 			Runtime.getRuntime().exec("Rscript HierarchicalClustering_1.R " + wd4r + " " + projectName + " " + pvalThreshold + " ward.D2"); 
@@ -139,6 +139,8 @@ public class ClusteredMotifsMain {
 			// run second R script when ready (e.g. testing h values [min max interval])
 			double[] hTest = Arrays.stream(params.getProperty("heightToTest", "0").split("\\s+")).mapToDouble(Double::parseDouble).toArray();
 			if(hTest[0] != 0) {
+				System.out.println("Assessing number of  ");
+
 				Runtime.getRuntime().exec("Rscript HierarchicalClustering_2.R " + wd4r + " " + projectName + " " + pvalThreshold + " ward.D2 " + hTest[0] + " " + hTest[1] + " " + hTest[2]); 
 			}
 
@@ -147,7 +149,7 @@ public class ClusteredMotifsMain {
 
 				File dir4 = new File(wd + "/motifFamilies/" + familyFolder + "/Groups_h" + height + "/");
 				if (! dir4.exists()){
-					System.out.println("creating directory: " + familyFolder + "\n");
+					System.out.println("creating directory: " + "/Groups_h" + height + "\n");
 					dir4.mkdir();
 				}
 				String condition = "Groups";
@@ -174,7 +176,7 @@ public class ClusteredMotifsMain {
 					String condition = "Groups_CoreProteins";
 					File dir4 = new File(wd + "/motifFamilies/" + familyFolder + condition+ "_h" + height2 + "/");
 					if (! dir4.exists()){
-						System.out.println("creating directory: " + familyFolder + "\n");
+						System.out.println("creating directory: " + condition+ "_h" + height2  + "\n");
 						dir4.mkdir();
 					}
 
@@ -213,9 +215,9 @@ public class ClusteredMotifsMain {
 				double height2 = Double.parseDouble(params.getProperty("coreHeight", "0"));
 				condition = "Groups_CoreProteins_h" + height2 + "/";
 
-				motifInstancesPrefix = wd + "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "coreProteins_h" + height2 + "_motifInstances_motifFamily";
-				motifPPMPrefix = wd +  "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "coreProteins_h" + height2 + "_ppm_motifFamilyGroup";
-				motifInfoFile = wd +  "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "coreProteins_h" + height2 + "_motifFamiliesInfo.tsv";
+				motifInstancesPrefix = wd + "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_motifInstances_motifFamily";
+				motifPPMPrefix = wd +  "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_ppm_motifFamilyGroup";
+				motifInfoFile = wd +  "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_motifFamiliesInfo.tsv";
 
 				motifFamilyFilePrefix = wd +  "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "_CoreProteins_p" + pvalThreshold + "_ward.D2_h"+ height2 +"_group";
 				int numberOfCoreFamilies = Integer.parseInt(params.getProperty("coreFamilyGroups", "10"));
@@ -223,6 +225,7 @@ public class ClusteredMotifsMain {
 				System.out.println("**Assessing motif instances for Core Proteins**");
 				MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfCoreFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, corePorteinsFile);
 				
+				/* Generate */ 
 				wd4r = wd + "motifFamilies/" + familyFolder + condition;
 				projectName = networkName + clusteringName + "_coreProteins";
 				Runtime.getRuntime().exec("Rscript seqLogo.R " + wd4r + " " + projectName + " " + numberOfFamilies + " " + height); 

@@ -52,7 +52,7 @@ dend <- hclust(dm_dist, method = "ward.D2")%>%
   set("labels", NULL) %>%
   plot()%>%
   abline(h = v, lty = 2, col= brewer.pal(length(v), "Set2")) %>%
-  text(x = ncol(dm2) + 15, y = v, labels = dm$groupSize) %>%
+  text(x = ncol(dm2) + 2, y = v, labels = dm$groupSize) %>%
   axis(side = 2, at = v, labels = F)
 dev.off()
 # 

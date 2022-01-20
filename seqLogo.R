@@ -35,12 +35,12 @@ outputFile <- paste(projectName, "_h", height, "_MotifFamilies.png")
 
 names(data) <- seq(1, groups, 1)
 
-ggseqlogo(data, ncol = 2, method = "prob") + 
-  theme(axis.text.x=element_text(colour="white"), 
-        axis.text.y = element_text(color = "white"),
-        text = element_text(colour = "white"),
-        strip.text.x = element_text(colour = "white"))
-ggsave(outputFile, width = 5, height = 10,  bg = "transparent")
+# ggseqlogo(data, ncol = 2, method = "prob") + 
+#   theme(axis.text.x=element_text(colour="white"), 
+#         axis.text.y = element_text(color = "white"),
+#         text = element_text(colour = "white"),
+#         strip.text.x = element_text(colour = "white"))
+# ggsave(outputFile, width = 5, height = 10,  bg = "transparent")
 
-# ggseqlogo(data, ncol = 4, method = "prob")
-# ggsave("MotifFamilies_corrNet2-400_CoreTPD0.4_CoreProteins_transp.png", width = 15, height = 10,  bg = "transparent")
+ggseqlogo(data, ncol = 2, method = "prob")
+ggsave(outputFile, width = 5, height = 10,  bg = "transparent")

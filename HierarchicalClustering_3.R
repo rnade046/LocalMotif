@@ -38,6 +38,7 @@ png(outputFile, res=400, units = "in", width = 10, height = 7)
 dend <- hclust(dm_dist, method = "ward.D2")%>% 
   as.dendrogram %>% 
   set("labels", NULL) %>%
+  color_branches(h=height) %>% 
   plot()%>%
   abline(h = height, lty = 2, col="black")
 dev.off()
