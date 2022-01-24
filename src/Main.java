@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import graph.Interaction;
 import graph.Protein;
+import opt.CheckDegreeDistributions;
 import sampling.ApproximateNormalDistribuiton;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
@@ -110,7 +111,6 @@ public class Main {
 		//printProtAndRefSeqIdsInNetwork(rnaIdListFile, proteinList);
 		//printRefSeqIdsInNetwork(rnaIdListFile, proteinList);
 
-		//CheckDegreeDistributions.assessDegreeDistribution(proteinList2, interactionList, (wd + projectName + "_degreesInNetwork.tsv"));
 
 		File f = new File(distanceMatrixFile);
 		if(!f.exists() && !f.isDirectory()) {
@@ -129,6 +129,9 @@ public class Main {
 		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
 		HashSet<String> proteinSet = NetworkProteins.getProteinSet(proteinList2);
 
+		CheckDegreeDistributions.assessDegreeDistribution(proteinList2, interactionList, (wd + projectName + "_degreesInNetwork.tsv"));
+
+		
 		if(proteinList.size() != proteinList2.size()) {
 			System.out.println("**Checking for disconnected components**");
 			File f1 = new File(distanceMatrix2File);
