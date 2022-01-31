@@ -1,5 +1,5 @@
 #Package dependencies
-packages = c("dendextend", "cluster", "RColorBrewer")
+packages = c("dendextend", "cluster", "RColorBrewer", "data.table")
 
 package.check <- lapply(packages, FUN = function(x) {
     if (!require(x, character.only = TRUE)) {
@@ -19,22 +19,24 @@ upperLimit <- args[6]
 interval <- args[7]
 
 
-# wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies/corrNetTop2-400_coreTPD_p0.4_p5.41545109270352E-7/"
-# projectName <- "corrNetTop2-400_coreTPD_p0.4"
-# pval <- "5.41545109270352E-7"
+# wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies/corrNetTop2-400_TPPD_p0.3_p2.34914206101241E-8/"
+# projectName <- "corrNetTop2-400_TPPD_p0.3_CoreProteins"
+# pval <- "2.34914206101241E-8"
 # clustMeasure <- "ward.D2"
+# 
+# lowerLimit <- 2.5
+# upperLimit <- 3.5
+# interval <- 0.1
+
 
 setwd(wd)
 
 # Load matrix 
 inputFile <- paste(projectName, "_p", pval, "_DistanceMatrix.tsv", sep="")
-dm <- as.matrix(read.csv(inputFile, sep = "\t", header = F))
+dm <- as.matrix(fread(inputFile, sep = "\t", header = F))
 dm2 <- dm[,-ncol(dm)]
 dm_dist <- as.dist(dm2)
 
-# lowerLimit <- 0.5
-# upperLimit <- 1
-# interval <- 0.1
 
 
 dend <- hclust(dm_dist, method = "ward.D2")
@@ -45,14 +47,14 @@ f <- function(x) {length(table(cutree(dend, h=x)))}
 dm$groupSize <- apply(dm, 1, f)
 
 # Plot dendrogram
-outputFile <- paste(projectName, "_p", pval,"_", clustMeasure ,"_Dendrogram2.png", sep="")
+outputFile <- paste(projectName, "_p", pval,"_", clustMeasure ,"_Dendrogram2_", lowerLimit, "_", upperLimit, "_", interval,".png", sep="")
 png(outputFile, res=400, units = "in", width = 10, height = 7)
 dend <- hclust(dm_dist, method = "ward.D2")%>% 
   as.dendrogram %>% 
-  set("labels", NULL) %>%
+  set_labels(rep("",length(dm_dist))) %>%
   plot()%>%
   abline(h = v, lty = 2, col= brewer.pal(length(v), "Set2")) %>%
-  text(x = ncol(dm2) + 2, y = v, labels = dm$groupSize) %>%
+  text(x = ncol(dm2) + 2, y = v, labels = dm$groupSize, cex = 0.5) %>%
   axis(side = 2, at = v, labels = F)
 dev.off()
 # 

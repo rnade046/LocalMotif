@@ -63,7 +63,7 @@ public class MotifMain {
 		String jobNumber = args[2];
 
 		/* Local computer - file paths */
-		String projectName = params.getProperty("project_name");
+		String projectName = params.getProperty("network_name");
 		
 		/* Input Files */
 		String fastaFile = wd + params.getProperty("fastaFile").replaceAll("\\s+", ""); // output from UCSC genome browser

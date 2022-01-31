@@ -15,10 +15,10 @@ projectName <- args[2]
 groups <- args[3]
 height <- args[4]
 
-# wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\corrNetTop2-400_coreTPD_p0.4_p5.41545109270352E-7\\Groups_h0.9\\"
-# projectName <- "corrNetTop2-400_coreTPD_p0.4"
-# groups <- 18
-# height <- 0.9
+wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\corrNetTop2-400_TPPD_p0.3_p1.14704202197871E-11\\Groups_h0.5\\"
+projectName <- "corrNetTop2-400_TPPD_p0.3"
+groups <- 23
+height <- 0.5
 setwd(wd)
 
 data <- list()
@@ -42,5 +42,5 @@ names(data) <- seq(1, groups, 1)
 #         strip.text.x = element_text(colour = "white"))
 # ggsave(outputFile, width = 5, height = 10,  bg = "transparent")
 
-ggseqlogo(data, ncol = 2, method = "prob")
-ggsave(outputFile, width = 5, height = 10,  bg = "transparent")
+ggseqlogo(data, ncol = 3, method = "prob")
+ggsave(outputFile, width = 8, height = 10,  bg = "transparent")

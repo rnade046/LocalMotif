@@ -41,16 +41,16 @@ public class MotifFamily {
 
 			/* Identify representative motif from list */
 			String representativeMotif = getRepresentativeMotif(motifSignificantMap);
-			
+
 			/* Generate list of non degenerate motifs from representative motif */
 			HashSet<String> possibleMotifSet = getPossibleInstancesOfMotif(representativeMotif);
-			
+
 			/* Load list of proteins annotated by representative motif */
 			HashSet<String> annotatedProteinSet = loadProteinsAnnotatedByRepresentativeMotif(representativeMotif, annotatedProteinsFile);
 
 			ArrayList<String> motifInstances = getInstancesOfMotifs(possibleMotifSet, proteinToRefSeqIDsMap, refSeqIdToMotifsMap, annotatedProteinSet);
 			double[][] ppm = calculatePPM(motifInstances, motifInstances.get(0).length());
-			
+
 			String outputFile = outputFilePrefix + i + ".tsv";
 			String motifInstancesFile = motifInstancesPrefix + i;
 			printMotifs(motifInstances, motifInstancesFile);
@@ -160,27 +160,27 @@ public class MotifFamily {
 		/* Get p-value for all motifs in this family 
 		 * rank in ascending order; take smallest one; 
 		 * if tie take motif with least amount of degen characters */ 
-				try {
-					InputStream in = new FileInputStream(new File(significantMotifsFile));
-					BufferedReader input = new BufferedReader(new InputStreamReader(in));
+		try {
+			InputStream in = new FileInputStream(new File(significantMotifsFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
-					String line = input.readLine();
+			String line = input.readLine();
 
-					while(line != null) {
+			while(line != null) {
 
-						String motif = line.split("\t")[0];
+				String motif = line.split("\t")[0];
 
-						if(motifSet.contains(motif)) {
-							motifSignificanceMap.put(motif, Double.parseDouble(line.split("\t")[3])); // [3] = p-value
-						}
-
-						line = input.readLine();
-					}
-
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+				if(motifSet.contains(motif)) {
+					motifSignificanceMap.put(motif, Double.parseDouble(line.split("\t")[3])); // [3] = p-value
 				}
+
+				line = input.readLine();
+			}
+
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 
 		return motifSignificanceMap;
@@ -198,14 +198,15 @@ public class MotifFamily {
 		int countIdx = 1;
 
 		/* Check if more than one motif has the same p-value */
-		while(repeatPval) {
-			if(list.get(countIdx).getValue() == minPval) {
-				countIdx++;
-			} else {
-				repeatPval = false;
+		if(list.size() > 1) {
+			while(repeatPval) {
+				if(list.get(countIdx).getValue() == minPval) {
+					countIdx++;
+				} else {
+					repeatPval = false;
+				}
 			}
 		}
-
 		/* Compare motifs with identical p-value*/
 		if(countIdx > 1) {
 
@@ -339,11 +340,11 @@ public class MotifFamily {
 		}	
 		return motifs;
 	}
-	
+
 	private static HashSet<String> loadProteinsAnnotatedByRepresentativeMotif(String representativeMotif, String annotatedProteinsFile){
 
 		HashSet<String> proteinSet = new HashSet<>();
-		
+
 		try {
 			InputStream in = new FileInputStream(new File(annotatedProteinsFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
@@ -352,10 +353,10 @@ public class MotifFamily {
 
 			while(line != null) {
 				String motif = line.split("\t")[0];
-				
+
 				/* if line corresponds to representative motif, store all it's annotated proteins to set */
 				if(motif.equals(representativeMotif)) {
-					
+
 					String[] annotatedProteins = line.split("\t")[2].split("\\|");
 					proteinSet.addAll(Arrays.asList(annotatedProteins));
 				}
@@ -378,37 +379,37 @@ public class MotifFamily {
 		 * multiple times in sequence or in different refseqIds (variants) > this is accomplished by 
 		 * making a hash set for every protein (therefore only one instance of any possible motif will
 		 * be kept per protein (from all 3'UTR variants) */ 
-		
+
 		for(Entry<String, HashSet<String>> proteinEntry : proteinToRefSeqIdsMap.entrySet()) { // Entry<Protein, List of RefSeqIDs>
-			
+
 			/* check if protein is associated to representative motif */
 			if(annotatedProteinSet.contains(proteinEntry.getKey())) {
-			HashSet<String> currentInstancesOfMotif = new HashSet<>();
+				HashSet<String> currentInstancesOfMotif = new HashSet<>();
 
-			for(String id: proteinEntry.getValue()) { // iterating over every RefSeq Id associated to protein
+				for(String id: proteinEntry.getValue()) { // iterating over every RefSeq Id associated to protein
 
-				if(refSeqIdToMotifsMap.containsKey(id)) {  // Map: RefSeqID = list of Motifs
-					
-					/* Iterate through motifs associated to refseq Id, store motif if corresponds to a possible motif instance */
-					for(String motif: refSeqIdToMotifsMap.get(id)) {
-						if(possibleMotifs.contains(motif)) {
-							currentInstancesOfMotif.add(motif);
+					if(refSeqIdToMotifsMap.containsKey(id)) {  // Map: RefSeqID = list of Motifs
+
+						/* Iterate through motifs associated to refseq Id, store motif if corresponds to a possible motif instance */
+						for(String motif: refSeqIdToMotifsMap.get(id)) {
+							if(possibleMotifs.contains(motif)) {
+								currentInstancesOfMotif.add(motif);
+							}
 						}
 					}
 				}
-			}
-			instanceOfMotifList.addAll(currentInstancesOfMotif);
-		
+				instanceOfMotifList.addAll(currentInstancesOfMotif);
+
 			}
 		}
 		return instanceOfMotifList;
 	}
 
 	private static double[][] calculatePPM(ArrayList<String> motifInstances, int motifLength){
-		
+
 		double[][] pfm = new double[4][motifLength];
 		double[][] ppm = new double[4][motifLength];
-		
+
 		/* compute position frequency matrix */
 		for(String motif: motifInstances) {
 			for(int i=0; i<motifLength; i++) {
@@ -428,17 +429,17 @@ public class MotifFamily {
 				}
 			}
 		}
-		
+
 		/* convert position frequency matrix to position probability matrix */
 		for(int i=0; i<4; i++) {
 			for(int j=0; j<motifLength; j++) {
 				ppm[i][j] = pfm[i][j]/ (double) motifInstances.size();
 			}
 		}
-		
+
 		return ppm;
 	}
-	
+
 	private static void printMotifs(ArrayList<String> motifInstances, String outputFile) {
 
 		try {
@@ -458,7 +459,7 @@ public class MotifFamily {
 	}
 
 	private static void printPPM(double[][] ppm, String outputFile) {
-		
+
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 
@@ -474,7 +475,7 @@ public class MotifFamily {
 		}
 
 	}
-	
+
 	private static void printMotifInfo(String outputFile, int family, String repMotif, int numInstances) {
 
 		try {

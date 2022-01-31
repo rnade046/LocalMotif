@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 public class IdentifyMotifs {
 
@@ -37,15 +38,15 @@ public class IdentifyMotifs {
 
 			/* search all files for significant motifs */
 			for(int i=0; i<numOfFiles; i++) {
-				
+
 				if(i%10 == 0) {
 					System.out.print(i + ".");
 				}
-				
+
 				if(i%100 == 0) {
 					System.out.println();
 				}
-				
+
 				String motifClusteringFile = motifClusteringPrefix + i;
 
 				InputStream in = new FileInputStream(new File(motifClusteringFile));
@@ -68,38 +69,38 @@ public class IdentifyMotifs {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		System.out.println("Done");
 	}
-	
-	
+
+
 	public static HashMap<String, Integer> loadSignificantMotifs(String motifClusteringFile) {
 
 		HashMap<String, Integer> motifsMapFileIdx = new HashMap<>();
 
 		try {
 
-				InputStream in = new FileInputStream(new File(motifClusteringFile));
-				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+			InputStream in = new FileInputStream(new File(motifClusteringFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
-				String line = input.readLine(); // header
+			String line = input.readLine(); // header
+			line = input.readLine();
+
+			while(line!=null) {
+
+				motifsMapFileIdx.put(line.split("\t")[0], Integer.parseInt(line.split("\t")[4])); // [0] = motif, [4] = file number
+
 				line = input.readLine();
-
-				while(line!=null) {
-
-					motifsMapFileIdx.put(line.split("\t")[0], Integer.parseInt(line.split("\t")[4])); // [0] = motif, [4] = file number
-					
-					line = input.readLine();
-				}
-				input.close();
+			}
+			input.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		System.out.println("Done");
 		return motifsMapFileIdx;
 	}
-	
+
 
 	/**
 	 * Find each significant motif in the annotation file and obtain the proteins in annotates, store in map. 
@@ -109,84 +110,85 @@ public class IdentifyMotifs {
 	 * 
 	 * @return motifMapOfannotatedProteins	Map<String, String[]> - map of motif and it's list of annotated proteins
 	 */
-	public static void getAnnotatedProteinInfo(HashMap<String, Integer> motifMapOfFileIdxs, String proteinAnnotationFreqFile, String outputFile, String annotationFilePrefix){
-		
+	public static void getAnnotatedProteinInfo(HashMap<String, Integer> motifMapOfFileIdxs, String proteinAnnotationFreqFile, String annotationFilePrefix, String outputFile, int numberOfFiles){
+
 		HashSet<String> proteinsInNetwork = getProteinsInNetwork(proteinAnnotationFreqFile);
-		
 		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File (outputFile)));
 
-			/* Search for every motif */
-			int motifCount = 0;
-			for(Entry<String, Integer> m: motifMapOfFileIdxs.entrySet()) {
-				motifCount++;
-				
-				if(motifCount%10==0) {
-					System.out.print(motifCount + ".");
-				}
-				
-				if(motifCount%100==0) {
-					System.out.println();
-				}
-				
-				String annotationFile = annotationFilePrefix + m.getValue();
-				String motif = m.getKey();
+			for(int i=0; i<numberOfFiles; i++) {
 
-				InputStream in = new FileInputStream(new File(annotationFile));
-				BufferedReader input = new BufferedReader(new InputStreamReader(in));
-
-				String line = input.readLine();
-
-				while(line!=null) {
-
-					/* Store annotated proteins for the found motif && break out of loop */
-					if(line.split("\t")[0].equals(motif)) {
-						
-						/* Check if protein was considered in analysis */
-						ArrayList<String> annotatedProteinsInNetwork = new ArrayList<>();
-						
-						for(String prot : line.split("\t")[2].split("\\|")) { // all proteins annotated by motif in annotation file
-							if(proteinsInNetwork.contains(prot)) {
-								annotatedProteinsInNetwork.add(prot);
-							}
-						}
-						
-						/* output {motif	#proteins	proteinList} */
-						out.write(motif + "\t" + annotatedProteinsInNetwork.size() + "\t");
-						
-						for(String prot: annotatedProteinsInNetwork) {
-							out.write(prot + "|");
-						}
-						out.write("\n");
-						out.flush();
-						break;  
+				/* Check if significant motif in file - store in set*/
+				HashSet<String> motifSet = new HashSet<>();
+				for(Entry<String, Integer> m: motifMapOfFileIdxs.entrySet()) {
+					if (Objects.equals(m.getValue(), i)) {
+						motifSet.add(m.getKey());
 					}
-					line = input.readLine();
 				}
 
-				input.close();
-			}
+				/* Find corresponding info and print */ 
+				if(!motifSet.isEmpty()) {
+					int motifCount = 0;
+					String annotationFile = annotationFilePrefix + i;
 
+					InputStream in = new FileInputStream(new File(annotationFile));
+					BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+					String line = input.readLine();
+
+					while(line!=null || motifCount < motifSet.size()) {
+
+						/* Store annotated proteins for the found motif && break out of loop */
+						if(motifSet.contains(line.split("\t")[0])) {
+
+							motifCount++; 
+
+							/* Check if protein was considered in analysis */
+							ArrayList<String> annotatedProteinsInNetwork = new ArrayList<>();
+
+							for(String prot : line.split("\t")[2].split("\\|")) { // all proteins annotated by motif in annotation file
+								if(proteinsInNetwork.contains(prot)) {
+									annotatedProteinsInNetwork.add(prot);
+								}
+							}
+
+							/* output {motif	#proteins	proteinList} */
+							out.write(line.split("\t")[0] + "\t" + annotatedProteinsInNetwork.size() + "\t");
+
+							for(String prot: annotatedProteinsInNetwork) {
+								out.write(prot + "|");
+							}
+							out.write("\n");
+							out.flush();
+						}
+						line = input.readLine();
+					}
+					input.close();
+					System.out.println("File: " + i + " - " + motifCount + "/" + motifSet.size());
+				}
+			}
 			out.close();
+
+			System.out.println("Done");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Done");
+
 	}
 
 	private static HashSet<String> getProteinsInNetwork(String protFile){
-	
+
 		HashSet<String> proteinSet = new HashSet<>();
-		
+
 		try {
 
 			InputStream in = new FileInputStream(new File(protFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-			
+
 			String line = input.readLine();
 
 			while(line!=null) {
-			
+
 				proteinSet.add(line.split("\t")[0]);
 				line = input.readLine();
 			}
@@ -194,11 +196,11 @@ public class IdentifyMotifs {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
+
+
 		return proteinSet;
 	}
-	
+
 	public static HashMap<String, String[]> loadAnnotatedProteinInfo(String annotationFile){
 
 		HashMap<String, String[]> motifMapOfAnnotatedProteins = new HashMap<>();
@@ -207,14 +209,14 @@ public class IdentifyMotifs {
 
 			InputStream in = new FileInputStream(new File(annotationFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-			
+
 			String line = input.readLine();
 
 			while(line!=null) {
-			
+
 				String[] col = line.split("\t");
 				motifMapOfAnnotatedProteins.put(col[0], col[2].split("\\|"));
-				
+
 				line = input.readLine();
 			}
 			input.close();
