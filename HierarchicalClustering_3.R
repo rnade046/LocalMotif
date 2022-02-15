@@ -18,12 +18,12 @@ height <- args[5]
 clustMeasure <- args[6]
 
 
-# wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies/corrNetTop2-400_TPPD_p0.3_p2.34914206101241E-8/"
-# projectName <- "corrNetTop2-400_TPPD_p0.3_CoreProteins"
-# pval <- "2.34914206101241E-8"
+# wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies/corrNetTop2-400_coreTPD_p0.4_p5.41545109270352E-7/"
+# projectName <- "corrNetTop2-400_coreTPD_p0.4"
+# pval <- "5.41545109270352E-7"
 # clustMeasure <- "ward.D2"
-# height<-2.7
-# condition<-"Groups_CoreProteins"
+# height<-0.9
+# condition<-"Groups_"
 setwd(wd)
 
 # Load matrix 
@@ -57,6 +57,15 @@ for (i in c(1:length(table(groups)))){
   write.table(groupX, fileName, sep = "\t", quote= F, col.names = F, row.names = F)
 }
 
+# png("MotifFamily_CoreTPD0.4_transp.png", res=400, units = "in", width = 7, height = 10, bg = "transparent")
+# par(fg = 'white', col.axis = "white", col.lab = "white")
+# dend <- hclust(dm_dist, method = "ward.D2") %>% 
+#   as.dendrogram %>% 
+#   color_branches(h=height) %>% 
+#   set_labels(rep("",length(dm_dist))) %>%
+#   plot(horiz = T) %>%
+#   abline(v = height, lty = 2, col="white")
+# dev.off()
 
 
 
