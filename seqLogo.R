@@ -16,8 +16,8 @@ groups <- args[3]
 height <- args[4]
 
 wd <- "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\corrNetTop2-400_coreTPD_p0.4_p5.41545109270352E-7\\Groups_h0.9\\"
-projectName <- "corrNetTop2-400_CoreProteins_p0.4"
-groups <- 19
+projectName <- "corrNetTop2-400_coreTPD_p0.4"
+groups <- 18
 height <- 0.9
 setwd(wd)
 
@@ -31,16 +31,16 @@ for(i in 1:groups){
   
 }
 
-outputFile <- paste(projectName, "_h", height, "_MotifFamilies.png")
+outputFile <- paste(projectName, "_h", height, "_MotifFamilies_bw.png")
 
 names(data) <- seq(1, groups, 1)
 
-# ggseqlogo(data, ncol = 2, method = "prob") + 
-#   theme(axis.text.x=element_text(colour="white"), 
-#         axis.text.y = element_text(color = "white"),
-#         text = element_text(colour = "white"),
-#         strip.text.x = element_text(colour = "white"))
-# ggsave(outputFile, width = 5, height = 10,  bg = "transparent")
+ggseqlogo(data, ncol = 2, method = "prob") +
+  theme(axis.text.x=element_text(colour="white"),
+        axis.text.y = element_text(color = "white"),
+        text = element_text(colour = "white"),
+        strip.text.x = element_text(colour = "white"))
+ggsave(outputFile, width =5, height = 10,  bg = "transparent")
 
 ggseqlogo(data, ncol = 3, method = "prob")
 ggsave(outputFile, width = 8, height = 10,  bg = "transparent")

@@ -61,7 +61,7 @@ public class FunctionalEnrichment {
 				dir3.mkdir();
 			}
 			allProtDir = "/allProteins/";
-			
+
 			File dir4 = new File(wd + "/Ontologizer/" + directory2 + coreProtDir);
 			if(! dir4.exists()) {
 				System.out.println("creating directory: Ontologizer/" + directory2 + coreProtDir);
@@ -120,18 +120,53 @@ public class FunctionalEnrichment {
 			/* Load table files - get GO-terms associated to an adjusted p-value < 0.05 */
 			String tablePrefix = wd + "Ontologizer/"+ directory2 + allProtDir + "table-"+ networkName + clusteringName + "_annotatedProteinsByMotif_";
 			String outputPrefix = wd + "Ontologizer/" + directory2 + allProtDir + networkName + clusteringName + "_significantGOterms_allProteins_";
-			
+
 			System.out.println("**Extracting significant GO-terms from all proteins**");
 			getSignificantGOterms(tablePrefix, outputPrefix, Integer.parseInt(params.getProperty("motifFamilyGroups")));
-			
+
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 				tablePrefix = wd + "Ontologizer/"+ directory2 + coreProtDir + "table-"+ networkName + clusteringName + "_coreProteinsByMotif_";
 				outputPrefix = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_significantGOterms_coreProteins_";
-				
+
 				System.out.println("**Extracting significant GO-terms from core proteins**");
 				getSignificantGOterms(tablePrefix, outputPrefix, Integer.parseInt(params.getProperty("coreFamilyGroups")));
 			}
-			 
+
+		}
+
+		if(Boolean.parseBoolean(params.getProperty("summarizeCellularComponents"))) {
+			
+			int numFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups"));
+			String revigoPrefix = wd + "Ontologizer/" + directory2 + allProtDir + networkName + clusteringName + "_revigo_allProteins_";
+			String significantPrefix = wd + "Ontologizer/" + directory2 + allProtDir + networkName + clusteringName + "_significantGOterms_allProteins_";
+			String outputFile = wd + "Ontologizer/" + directory2 + allProtDir + networkName + clusteringName + "_allProteins_cellularComponentSummary_matrix.tsv";
+			
+			/* Get significant cellular components */
+			System.out.println("**Obtain significant cellular components - all proteins**");
+			HashMap<String, String> ccInfoMap = getAllCellularComponents(revigoPrefix, numFamilies);
+			
+			/* Summarize cellular components & print */
+			System.out.println("**Summarize cellular compartment significance scores - all proteins**");
+			HashMap<String, Double[]> significantCCMap = summarizeCellularComponents(ccInfoMap, significantPrefix, numFamilies);
+			printCellularComponentSummary(ccInfoMap, significantCCMap, numFamilies, outputFile);
+			
+			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
+		
+				numFamilies = Integer.parseInt(params.getProperty("coreFamilyGroups"));
+				revigoPrefix = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_revigo_coreProteins_";
+				significantPrefix = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_significantGOterms_coreProteins_";
+				outputFile = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_coreProteins_cellularComponentSummary_matrix.tsv";
+				
+				/* Get significant cellular components */
+				System.out.println("**Obtain significant cellular components - core proteins**");
+				ccInfoMap = getAllCellularComponents(revigoPrefix, numFamilies);
+				System.out.println("ccMap : " + ccInfoMap.size());
+				/* Summarize cellular components & print */
+				System.out.println("**Summarize cellular compartment significance scores - core proteins**");
+				significantCCMap = summarizeCellularComponents(ccInfoMap, significantPrefix, numFamilies);
+				System.out.println("summaryMap : " + significantCCMap.size());
+				printCellularComponentSummary(ccInfoMap, significantCCMap, numFamilies, outputFile);
+			}
 		}
 	}
 
@@ -236,25 +271,25 @@ public class FunctionalEnrichment {
 
 				String line = input.readLine(); // header
 				line = input.readLine(); 
-				
+
 				while(line!=null) {
 					String[] col = line.split("\t"); // [0] = GO-term; [10] = adjusted p-val
 					if(Double.parseDouble(col[10]) < 0.05) {
 						goMap.put(col[0], col[10]);
 					}
-					
+
 					line = input.readLine(); // next line 
 				}
 				input.close();
-				
+
 				if(!goMap.isEmpty()) {
 					BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputPrefix + i)));
-					
+
 					for(Entry<String, String> e: goMap.entrySet()) {
 						out.write(e.getKey() + "\t" + e.getValue() + "\n");
 						out.flush();
 					}
-				
+
 					out.close();
 				}
 			} catch (IOException e) {
@@ -262,4 +297,118 @@ public class FunctionalEnrichment {
 			}
 		}
 	}
+
+	private static HashMap<String, String> getAllCellularComponents(String revigoPrefixFile, int numFamilies) {
+
+		HashMap<String, String> ccInfo = new HashMap<>(); //GO:XX, Name
+
+		for(int i=1; i<= numFamilies; i++) {
+			System.out.print(i + ".");
+			try {
+
+				InputStream in = new FileInputStream(new File(revigoPrefixFile+ i));
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+				String line = input.readLine(); // header
+				for(int lineCount=1; lineCount<=5; lineCount ++) {
+					line = input.readLine(); 
+				}
+
+				while(line!=null) {
+
+					String[] col = line.split(","); // [0] = GO-term; [1] = name
+					String term = col[0].split("\"")[1];
+					String name = col[1].split("\"")[1];
+					if(!ccInfo.containsKey(term)) {
+						ccInfo.put(term, name);
+					}
+					line = input.readLine(); // next line 
+				}
+				input.close();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("Done");
+		return ccInfo;
+	}		
+
+	private static HashMap<String, Double[]> summarizeCellularComponents(HashMap<String, String> ccInfoMap, String significantGOsPrefixFile, int numberFamily) {
+
+		HashMap<String, Double[]> significantCCMap = new HashMap<>(); //GO:XXD, Double[family1, 2, .., x] (adjusted p-value)
+
+		for(int i=1; i<=numberFamily; i++) {
+			System.out.print(i + ".");
+			try {
+
+				InputStream in = new FileInputStream(new File(significantGOsPrefixFile+ i));
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+				String line = input.readLine(); // header
+
+				while(line!=null) {
+					String[] col = line.split("\t"); // [0] = GO-term; [1] = adjusted p-val
+					
+					/* store info if significant GO:XX is a CC */
+					if(ccInfoMap.containsKey(col[0])) {
+
+						/* create entry if it's the first time this GO:XX is seen */ 
+						if(!significantCCMap.containsKey(col[0])) {
+							significantCCMap.put(col[0], new Double[numberFamily]);
+						}
+						/* update adjusted p-value at appropriate position */
+						Double[] array = significantCCMap.get(col[0]);
+						array[i-1] = Double.parseDouble(col[1]);
+						
+						significantCCMap.put(col[0], array);
+					}
+					line = input.readLine(); // next line 
+				}
+				input.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("Done");
+		return significantCCMap;
+	}
+
+	private static void printCellularComponentSummary(HashMap<String, String> ccInfoMap, HashMap<String, Double[]> significantCCMap, int numFamilies, String outputFile) {
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			
+			// header 
+			out.write("GO-term\tGO-name\t#Groups\t");
+			for(int i=1; i<= numFamilies; i++) {
+				out.write(i + "\t");
+			}
+			out.write("\n");
+			
+			for(Entry<String, Double[]> goEntry: significantCCMap.entrySet()) {
+				String go = goEntry.getKey();
+				Double[] scores = goEntry.getValue();
+				
+				int count = 0;
+				for(int i=0; i<scores.length; i++) {
+					if(scores[i] != null) {
+						count++;
+					}
+				}
+				
+				out.write(go + "\t" + ccInfoMap.get(go) + "\t" + count + "\t");
+				for(int i=0; i<scores.length; i++) {
+					out.write(scores[i] + "\t");
+				}
+				out.write("\n");
+				out.flush();
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 }
