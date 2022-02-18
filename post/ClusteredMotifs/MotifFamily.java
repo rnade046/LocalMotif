@@ -482,10 +482,10 @@ public class MotifFamily {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile), true));
 
 			if(new File(outputFile).length() == 0) {
-				out.write("Family\tRepMotif\t#Instances\n");
+				out.write("RepMotif\tFamilyNumber\t#Instances\n");
 			}
 
-			out.write(family + "\t" + repMotif + "\t" + numInstances + "\n");
+			out.write(repMotif+ "\t" + family  +"\t" + numInstances + "\n");
 			out.flush();
 			out.close();
 

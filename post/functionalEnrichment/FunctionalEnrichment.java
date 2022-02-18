@@ -82,8 +82,7 @@ public class FunctionalEnrichment {
 			}
 
 			/* Load motif family info file to guide further analysis */
-			String height = params.getProperty("height");
-			String motifFamilyInfoFile = wd + networkName + clusteringName + "_h" + height+ "_motifFamiliesInfo.tsv" ;
+			String motifFamilyInfoFile = wd + params.getProperty("motifsToTestFile");
 
 			System.out.println("**Loading representative motifs**");
 			HashSet<String> motifSet = loadRepresentativeMotifs(motifFamilyInfoFile);
@@ -101,8 +100,7 @@ public class FunctionalEnrichment {
 			/* Go enrichment of core proteins */
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 
-				String coreHeight = params.getProperty("coreHeight");
-				String coreMotifFamilyInfoFile = wd + networkName + clusteringName + "_coreProteins_h" + coreHeight+ "_motifFamiliesInfo.tsv" ;
+				String coreMotifFamilyInfoFile = wd + params.getProperty("coreMotifsToTestFile");
 
 				System.out.println("**Loading representative motifs**");
 				motifSet = loadRepresentativeMotifs(coreMotifFamilyInfoFile);
@@ -213,7 +211,7 @@ public class FunctionalEnrichment {
 			line = input.readLine();
 
 			while(line!=null) {
-				motifSet.add(line.split("\t")[1]); // [1] representative motif
+				motifSet.add(line.split("\t")[0]); // [0] representative motif
 				line = input.readLine();
 			}
 			input.close();
