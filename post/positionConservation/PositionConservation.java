@@ -29,12 +29,17 @@ public class PositionConservation {
 		System.out.println("Generate fasta file index");
 		this.fastaIdx = generateFastaFileIdx(fastaFile); // generate index for FASTA file
 		System.out.println("Load protein info file");
-		this.proteinInfoMap = loadProteinInfoFile(proteinInfoFile); // load protein info file
-		this.annotatedProteins = loadAnnotatedProteinsInNetwork(protFreqFile);
+		this.proteinInfoMap = loadProteinInfoFile(proteinInfoFile); // load motif = refSeqId1|2|..|n
+		this.annotatedProteins = loadAnnotatedProteinsInNetwork(protFreqFile); // load {protein1 | prot2 |..| n} proteins in network
+		// can remove annotatedProteins -- annotation subset files are generate with only the annotated proteins
 	}
 
 	public void getMotifPositions(String extractedAnnotationsFile, String motifOutputPrefixFile, int lowerIdx, int upperIdx) {
 
+		/* Load motifs to test */ 
+		
+		/* For a given motif ; test position conservation */
+		
 		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */ 
 		InputStream in;
 		try {
