@@ -15,13 +15,14 @@ public class RBPDBFormatter {
 	public static void main(String[] args) {
 
 		String db = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_human_PFMDir\\";
-		String outputFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_formatted.txt"; 
+		//String outputFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_formatted.txt"; 
 		String tomtomDB = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_TomTomformatted.txt";
 		
-		printFormattedDBforMotifComp(db, outputFile);
+		//printFormattedDBforMotifComp(db, outputFile);
 		printFormattedDBForTomTom(db, tomtomDB);
 	}
 
+	@SuppressWarnings("unused")
 	private static void printFormattedDBforMotifComp(String databaseDir, String outputFile) {
 
 		try {
@@ -40,7 +41,6 @@ public class RBPDBFormatter {
 				out.write("#ID = " + path + "\n");
 				out.write("#W = " + ppm.get(0).size() + "\n");
 				
-
 				
 				for(int k=0; k<ppm.get(0).size(); k++) {
 					for(int j=0; j<ppm.size(); j++) {
@@ -70,23 +70,25 @@ public class RBPDBFormatter {
 
 			File f = new File(databaseDir);
 			String[] pathnames = f.list();
+			int count = 1; 
 			for(String path : pathnames) {
 
 				/* Load the ppm (position probability matrix) for every family*/
 				String fileX = databaseDir + path;
 				ArrayList<ArrayList<Double>> ppm = loadPPM(fileX);
 
-				out.write("MOTIF" + path + "\n");
+				out.write("MOTIF"  + " Motif" + count + " " + path +"\n");
 				out.write("letter-probability matrix: alength= 4 w= " + ppm.get(0).size() +"\n");
 
 				for(int k=0; k<ppm.get(0).size(); k++) {
 					for(int j=0; j<ppm.size(); j++) {
-						out.write(ppm.get(j).get(k) + "\t");
+						out.write(ppm.get(j).get(k) + " ");
 					}
 					out.write("\n");
 					out.flush();
 				}
 				out.write("\n");
+				count++;
 			}
 			out.write("#END\n"); // end signal
 
@@ -158,4 +160,5 @@ public class RBPDBFormatter {
 
 		return ppm;
 	}
+	
 }

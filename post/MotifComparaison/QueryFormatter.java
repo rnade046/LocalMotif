@@ -4,23 +4,60 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Properties;
 
 public class QueryFormatter {
 
-	public static void main(String[] args) {
-
-		String motifFamilyPrefix = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm2\\corrNetTop2-400_TPPD_p0.3_ppm_motifFamilyGroup";
-		String queryMotifCompOutput = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm2\\queryMotifs.txt";
-		String queryMotifTomTom = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\ppm2\\queryMotifsTomTom.txt";
+	public static void main(String[] args) throws FileNotFoundException, IOException {
 		
-		//printFormatedQueryMotifsForMotifComp(motifFamilyPrefix, 10, queryMotifCompOutput);
-		printFormattedQueryMotifsForTomTom(motifFamilyPrefix, 9, queryMotifTomTom);
+		System.out.println("**Loading parameters file** \n");
+		Properties params = new Properties();
+		params.load(new FileInputStream(args[0]));		
+
+		String wd = params.getProperty("working_directory");
+		String networkName = params.getProperty("network_name");
+
+		int clusteringMeasure = Integer.parseInt(params.getProperty("clusteringMeasure", "0"));
+		double percentThreshold = Double.parseDouble(params.getProperty("percentThreshold", "0.2"));
+
+		String clusteringName = "";
+
+		switch(clusteringMeasure) {
+		case 0: clusteringName = "_TPD";
+		break;
+		case 1: clusteringName = "_TPPD_p" + percentThreshold;
+		break;
+		case 2: clusteringName = "_coreTPD_p" + percentThreshold;
+		break;
+		}
+		
+		String projectDirectory =  networkName + clusteringName + "_p" + params.getProperty("significantThreshold");
+		
+		String height = params.getProperty("height");
+		String motifFamilyPrefix = wd + "/motifFamilies/" + projectDirectory + "/Groups_h"+ height + "/" + networkName + clusteringName + "_h" + height + "_ppm_motifFamilyGroup";
+		String queryMotifTomTom = wd + "/motifFamilies/"+ projectDirectory + "/Groups_h" + height  + "/" + networkName + clusteringName + "_h"+ height + "_queryMotifsTomTom.txt";
+		
+		System.out.println("Formatting motif families ppm - all proteins");
+		printFormattedQueryMotifsForTomTom(motifFamilyPrefix, Integer.parseInt(params.getProperty("motifFamilyGroups")), queryMotifTomTom);
+		
+		if(clusteringMeasure == 1 || clusteringMeasure == 2) {
+			
+			height = params.getProperty("coreHeight");
+			motifFamilyPrefix = wd + "/motifFamilies/" + projectDirectory + "/Groups_CoreProteins_h"+ height + "/" + networkName + clusteringName + "_coreProteins_h" + height + "_ppm_motifFamilyGroup";
+			queryMotifTomTom = wd + "/motifFamilies/"+ projectDirectory + "/Groups_CoreProteins_h" + height  + "/" + networkName + clusteringName + "_coreProteins_h"+ height + "_queryMotifsTomTom.txt";
+			
+			System.out.println("Formatting motif families ppm - core proteins");
+			printFormattedQueryMotifsForTomTom(motifFamilyPrefix, Integer.parseInt(params.getProperty("coreFamilyGroups")), queryMotifTomTom);
+			
+		}
 	}
 
+	@SuppressWarnings("unused")
 	private static void printFormatedQueryMotifsForMotifComp(String familyPrefix, int numFamilies, String outputFile) {
 
 		try {
@@ -63,7 +100,8 @@ public class QueryFormatter {
 			"Background letter frequencies\nA 0.25 C 0.25 G 0.25 T 0.25\n"); // header
 
 			for(int i=1; i<=numFamilies; i++) {
-
+				System.out.print(i + ".");
+				
 				String familyFile = familyPrefix + i + ".tsv";
 				/* Load the ppm (position probability matrix) for every family*/
 				double[][] ppm = loadPPM(familyFile);
@@ -85,7 +123,7 @@ public class QueryFormatter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		System.out.println("Done");
 	}
 	
 	private static double[][] loadPPM(String inputFile) {
