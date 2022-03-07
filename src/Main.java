@@ -151,7 +151,7 @@ public class Main {
 			String networkOutputFile = wd + networkName + "_mclNetwork.txt";
 			
 			System.out.println("**Formatting network for MCL analysis**");
-			opt.FormatNetworkForMCL.formatMCLnetwork(proteinList2, interactionList, networkOutputFile);
+			benchmark.FormatNetworkForMCL.formatMCLnetwork(proteinList2, interactionList, networkOutputFile);
 		}
 		
 		if(Boolean.parseBoolean(params.getProperty("generateNullModel"))) {
