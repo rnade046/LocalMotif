@@ -248,9 +248,14 @@ public class FdrCalculator {
 			while(line!=null) {
 
 				double currentValue = Double.parseDouble(line);
-				if(currentValue < minPval) {
-					minPval = currentValue;
+				if(currentValue != 0) {
+					if(currentValue < minPval) {
+						minPval = currentValue;
+					}
+				} else {
+					System.out.println("zero-value p-val @line: " + countLines);
 				}
+				
 				line = input.readLine();
 				countLines++;
 			}
