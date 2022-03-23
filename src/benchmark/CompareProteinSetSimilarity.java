@@ -25,8 +25,8 @@ public class CompareProteinSetSimilarity {
 		String motifFamilySummaryFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
 		String annotationSubsetFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
 
-		String outputFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\corrNetTop2-400_coreTPD_p0.4_MCL_i2_similarity_coreProts.tsv";
-		String protDistribution = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\corrNetTop2-400_coreTPD_p0.4_MCL_i2_proteinDistribution_coreProts.tsv";
+		String outputFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\corrNetTop2-400_coreTPD_p0.4_MCL_i2_similarity_coreProts_2.tsv";
+		//String protDistribution = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\corrNetTop2-400_coreTPD_p0.4_MCL_i2_proteinDistribution_coreProts.tsv";
 
 		/* Load MCL clusters (protein sets) as list<Set<Proteins>> */ 
 		System.out.println("**Loading mcl clusters**");
@@ -41,20 +41,21 @@ public class CompareProteinSetSimilarity {
 		System.out.println("**Computing similarity**");
 		computeProteinSetSimilarity(motifFamilySubset, mclClusters, outputFile);
 
-		System.out.println("**Assess Protein distribution**");
-		assessDistributionOfProteinsInMCLclusters(motifFamilySubset, mclClusters, protDistribution);
+//		System.out.println("**Assess Protein distribution**");
+//		assessDistributionOfProteinsInMCLclusters(motifFamilySubset, mclClusters, protDistribution);
 	}
 
 	/**
 	 * Load the protein set corresponding to each MCL cluster, line order is important
+	 * 
 	 * @param mclClustersFile	String - input file, each line corresponds to 1 MCL cluster 
 	 * @return mclClusters		List<HashSet<String>> - List<Set {Protein 1|2|..|n} >
 	 */
 	private static List<HashSet<String>> loadMCLclusters(String mclClustersFile, String proteinInfoFile){
 		List<HashSet<String>> mclClusters = new ArrayList<HashSet<String>>();
-		
+
 		HashSet<String> proteinsWithSequence = loadProteinsWithSequence(proteinInfoFile);
-		
+
 		InputStream in;
 		try {
 			in = new FileInputStream(new File(mclClustersFile));
@@ -65,17 +66,14 @@ public class CompareProteinSetSimilarity {
 				/* Each line corresponds to an mcl cluster (or set of proteins) */
 				HashSet<String> proteinSet = new HashSet<>(Arrays.asList(line.split("\t")));
 				HashSet<String> proteinSet2 = new HashSet<>();
-				
+
 				for(String prot: proteinSet) {
 					if(proteinsWithSequence.contains(prot)) {
 						proteinSet2.add(prot);
 					}
 				}
-				
-				/* Store clusters with more than 3 proteins */
-				if(proteinSet2.size() >= 3) {
-					mclClusters.add(proteinSet2);
-				}
+
+				mclClusters.add(proteinSet2);
 				line = input.readLine();
 			}
 			input.close();
@@ -140,6 +138,14 @@ public class CompareProteinSetSimilarity {
 		return motifFamilies;
 	}
 
+	/**
+	 * Load representative motifs from motif info file and obtain their corresponding proteins from the annotation subset file
+	 * 
+	 * @param annotationSubset	String - file motif1[XXXXX] \t protein1|protein2|...|n
+	 * @param motifInfoFile 	String - file listing representative motifs
+	 * 
+	 * @return motifFamilyProteinSets	List<HashSet<String>> - list of protein sets corresponding to motifs families
+	 */
 	private static List<HashSet<String>> loadMotifFamilyProteinSet(String annotationSubset, String motifInfoFile){
 
 		/* Get list of representative motifs */
@@ -182,6 +188,14 @@ public class CompareProteinSetSimilarity {
 		return motifFamilyProteinSets;
 	}
 
+	/**
+	 * Compare protein sets of mcl clusters (size n) and motif families (size m). Print matrix of size (n x m). 
+	 * Note only mcl clusters with greater than 3 proteins with a corresponding sequence will be output (therefore actual size may be smaller than n)
+	 * 
+	 * @param motifFamilySubset		List<HashSet<String>> - set of proteins corresponding to motif families
+	 * @param mclClusters			List<HashSet<String>> - set of proteins corresponding to MCL clusters
+	 * @param outputFile			String - File - similarity matrix between MCL clusters and motif families
+	 */
 	private static void computeProteinSetSimilarity(List<HashSet<String>> motifFamilySubset, List<HashSet<String>> mclClusters, String outputFile) {
 
 		try {
@@ -198,32 +212,35 @@ public class CompareProteinSetSimilarity {
 			/* For each MCL cluster and motifFamily, compute similarity overlap of protein set and print to file */
 			for(int i=0; i<mclClusters.size(); i++) {
 				HashSet<String> cluster = mclClusters.get(i);
-				out.write((i+1) + "\t");
 				System.out.print(i + ".");
+				
+				/* Ensure MCL cluster is associated to at least 3 sequences */
+				if(!cluster.isEmpty() && cluster.size() >= 3) {
+					out.write((i+1) + "\t");
 
-				List<Double> similarityList = new ArrayList<>();
-				for(int j=0; j<motifFamilySubset.size(); j++) {
-					HashSet<String> familySet = motifFamilySubset.get(j);
+					/* compare MCL cluster protein set similarity against each motif family */
+					List<Double> similarityList = new ArrayList<>();
+					for(int j=0; j<motifFamilySubset.size(); j++) {
+						HashSet<String> familySet = motifFamilySubset.get(j);
 
-					/* count number of shared proteins */ 
-					int countSharedProteins = 0;
-					for(String protein: cluster) {
-						if(familySet.contains(protein)) {
-							countSharedProteins++;
+						/* count number of shared proteins */ 
+						int countSharedProteins = 0;
+						for(String protein: cluster) {
+							if(familySet.contains(protein)) {
+								countSharedProteins++;
+							}
 						}
+						/* compute similarity */ 
+						double similarity = countSharedProteins / (double) Math.min(cluster.size(), familySet.size());
+
+						similarityList.add(similarity);
+						out.write(similarity + "\t");
 					}
-					/* compute similarity */ 
-					double similarity = countSharedProteins / (double) Math.min(cluster.size(), familySet.size());
-
-					similarityList.add(similarity);
-					out.write(similarity + "\t");
+					double max = Collections.max(similarityList);
+					int idx = similarityList.indexOf(max) + 1;
+					out.write(idx + "\t" + max + "\n");
+					out.flush();
 				}
-				double max = Collections.max(similarityList);
-				int idx = similarityList.indexOf(max) + 1;
-				out.write(idx + "\t" + max + "\n");
-
-
-				out.flush();
 			}
 			out.close();
 			System.out.println("Done");
