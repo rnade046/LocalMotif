@@ -34,12 +34,11 @@ public class PositionConservation {
 		// can remove annotatedProteins -- annotation subset files are generate with only the annotated proteins
 	}
 
-	public void getMotifPositions(String extractedAnnotationsFile, String motifOutputPrefixFile, int lowerIdx, int upperIdx) {
+	public void getMotifPositions(String representativeMotifsFile, String extractedAnnotationsFile, String motifOutputPrefixFile) {
 
-		/* Load motifs to test */ 
-		
-		/* For a given motif ; test position conservation */
-		
+		/* Load representative motifs to test */ 
+		HashMap<String, Integer> motifMap = loadRepresentativeMotifs(representativeMotifsFile);
+
 		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */ 
 		InputStream in;
 		try {
@@ -47,47 +46,37 @@ public class PositionConservation {
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 			String line = input.readLine();
-			int lineCount = 1;
+			int motifCount = 1;
 			while(line != null) {
 
-				if(lineCount >= lowerIdx && lineCount <= upperIdx) {
-					String[] col = line.split("\t"); // [0] = motif, [1] = proteinList
+				String motif = line.split("\t")[0];
 
-					System.out.println(lineCount + ": ");
-					/* For every protein get list of refseqIDs*/
-					int protCount =1;
-					for(String prot: col[2].split("\\|")) {
+				if(motifMap.containsKey(motif)) {
+					motifCount ++;
+					System.out.println("Testing motif : " + motifCount);
+
+					/* Obtain fasta sequences corresponding to annotated proteins of given motif */
+					ArrayList<String> sequences = new ArrayList<>();
+
+					int protCount = 0;
+					for(String prot: line.split("\t")[1].split("\\|")) {
 
 						if(this.annotatedProteins.contains(prot) && this.proteinInfoMap.containsKey(prot)) {
-
-							System.out.print(protCount + ".");
-							String[] refSeqIDs = this.proteinInfoMap.get(prot);
-							ArrayList<ArrayList<Integer>> listMotifPositionsByRefSeqId = new ArrayList<>();
-
-							for(String id: refSeqIDs) {
-								if(this.fastaIdx.containsKey(id)) {
-									int indexOfFasta = this.fastaIdx.get(id);
-
-									/* Load sequence */
-									String sequence = loadRNAsequence(indexOfFasta);
-
-									/* Search for motif in sequence */
-									listMotifPositionsByRefSeqId.add(searchForMotifPositionsInSequence(col[0], sequence)); // col[0] = motifs
-								} else {
-									listMotifPositionsByRefSeqId.add(new ArrayList<Integer>());
-								}
-							}
-
-							/* Print results 1 file per motif; protein \t position \t RefSeqId1=[Position,Position,etc.], RefSeqID2=[Position, Position]  */
-							/* Protein position is decided as the median, mode or smallest possible or random? */ 
-							String motifOutputFile = motifOutputPrefixFile+ "motif" + lineCount;
-							printMotifPositions(prot, refSeqIDs, listMotifPositionsByRefSeqId, motifOutputFile);
-							protCount++;
+							sequences.add(getLongestSequence(prot));
 						}
+						protCount++;
+						System.out.print(protCount + ".");
 					}
+
+					/* Obtain motif positions for each sequence */
+					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
+					int[] motifPositions = getMotifPositions(possibleInstances, sequences);
+					
+					/* Print positions */
+					String motifOutputFile = motifOutputPrefixFile+ "_motif" + motifMap.get(motif);
+					printMotifPosition(motifPositions, motifOutputFile);
 				}
 				line = input.readLine();
-				lineCount++;
 			}
 			input.close();
 		} catch (IOException e) {
@@ -96,6 +85,129 @@ public class PositionConservation {
 
 	}
 
+	private static HashMap<String, Integer> loadRepresentativeMotifs(String inputFile){
+
+		HashMap<String, Integer> motifSet = new HashMap<>();
+
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(inputFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine(); // header
+			line = input.readLine();
+
+			while(line != null) {
+
+				motifSet.put(line.split("\t")[1], Integer.parseInt(line.split("\t")[0])); // [1] = motif, [0] = motifCount
+				line = input.readLine();
+			}
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return motifSet;
+	}
+
+	private String getLongestSequence(String prot) {
+
+		String longestSeq = "";
+		int seqLength = 0; 
+
+		String[] refSeqIDs = this.proteinInfoMap.get(prot);
+
+		/* For a given protein, check it's various sequences (corresponding to different refSeqIds) */
+		for(String id: refSeqIDs) {
+			if(this.fastaIdx.containsKey(id)) {
+
+				/* Load sequence */
+				int indexOfFasta = this.fastaIdx.get(id);
+				String currentSeq = loadRNAsequence(indexOfFasta);
+
+				/* Check if sequence is longer than current stored */
+				if(currentSeq.length() > seqLength) {
+					longestSeq = currentSeq;
+					seqLength = currentSeq.length();
+				}
+			}
+		}
+		return longestSeq;
+	}
+
+	private static String formatSequence(String seq) {
+		String finalSeq = "";
+
+		int l = seq.length();
+
+		if(l == 1000) {
+			finalSeq = seq;
+
+		} else if(l < 1000) {
+
+			String fill = "";
+			for(int i=0; i<(1000-l); i++) {
+				fill += "X";
+			}
+
+			int half = l/2;
+			finalSeq = seq.substring(0, half) + fill + seq.substring(half, l); 	
+		} else { 
+			finalSeq = seq.substring(0, 500) + seq.substring(l-500, l);
+		}
+
+
+		return finalSeq;
+	}
+
+	private static int[] getMotifPositions(HashSet<String> possibleMotifs, ArrayList<String> sequences){
+		int[] motifPositions = new int[1000];
+
+		for(String seq : sequences) {
+			/* format sequence to fit 1000 nucleotides */
+			String finalSeq = formatSequence(seq);
+
+			/* search for motif instances in first 500 nucleotides */
+			for(int i=0; i<500-8; i++) {
+				
+				String substring = finalSeq.substring(i, i+8);
+				
+				/* if current substring is a motif instance, increase motif position count */
+				if(possibleMotifs.contains(substring)) {
+					for(int j=i; j<i+8; j++) {
+						motifPositions[j]++;
+					}
+				}
+			}
+			
+			/* search for motif instances in last 500 nucleotides */
+			for(int i=500; i<1000-8; i++) {
+				
+				String substring = finalSeq.substring(i, i+8);
+				
+				/* if current substring is a motif instance, increase motif position count */
+				if(possibleMotifs.contains(substring)) {
+					for(int j=i; j<i+8; j++) {
+						motifPositions[j]++;
+					}
+				}
+			}
+		}
+		return motifPositions;
+	}
+	
+	private static void printMotifPosition(int[] motifPositions, String outputFile) {
+		
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			
+			for(int i=0; i<motifPositions.length; i++) {
+				out.write((i+1) + "\t" + motifPositions[i]);
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Generate an index for the FASTA file; identifying the line number for the different refseq identifiers
@@ -222,6 +334,7 @@ public class PositionConservation {
 		return sequence;
 	}
 
+	@SuppressWarnings("unused")
 	private ArrayList<Integer> searchForMotifPositionsInSequence(String motif, String sequence){
 
 		ArrayList<Integer> motifPositions = new ArrayList<>();
@@ -325,6 +438,7 @@ public class PositionConservation {
 		return charMap;
 	}
 
+	@SuppressWarnings("unused")
 	private void printMotifPositions(String proteinName, String[] refSeqIds, ArrayList<ArrayList<Integer>> motifPositionByRefSeqID, String outputFile) {
 
 		/* Decide on motif position */
@@ -336,14 +450,14 @@ public class PositionConservation {
 
 		HashMap<String, Integer> utrModeMap = new HashMap<>(); // mode of entire 3'utr positions
 		int utrModeMax = 1;
-		
+
 		ArrayList<Integer> allPositions = new ArrayList<>();
 
 		for(ArrayList<Integer> motifPositions: motifPositionByRefSeqID) {
 			if(!motifPositions.isEmpty()) {
-			
+
 				String utrPositions = ""; // utr mode initializaion
-				
+
 				for(int position: motifPositions) {
 
 					// minimum
@@ -364,10 +478,10 @@ public class PositionConservation {
 
 					// median
 					allPositions.add(position);
-					
+
 					utrPositions += position + ",";
 				}
-				
+
 				// update utr mode 
 				if(utrModeMap.containsKey(utrPositions)) {
 					int currentUtrPositionFrq = utrModeMap.get(utrPositions);
@@ -398,7 +512,7 @@ public class PositionConservation {
 
 			mode = modes.get(0);
 		} 
-		
+
 		// utr mode 
 		String utrMode = "";
 		for(String utrPositions : utrModeMap.keySet()) {
@@ -406,7 +520,7 @@ public class PositionConservation {
 				utrMode = utrPositions;
 			}
 		}
-		
+
 		// median
 		Collections.sort(allPositions);
 		int median = Integer.MAX_VALUE;
