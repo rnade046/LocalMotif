@@ -46,7 +46,7 @@ public class PositionConservation {
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 			String line = input.readLine();
-			int motifCount = 1;
+			int motifCount = 0;
 			while(line != null) {
 
 				String motif = line.split("\t")[0];
@@ -55,23 +55,35 @@ public class PositionConservation {
 					motifCount ++;
 					System.out.println("Testing motif : " + motifCount);
 
-					/* Obtain fasta sequences corresponding to annotated proteins of given motif */
-					ArrayList<String> sequences = new ArrayList<>();
+					/* Determine possible instance motifs */
+					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
+					
+					int[] motifPositions = new int[1000];
 
 					int protCount = 0;
-					for(String prot: line.split("\t")[1].split("\\|")) {
+					String[] proteins = line.split("\t")[2].split("\\|");
+					System.out.println("proteins to check: " + proteins.length);
 
+					for(String prot: proteins) {
 						if(this.annotatedProteins.contains(prot) && this.proteinInfoMap.containsKey(prot)) {
-							sequences.add(getLongestSequence(prot));
+
+							/* obtain longest 3'UTR sequence corresponding to protein */
+							String longestSeq = getLongestSequence(prot);
+
+							/* format sequence to fit 1000 nucleotides */
+							String finalSeq = formatSequence(longestSeq);
+
+							/* search for motif positions */
+							motifPositions = getMotifPositions(possibleInstances, finalSeq, motifPositions);
 						}
 						protCount++;
 						System.out.print(protCount + ".");
+						if(protCount % 50 == 0) {
+							System.out.println();
+						}
 					}
+					System.out.println("Done");
 
-					/* Obtain motif positions for each sequence */
-					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
-					int[] motifPositions = getMotifPositions(possibleInstances, sequences);
-					
 					/* Print positions */
 					String motifOutputFile = motifOutputPrefixFile+ "_motif" + motifMap.get(motif);
 					printMotifPosition(motifPositions, motifOutputFile);
@@ -149,57 +161,58 @@ public class PositionConservation {
 				fill += "X";
 			}
 
-			int half = l/2;
-			finalSeq = seq.substring(0, half) + fill + seq.substring(half, l); 	
+			int half = (int) Math.floor(l/2);
+			String start = seq.substring(0, half);
+			String end = seq.substring(half, l);
+					
+			finalSeq = start + fill + end; 	
 		} else { 
-			finalSeq = seq.substring(0, 500) + seq.substring(l-500, l);
+			
+			String start = seq.substring(0, 500);
+			String end = seq.substring(l-500, l);
+			finalSeq = start + end;
 		}
-
 
 		return finalSeq;
 	}
 
-	private static int[] getMotifPositions(HashSet<String> possibleMotifs, ArrayList<String> sequences){
-		int[] motifPositions = new int[1000];
+	private static int[] getMotifPositions(HashSet<String> possibleMotifs, String sequence, int[] motifPositions){
 
-		for(String seq : sequences) {
-			/* format sequence to fit 1000 nucleotides */
-			String finalSeq = formatSequence(seq);
 
-			/* search for motif instances in first 500 nucleotides */
-			for(int i=0; i<500-8; i++) {
-				
-				String substring = finalSeq.substring(i, i+8);
-				
-				/* if current substring is a motif instance, increase motif position count */
-				if(possibleMotifs.contains(substring)) {
-					for(int j=i; j<i+8; j++) {
-						motifPositions[j]++;
-					}
+		/* search for motif instances in first 500 nucleotides */
+		for(int i=0; i<500-8; i++) {
+
+			String substring = sequence.substring(i, i+8);
+
+			/* if current substring is a motif instance, increase motif position count */
+			if(possibleMotifs.contains(substring)) {
+				for(int j=i; j<i+8; j++) {
+					motifPositions[j]++;
 				}
 			}
-			
-			/* search for motif instances in last 500 nucleotides */
-			for(int i=500; i<1000-8; i++) {
-				
-				String substring = finalSeq.substring(i, i+8);
-				
-				/* if current substring is a motif instance, increase motif position count */
-				if(possibleMotifs.contains(substring)) {
-					for(int j=i; j<i+8; j++) {
-						motifPositions[j]++;
-					}
+		}
+
+		/* search for motif instances in last 500 nucleotides */
+		for(int i=500; i<1000-8; i++) {
+
+			String substring = sequence.substring(i, i+8);
+
+			/* if current substring is a motif instance, increase motif position count */
+			if(possibleMotifs.contains(substring)) {
+				for(int j=i; j<i+8; j++) {
+					motifPositions[j]++;
 				}
 			}
 		}
 		return motifPositions;
 	}
-	
+
+
 	private static void printMotifPosition(int[] motifPositions, String outputFile) {
-		
+
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
-			
+
 			for(int i=0; i<motifPositions.length; i++) {
 				out.write((i+1) + "\t" + motifPositions[i]);
 			}
