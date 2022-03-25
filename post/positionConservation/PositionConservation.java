@@ -21,6 +21,7 @@ public class PositionConservation {
 	private HashMap<String, String[]> proteinInfoMap;
 	private HashSet<String> annotatedProteins;
 
+	private Integer motifFoundCount = 0;
 	// Constructor
 	public PositionConservation(String fastaFile, String proteinInfoFile, String protFreqFile, int l) {
 
@@ -59,7 +60,8 @@ public class PositionConservation {
 					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
 					
 					int[] motifPositions = new int[1000];
-
+					this.motifFoundCount = 0;
+					
 					int protCount = 0;
 					String[] proteins = line.split("\t")[2].split("\\|");
 					System.out.println("proteins to check: " + proteins.length);
@@ -83,9 +85,10 @@ public class PositionConservation {
 						}
 					}
 					System.out.println("Done");
-
+					System.out.println("Sequences containing motifs in first/last 500 nucleotides: " + this.motifFoundCount);
+					
 					/* Print positions */
-					String motifOutputFile = motifOutputPrefixFile+ "_motif" + motifMap.get(motif);
+					String motifOutputFile = motifOutputPrefixFile+ "motif" + motifMap.get(motif);
 					printMotifPosition(motifPositions, motifOutputFile);
 				}
 				line = input.readLine();
@@ -176,8 +179,9 @@ public class PositionConservation {
 		return finalSeq;
 	}
 
-	private static int[] getMotifPositions(HashSet<String> possibleMotifs, String sequence, int[] motifPositions){
-
+	private int[] getMotifPositions(HashSet<String> possibleMotifs, String sequence, int[] motifPositions){
+		
+		boolean motifFound = false;
 
 		/* search for motif instances in first 500 nucleotides */
 		for(int i=0; i<500-8; i++) {
@@ -186,6 +190,7 @@ public class PositionConservation {
 
 			/* if current substring is a motif instance, increase motif position count */
 			if(possibleMotifs.contains(substring)) {
+				motifFound = true;
 				for(int j=i; j<i+8; j++) {
 					motifPositions[j]++;
 				}
@@ -199,10 +204,15 @@ public class PositionConservation {
 
 			/* if current substring is a motif instance, increase motif position count */
 			if(possibleMotifs.contains(substring)) {
+				motifFound = true;
 				for(int j=i; j<i+8; j++) {
 					motifPositions[j]++;
 				}
 			}
+		}
+		
+		if(motifFound) {
+			this.motifFoundCount++;
 		}
 		return motifPositions;
 	}
@@ -214,7 +224,8 @@ public class PositionConservation {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 
 			for(int i=0; i<motifPositions.length; i++) {
-				out.write((i+1) + "\t" + motifPositions[i]);
+				out.write((i+1) + "\t" + motifPositions[i] + "\n");
+				out.flush();
 			}
 			out.close();
 		} catch (IOException e) {
