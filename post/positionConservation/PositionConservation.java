@@ -17,16 +17,18 @@ public class PositionConservation {
 
 	private String fasta;
 	private int motifLength;
+	private int testLength;
 	private HashMap<String, Integer> fastaIdx;
 	private HashMap<String, String[]> proteinInfoMap;
 	private HashSet<String> annotatedProteins;
 
 	private Integer motifFoundCount = 0;
 	// Constructor
-	public PositionConservation(String fastaFile, String proteinInfoFile, String protFreqFile, int l) {
+	public PositionConservation(String fastaFile, String proteinInfoFile, String protFreqFile, int l, int t) {
 
 		this.fasta = fastaFile;
 		this.motifLength = l;
+		this.testLength = t;
 		System.out.println("Generate fasta file index");
 		this.fastaIdx = generateFastaFileIdx(fastaFile); // generate index for FASTA file
 		System.out.println("Load protein info file");
@@ -59,8 +61,10 @@ public class PositionConservation {
 					/* Determine possible instance motifs */
 					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
 					
-					int[] motifPositions = new int[1000];
+					int[] motifPositions = new int[testLength];
 					this.motifFoundCount = 0;
+					
+					int[] consideredSequences = new int[testLength];
 					
 					int protCount = 0;
 					String[] proteins = line.split("\t")[2].split("\\|");
@@ -77,6 +81,9 @@ public class PositionConservation {
 
 							/* search for motif positions */
 							motifPositions = getMotifPositions(possibleInstances, finalSeq, motifPositions);
+							
+							/* update considered sequences*/
+							consideredSequences = updateCountOfConsideredSequences(consideredSequences, longestSeq.length());
 						}
 						protCount++;
 						System.out.print(protCount + ".");
@@ -89,7 +96,9 @@ public class PositionConservation {
 					
 					/* Print positions */
 					String motifOutputFile = motifOutputPrefixFile+ "motif" + motifMap.get(motif);
+					String motifNormalizedOutputFile = motifOutputPrefixFile+ "_Normalized_motif" + motifMap.get(motif);
 					printMotifPosition(motifPositions, motifOutputFile);
+					printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
 				}
 				line = input.readLine();
 			}
@@ -216,6 +225,29 @@ public class PositionConservation {
 		}
 		return motifPositions;
 	}
+	
+	private static int[] updateCountOfConsideredSequences(int[] consideredSeqs, int seqLength) {
+		
+		/* Sequence that are at least the same length as the search area */
+		if(seqLength >= consideredSeqs.length) {
+			for(int i=0; i<consideredSeqs.length; i++) { 
+				consideredSeqs[i] += 1;
+			}	
+		/* Sequence that are shorter than the search area */
+		} else {
+			int half = (int) Math.floor(seqLength/2);
+			int secondHalfStart = consideredSeqs.length - half;
+			
+			for(int i=0; i<half; i++) {
+				consideredSeqs[i]+=1;
+			}
+			
+			for(int i=secondHalfStart; i<consideredSeqs.length; i++) {
+				consideredSeqs[i]+=1;
+			}
+		}
+		return consideredSeqs;
+	}
 
 
 	private static void printMotifPosition(int[] motifPositions, String outputFile) {
@@ -225,6 +257,21 @@ public class PositionConservation {
 
 			for(int i=0; i<motifPositions.length; i++) {
 				out.write((i+1) + "\t" + motifPositions[i] + "\n");
+				out.flush();
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void printNormalizedMotifPosition(int[] motifPositions, int[] consideredSequences, String outputFile) {
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+
+			for(int i=0; i<motifPositions.length; i++) {
+				out.write((i+1) + "\t" + motifPositions[i]/(double)consideredSequences[i] + "\n");
 				out.flush();
 			}
 			out.close();

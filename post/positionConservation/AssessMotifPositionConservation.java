@@ -47,14 +47,14 @@ public class AssessMotifPositionConservation {
 		String coreMotifFamilies = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
 		
 		String fastaFile = wd + params.getProperty("fastaFile");
-//		String motifOutputPrefixFile = wd + "MotifPosition/motifPositionConservation_"; 
-		PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8);
+		String motifOutputPrefixFile = wd + "MotifPosition/motifPositionConservation_"; 
 		
-//		p.getMotifPositions(motifFamilies, extractedAnnotationsFile, motifOutputPrefixFile);
-//	
+		PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8);
+		p.getMotifPositions(motifFamilies, extractedAnnotationsFile, motifOutputPrefixFile);
+	
 		/* motif positions of core proteins */
 		if(clusteringMeasure == 1 || clusteringMeasure == 2) {
-			String motifOutputPrefixFile = wd + "MotifPosition/MotifPositionConservation_coreProteins_";
+			motifOutputPrefixFile = wd + "MotifPosition/MotifPositionConservation_coreProteins_";
 			p.getMotifPositions(coreMotifFamilies, corePorteinsFile, motifOutputPrefixFile);				
 			
 		}
