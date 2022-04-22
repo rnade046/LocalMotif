@@ -12,7 +12,7 @@ public class AssessMotifPositionConservation {
 
 		System.out.println("**Loading parameters file** \n");
 		Properties params = new Properties();
-		params.load(new FileInputStream(args[0]));		
+		params.load(new FileInputStream(args[0]));
 
 		String wd = params.getProperty("working_directory");
 		String networkName = params.getProperty("network_name");
@@ -30,8 +30,8 @@ public class AssessMotifPositionConservation {
 		case 2: clusteringName = "_coreTPD_p" + percentThreshold;
 		break;
 		}
-		
-		File directory = new File(wd + "/MotifPosition/"); 
+
+		File directory = new File(wd + "/MotifPosition/");
 		if (! directory.exists()){
 			System.out.println("creating directory: MotifPosition/");
 			directory.mkdir();
@@ -45,20 +45,20 @@ public class AssessMotifPositionConservation {
 
 		String motifFamilies = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
 		String coreMotifFamilies = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
-		
+
 		String fastaFile = wd + params.getProperty("fastaFile");
-		String motifOutputPrefixFile = wd + "MotifPosition/motifPositionConservation_"; 
-		
-		PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8);
+		String motifOutputPrefixFile = wd + "MotifPosition/motifPositionConservation_";
+
+		PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8, 1000);
 		p.getMotifPositions(motifFamilies, extractedAnnotationsFile, motifOutputPrefixFile);
-	
+
 		/* motif positions of core proteins */
 		if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 			motifOutputPrefixFile = wd + "MotifPosition/MotifPositionConservation_coreProteins_";
-			p.getMotifPositions(coreMotifFamilies, corePorteinsFile, motifOutputPrefixFile);				
-			
+			p.getMotifPositions(coreMotifFamilies, corePorteinsFile, motifOutputPrefixFile);
+
 		}
-		
+
 	}
 
 }

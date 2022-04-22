@@ -39,10 +39,10 @@ public class PositionConservation {
 
 	public void getMotifPositions(String representativeMotifsFile, String extractedAnnotationsFile, String motifOutputPrefixFile) {
 
-		/* Load representative motifs to test */ 
+		/* Load representative motifs to test */
 		HashMap<String, Integer> motifMap = loadRepresentativeMotifs(representativeMotifsFile);
 
-		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */ 
+		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */
 		InputStream in;
 		try {
 			in = new FileInputStream(new File(extractedAnnotationsFile));
@@ -60,12 +60,12 @@ public class PositionConservation {
 
 					/* Determine possible instance motifs */
 					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
-					
+
 					int[] motifPositions = new int[testLength];
 					this.motifFoundCount = 0;
-					
+
 					int[] consideredSequences = new int[testLength];
-					
+
 					int protCount = 0;
 					String[] proteins = line.split("\t")[2].split("\\|");
 					System.out.println("proteins to check: " + proteins.length);
@@ -81,7 +81,7 @@ public class PositionConservation {
 
 							/* search for motif positions */
 							motifPositions = getMotifPositions(possibleInstances, finalSeq, motifPositions);
-							
+
 							/* update considered sequences*/
 							consideredSequences = updateCountOfConsideredSequences(consideredSequences, longestSeq.length());
 						}
@@ -93,7 +93,7 @@ public class PositionConservation {
 					}
 					System.out.println("Done");
 					System.out.println("Sequences containing motifs in first/last 500 nucleotides: " + this.motifFoundCount);
-					
+
 					/* Print positions */
 					String motifOutputFile = motifOutputPrefixFile+ "motif" + motifMap.get(motif);
 					String motifNormalizedOutputFile = motifOutputPrefixFile+ "_Normalized_motif" + motifMap.get(motif);
@@ -136,7 +136,7 @@ public class PositionConservation {
 	private String getLongestSequence(String prot) {
 
 		String longestSeq = "";
-		int seqLength = 0; 
+		int seqLength = 0;
 
 		String[] refSeqIDs = this.proteinInfoMap.get(prot);
 
@@ -158,30 +158,31 @@ public class PositionConservation {
 		return longestSeq;
 	}
 
-	private static String formatSequence(String seq) {
+	private String formatSequence(String seq) {
 		String finalSeq = "";
 
 		int l = seq.length();
 
-		if(l == 1000) {
+		if(l == testLength) {
 			finalSeq = seq;
 
-		} else if(l < 1000) {
+		} else if(l < testLength) {
 
 			String fill = "";
-			for(int i=0; i<(1000-l); i++) {
+			for(int i=0; i<(testLength-l); i++) {
 				fill += "X";
 			}
 
 			int half = (int) Math.floor(l/2);
 			String start = seq.substring(0, half);
 			String end = seq.substring(half, l);
-					
-			finalSeq = start + fill + end; 	
-		} else { 
-			
-			String start = seq.substring(0, 500);
-			String end = seq.substring(l-500, l);
+
+			finalSeq = start + fill + end;
+		} else {
+
+			int half = (int) Math.floor(testLength/2);
+			String start = seq.substring(0, half);
+			String end = seq.substring(l-half, l);
 			finalSeq = start + end;
 		}
 
@@ -189,59 +190,59 @@ public class PositionConservation {
 	}
 
 	private int[] getMotifPositions(HashSet<String> possibleMotifs, String sequence, int[] motifPositions){
-		
+
 		boolean motifFound = false;
-
+		int half = (int) Math.floor(testLength / 2);
 		/* search for motif instances in first 500 nucleotides */
-		for(int i=0; i<500-8; i++) {
+		for(int i=0; i<half-motifLength; i++) {
 
-			String substring = sequence.substring(i, i+8);
+			String substring = sequence.substring(i, i+motifLength);
 
 			/* if current substring is a motif instance, increase motif position count */
 			if(possibleMotifs.contains(substring)) {
 				motifFound = true;
-				for(int j=i; j<i+8; j++) {
+				for(int j=i; j<i+motifLength; j++) {
 					motifPositions[j]++;
 				}
 			}
 		}
 
 		/* search for motif instances in last 500 nucleotides */
-		for(int i=500; i<1000-8; i++) {
+		for(int i=half; i<testLength-motifLength; i++) {
 
-			String substring = sequence.substring(i, i+8);
+			String substring = sequence.substring(i, i+motifLength);
 
 			/* if current substring is a motif instance, increase motif position count */
 			if(possibleMotifs.contains(substring)) {
 				motifFound = true;
-				for(int j=i; j<i+8; j++) {
+				for(int j=i; j<i+motifLength; j++) {
 					motifPositions[j]++;
 				}
 			}
 		}
-		
+
 		if(motifFound) {
 			this.motifFoundCount++;
 		}
 		return motifPositions;
 	}
-	
+
 	private static int[] updateCountOfConsideredSequences(int[] consideredSeqs, int seqLength) {
-		
+
 		/* Sequence that are at least the same length as the search area */
 		if(seqLength >= consideredSeqs.length) {
-			for(int i=0; i<consideredSeqs.length; i++) { 
+			for(int i=0; i<consideredSeqs.length; i++) {
 				consideredSeqs[i] += 1;
-			}	
+			}
 		/* Sequence that are shorter than the search area */
 		} else {
 			int half = (int) Math.floor(seqLength/2);
 			int secondHalfStart = consideredSeqs.length - half;
-			
+
 			for(int i=0; i<half; i++) {
 				consideredSeqs[i]+=1;
 			}
-			
+
 			for(int i=secondHalfStart; i<consideredSeqs.length; i++) {
 				consideredSeqs[i]+=1;
 			}
@@ -264,7 +265,7 @@ public class PositionConservation {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void printNormalizedMotifPosition(int[] motifPositions, int[] consideredSequences, String outputFile) {
 
 		try {
@@ -282,9 +283,9 @@ public class PositionConservation {
 
 	/**
 	 * Generate an index for the FASTA file; identifying the line number for the different refseq identifiers
-	 * 
+	 *
 	 * @param fastaFile String - file path for the FASTA sequences
-	 * @return indexOfFastaFile HashMap<String, Integer> - map of {refseqId : line count} 
+	 * @return indexOfFastaFile HashMap<String, Integer> - map of {refseqId : line count}
 	 */
 	private static HashMap<String, Integer> generateFastaFileIdx(String fastaFile){
 
@@ -369,13 +370,13 @@ public class PositionConservation {
 	}
 
 	/**
-	 * Obtains full RNA seqeunce from the fasta file given the line number corresponding to the sequence header. 
-	 * Will store all information following sequence header until the next sequence header 
-	 * 
+	 * Obtains full RNA seqeunce from the fasta file given the line number corresponding to the sequence header.
+	 * Will store all information following sequence header until the next sequence header
+	 *
 	 * @param fastaFile		String - file path to fasta file containing all rna sequences
 	 * @param lineNumber	int - corresponds to the line number from which to start reading the file
-	 * 
-	 * @return sequence		String - full rna sequence 
+	 *
+	 * @return sequence		String - full rna sequence
 	 */
 	private String loadRNAsequence(int lineNumber) {
 		String sequence = "";
@@ -433,7 +434,7 @@ public class PositionConservation {
 		HashMap<Character, Character[]> degenCharacterMap = defineDegenCharacterMap();
 		int solutions = calculateSolutions(motif, degenCharacterMap);
 
-		/* generate all solutions */ 
+		/* generate all solutions */
 		for(int i = 0; i < solutions; i++) {
 			int j = 1;
 			String seq = "";
@@ -441,14 +442,14 @@ public class PositionConservation {
 			for(int k=0; k < motif.length() ; k++) {
 				Character[] set = degenCharacterMap.get(motif.charAt(k));
 
-				char charToAppend = set[(i/j)%set.length]; // magic 
+				char charToAppend = set[(i/j)%set.length]; // magic
 				seq += charToAppend;
 				j *= set.length;
 			}
 
 			motifs.add(seq);
 
-		}	
+		}
 		return motifs;
 
 	}
@@ -456,11 +457,11 @@ public class PositionConservation {
 	/**
 	 * Determine the number of possible solutions that will be generated for the given motif length
 	 * This function works simply because there's the same amount of possible letters for each nucleotide
-	 * Therefore the number of solutions will be the same. 
-	 * 
+	 * Therefore the number of solutions will be the same.
+	 *
 	 * @param motifLength	int - number of nucleotides considered for a motif (motif size)
 	 * @param charMap		HashMap<Character, Character[]> - map of {nucleotides : list of substitutions}
-	 * 
+	 *
 	 * @return solutions	int - number of solutions for a given motif of length 8
 	 */
 	private int calculateSolutions(String motif, HashMap<Character, Character[]> degenCharacterMap) {
@@ -469,15 +470,15 @@ public class PositionConservation {
 			solutions *= degenCharacterMap.get(motif.charAt(i)).length;
 		}
 		return solutions;
-	} 
+	}
 
 
 	/**
 	 * Define the RNA nucleotide mapping to their possible substitutions (ie. degenerate characters)
-	 * Note: for now this is fix - this could be passed as an input parameter in the future to enable 
+	 * Note: for now this is fix - this could be passed as an input parameter in the future to enable
 	 * flexible motif representation for users
-	 * Maps RNA nucleotides {A, U, C, G} to possible substitutions (themselves + degenerate characters) 
-	 * 
+	 * Maps RNA nucleotides {A, U, C, G} to possible substitutions (themselves + degenerate characters)
+	 *
 	 * @return charMap	 HashMap<Character, Character[]> - map {nucleotide : list of possible characters}
 	 */
 	private HashMap<Character, Character[]> defineDegenCharacterMap(){
@@ -516,7 +517,7 @@ public class PositionConservation {
 		int minPosition = Integer.MAX_VALUE; // min
 
 		/* Map of positions and their frequencies */
-		HashMap<Integer, Integer> positionMode = new HashMap<>(); // mode 
+		HashMap<Integer, Integer> positionMode = new HashMap<>(); // mode
 		int modeMax = 1;
 
 		HashMap<String, Integer> utrModeMap = new HashMap<>(); // mode of entire 3'utr positions
@@ -536,14 +537,14 @@ public class PositionConservation {
 						minPosition = position;
 					}
 
-					// mode 
+					// mode
 					if(positionMode.containsKey(position)) {
 						int currentPosition =  positionMode.get(position);
-						if( currentPosition + 1 > modeMax) { 
+						if( currentPosition + 1 > modeMax) {
 							modeMax++;
 						}
 						positionMode.put(position, currentPosition +1 );
-					} else { 
+					} else {
 						positionMode.put(position, 1);
 					}
 
@@ -553,7 +554,7 @@ public class PositionConservation {
 					utrPositions += position + ",";
 				}
 
-				// update utr mode 
+				// update utr mode
 				if(utrModeMap.containsKey(utrPositions)) {
 					int currentUtrPositionFrq = utrModeMap.get(utrPositions);
 					if(currentUtrPositionFrq + 1 > utrModeMax) {
@@ -578,13 +579,13 @@ public class PositionConservation {
 		int mode = Integer.MAX_VALUE;
 		if(!modes.isEmpty()) {
 			if(modes.size() > 1) {
-				Collections.sort(modes);	
+				Collections.sort(modes);
 			}
 
 			mode = modes.get(0);
-		} 
+		}
 
-		// utr mode 
+		// utr mode
 		String utrMode = "";
 		for(String utrPositions : utrModeMap.keySet()) {
 			if(utrModeMap.get(utrPositions) == utrModeMax) {
@@ -596,8 +597,8 @@ public class PositionConservation {
 		Collections.sort(allPositions);
 		int median = Integer.MAX_VALUE;
 		if(!allPositions.isEmpty()) {
-			median = allPositions.get(((int) Math.ceil(allPositions.size()/ (double) 2)) -1);	
-		} 
+			median = allPositions.get(((int) Math.ceil(allPositions.size()/ (double) 2)) -1);
+		}
 
 
 		try {
@@ -617,8 +618,8 @@ public class PositionConservation {
 
 					out.write(refSeqIds[i] + "=[");
 					Collections.sort(positions);
-					for(int j=0; j<positions.size(); j++){
-						out.write(positions.get(j) + ",");
+					for (Integer position : positions) {
+						out.write(position + ",");
 					}
 					out.write("],");
 				}
