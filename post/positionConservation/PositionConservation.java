@@ -37,10 +37,10 @@ public class PositionConservation {
 		// can remove annotatedProteins -- annotation subset files are generate with only the annotated proteins
 	}
 
-	public void getMotifPositions(String representativeMotifsFile, String extractedAnnotationsFile, String motifOutputPrefixFile) {
+	public void getMotifPositions(String representativeMotifsFile, String extractedAnnotationsFile, String motifOutputPrefixFile, int motifNumber) {
 
-		/* Load representative motifs to test */
-		HashMap<String, Integer> motifMap = loadRepresentativeMotifs(representativeMotifsFile);
+		/* Load motif to test */
+		String motif = loadRepresentativeMotifs(representativeMotifsFile, motifNumber);
 
 		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */
 		InputStream in;
@@ -52,9 +52,9 @@ public class PositionConservation {
 			int motifCount = 0;
 			while(line != null) {
 
-				String motif = line.split("\t")[0];
+				String currentMotif = line.split("\t")[0];
 
-				if(motifMap.containsKey(motif)) {
+				if(currentMotif.equals(motif)) {
 					motifCount ++;
 					System.out.println("Testing motif : " + motifCount);
 
@@ -92,11 +92,11 @@ public class PositionConservation {
 						}
 					}
 					System.out.println("Done");
-					System.out.println("Sequences containing motifs in first/last 500 nucleotides: " + this.motifFoundCount);
+					System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
 
 					/* Print positions */
-					String motifOutputFile = motifOutputPrefixFile+ "motif" + motifMap.get(motif);
-					String motifNormalizedOutputFile = motifOutputPrefixFile+ "_Normalized_motif" + motifMap.get(motif);
+					String motifOutputFile = motifOutputPrefixFile+ "motif" + motifNumber;
+					String motifNormalizedOutputFile = motifOutputPrefixFile+ "_Normalized_motif" + motifNumber;
 					printMotifPosition(motifPositions, motifOutputFile);
 					printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
 				}
@@ -109,10 +109,9 @@ public class PositionConservation {
 
 	}
 
-	private static HashMap<String, Integer> loadRepresentativeMotifs(String inputFile){
+	private static String loadRepresentativeMotifs(String inputFile, int motifToFind){
 
-		HashMap<String, Integer> motifSet = new HashMap<>();
-
+		String motif = "";
 		InputStream in;
 		try {
 			in = new FileInputStream(new File(inputFile));
@@ -120,17 +119,21 @@ public class PositionConservation {
 
 			String line = input.readLine(); // header
 			line = input.readLine();
+			int motifCount=1; 
 
 			while(line != null) {
-
-				motifSet.put(line.split("\t")[1], Integer.parseInt(line.split("\t")[0])); // [1] = motif, [0] = motifCount
+				if(motifCount == motifToFind) {
+					motif = line.split("\t")[1];
+					break;
+				}
 				line = input.readLine();
+				motifCount++;
 			}
 			input.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return motifSet;
+		return motif;
 	}
 
 	private String getLongestSequence(String prot) {

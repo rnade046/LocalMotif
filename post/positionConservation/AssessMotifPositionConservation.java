@@ -49,13 +49,15 @@ public class AssessMotifPositionConservation {
 		String fastaFile = wd + params.getProperty("fastaFile");
 		String motifOutputPrefixFile = wd + "MotifPosition/motifPositionConservation_";
 
-		PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8, 1000);
-		p.getMotifPositions(motifFamilies, extractedAnnotationsFile, motifOutputPrefixFile);
-
+		PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8, Integer.parseInt(args[1]));
+		
 		/* motif positions of core proteins */
 		if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 			motifOutputPrefixFile = wd + "MotifPosition/MotifPositionConservation_coreProteins_";
-			p.getMotifPositions(coreMotifFamilies, corePorteinsFile, motifOutputPrefixFile);
+			p.getMotifPositions(coreMotifFamilies, corePorteinsFile, motifOutputPrefixFile, Integer.parseInt(args[2]));
+
+		} else {
+			p.getMotifPositions(motifFamilies, extractedAnnotationsFile, motifOutputPrefixFile, Integer.parseInt(args[2]));
 
 		}
 
