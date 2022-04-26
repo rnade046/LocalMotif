@@ -14,9 +14,9 @@ public class RBPDBFormatter {
 
 	public static void main(String[] args) {
 
-		String db = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_human_PFMDir\\";
+		String db = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_human_PFMDir\\";
 		//String outputFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_formatted.txt"; 
-		String tomtomDB = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_TomTomformatted.txt";
+		String tomtomDB = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\RBPDB_TomTomformatted-2.txt";
 		
 		//printFormattedDBforMotifComp(db, outputFile);
 		printFormattedDBForTomTom(db, tomtomDB);
@@ -139,16 +139,18 @@ public class RBPDBFormatter {
 		if(convertFreq) {
 
 			/* Determine total elements */
-			int maxInstances = 0;
+			int[] maxInstances = new int[matrix.get(0).size()]; // lenght = number of positions
 			for(int i=0; i<matrix.size(); i++) {
-				maxInstances += matrix.get(i).get(0);
+				for(int j=0; j<maxInstances.length; j++) {
+					maxInstances[j] += matrix.get(i).get(j);
+				}
 			}
 
 			/* normalize matrix*/
 			for(int i=0; i<matrix.size(); i++) {
 				ArrayList<Double> nuclFreq = new ArrayList<>();
 				for(int j=0; j<matrix.get(i).size(); j++) {
-					nuclFreq.add(matrix.get(i).get(j) / (double) maxInstances);
+					nuclFreq.add(matrix.get(i).get(j) / (double) maxInstances[j]);
 				}
 				ppm.add(nuclFreq);
 			}
