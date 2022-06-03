@@ -12,13 +12,29 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 
-public class IdLongestSequences {
+public class LongestSequences {
 
 	public static void main(String[] args) {
 
 		String proteinInfoFile = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\corrNetTop2_proteinsInNetwork_info.tsv";
 		String fastaFile = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\input_files\\human_3UTRsequences.txt";
 		String outputFile = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_longestSequence.tsv";
+		
+		String filterFasta = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_3UTRlongestSequences.txt";
+		
+		String shuffledSeq = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\input_files\\human_Shuffled_3UTRsequences.txt";
+		String filteredShuffled = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_shuffledLongestSequences.txt";
+		
+		HashSet<String> ids = determineLongestSequences(proteinInfoFile, fastaFile, outputFile);
+		
+		filterFastaForLongestSequences(fastaFile, ids, filterFasta);
+		filterFastaForLongestSequences(shuffledSeq, ids, filteredShuffled);
+
+	}
+
+	private static HashSet<String> determineLongestSequences(String proteinInfoFile, String fastaFile, String outputFile) {
+
+		HashSet<String> idSet = new HashSet<>();
 
 		/* load protein name and associated reFseq id*/ 
 		try {
@@ -44,9 +60,13 @@ public class IdLongestSequences {
 						String id = getIdForLongestSequence(refSeqIds, fastaFile);
 						out.write(protName + "\t" + id + "\n");
 						out.flush();
+
+						idSet.add(id);
 					} else { 
 						out.write(protName + "\t" + refSeqIds[0] + "\n");
 						out.flush();
+
+						idSet.add(refSeqIds[0]);
 					}
 				}
 				line = in.readLine();
@@ -57,6 +77,7 @@ public class IdLongestSequences {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return idSet;
 	}
 
 	private static String getIdForLongestSequence(String[] refSeqIds, String fasta) {
@@ -122,5 +143,51 @@ public class IdLongestSequences {
 
 		}
 		return finalId;
+	}
+
+	private static void filterFastaForLongestSequences(String fasta, HashSet<String> ids, String filteredFasta) {
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fasta))));
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(filteredFasta)));
+			
+			String line = in.readLine();
+			
+			boolean printSeq = false;
+			String seq = "";
+			String id = "";
+
+			while(line!=null) {
+
+				/* store sequence (add multiple lines) */
+				if(printSeq) {
+					seq += line;
+				}
+
+				if(line.startsWith(">")) {
+					
+					if(seq!=null) {
+						out.write(seq + "\n");
+					}
+					
+					printSeq = false;
+					seq = "";
+
+					String[] col = line.split("_|\\.");
+					id = col[2] + "_" + col[3]; // col[2] = type of ID (eg. NM) ; col[3] = number ID (#####)
+
+					if(ids.contains(id)) {
+						printSeq = true;
+						out.write(">Seq_" + id + "\n");
+					}
+				}
+				line = in.readLine();
+			}
+			
+			out.close();
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 }

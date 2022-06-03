@@ -109,6 +109,78 @@ public class PositionConservation {
 
 	}
 
+	public void getMotifPositionsFromLongestSequences(String representativeMotifsFile, String fastaFile, String motifOutputPrefixFile, int motifNumber) {
+
+		/* Load motif to test */
+		String motif = loadRepresentativeMotifs(representativeMotifsFile, motifNumber);
+
+		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(fastaFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+			int motifCount = 0;
+			while(line != null) {
+
+				String currentMotif = line.split("\t")[0];
+
+				if(currentMotif.equals(motif)) {
+					motifCount ++;
+					System.out.println("Testing motif : " + motifCount);
+
+					/* Determine possible instance motifs */
+					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
+
+					int[] motifPositions = new int[testLength];
+					this.motifFoundCount = 0;
+
+					int[] consideredSequences = new int[testLength];
+
+					int protCount = 0;
+					String[] proteins = line.split("\t")[2].split("\\|");
+					System.out.println("proteins to check: " + proteins.length);
+
+					for(String prot: proteins) {
+						if(this.annotatedProteins.contains(prot) && this.proteinInfoMap.containsKey(prot)) {
+
+							/* obtain longest 3'UTR sequence corresponding to protein */
+							String longestSeq = getLongestSequence(prot);
+
+							/* format sequence to fit 1000 nucleotides */
+							String finalSeq = formatSequence(longestSeq);
+
+							/* search for motif positions */
+							motifPositions = getMotifPositions(possibleInstances, finalSeq, motifPositions);
+
+							/* update considered sequences*/
+							consideredSequences = updateCountOfConsideredSequences(consideredSequences, longestSeq.length());
+						}
+						protCount++;
+						System.out.print(protCount + ".");
+						if(protCount % 50 == 0) {
+							System.out.println();
+						}
+					}
+					System.out.println("Done");
+					System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
+
+					/* Print positions */
+					String motifOutputFile = motifOutputPrefixFile+ "motif" + motifNumber;
+					String motifNormalizedOutputFile = motifOutputPrefixFile+ "_Normalized_motif" + motifNumber;
+					printMotifPosition(motifPositions, motifOutputFile);
+					printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
+				}
+				line = input.readLine();
+			}
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+	
 	private static String loadRepresentativeMotifs(String inputFile, int motifToFind){
 
 		String motif = "";
