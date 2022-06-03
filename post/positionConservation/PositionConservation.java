@@ -111,9 +111,10 @@ public class PositionConservation {
 
 	public void getMotifPositionsFromLongestSequences(String representativeMotifsFile, String fastaFile, String motifOutputPrefixFile, int motifNumber) {
 
-		/* Load motif to test */
+		/* Load motifs to test */
 		String motif = loadRepresentativeMotifs(representativeMotifsFile, motifNumber);
-
+	
+		
 		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */
 		InputStream in;
 		try {
