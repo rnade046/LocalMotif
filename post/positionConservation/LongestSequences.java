@@ -22,13 +22,20 @@ public class LongestSequences {
 		
 		String filterFasta = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_3UTRlongestSequences.txt";
 		
-		String shuffledSeq = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\input_files\\human_Shuffled_3UTRsequences.txt";
-		String filteredShuffled = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_shuffledLongestSequences.txt";
+		//String shuffledSeq = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\input_files\\human_Shuffled_3UTRsequences.txt";
+		//String filteredShuffled = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_shuffledLongestSequences.txt";
 		
-		HashSet<String> ids = determineLongestSequences(proteinInfoFile, fastaFile, outputFile);
-		
+		HashSet<String> ids = new HashSet<>();
+		File file = new File(outputFile);
+		if(!file.exists()) {
+			ids = determineLongestSequences(proteinInfoFile, fastaFile, outputFile);
+
+		} else {
+			ids = loadIds(outputFile);
+		}
+	
 		filterFastaForLongestSequences(fastaFile, ids, filterFasta);
-		filterFastaForLongestSequences(shuffledSeq, ids, filteredShuffled);
+		//(shuffledSeq, ids, filteredShuffled);
 
 	}
 
@@ -144,7 +151,28 @@ public class LongestSequences {
 		}
 		return finalId;
 	}
+	
+	private static HashSet<String> loadIds(String idFile) {
+		HashSet<String> ids = new HashSet<>();
+		
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(idFile))));
 
+			String line = in.readLine(); // no header
+			while(line!=null) {
+				String id = line.split("\t")[1]; // [0] = protein name, [1] = id
+				ids.add(id);
+				
+				line = in.readLine();
+			}
+					
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return ids;
+	}
+	
 	private static void filterFastaForLongestSequences(String fasta, HashSet<String> ids, String filteredFasta) {
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fasta))));
@@ -165,7 +193,7 @@ public class LongestSequences {
 
 				if(line.startsWith(">")) {
 					
-					if(seq!=null) {
+					if(!seq.isEmpty()) {
 						out.write(seq + "\n");
 					}
 					
