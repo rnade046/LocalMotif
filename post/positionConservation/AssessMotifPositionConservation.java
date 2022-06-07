@@ -15,7 +15,6 @@ public class AssessMotifPositionConservation {
 		params.load(new FileInputStream(args[0]));
 
 		String wd = params.getProperty("working_directory");
-		String networkName = params.getProperty("network_name");
 
 		File directory = new File(wd + "/MotifPosition/");
 		if (! directory.exists()){
@@ -23,17 +22,13 @@ public class AssessMotifPositionConservation {
 			directory.mkdir();
 		}
 
-		String protAnnotationFreqFile = wd + networkName + "_protFreqAnnotation.tsv";
-		String proteinToRefSeqIdFile = wd +  networkName + "_proteinsInNetwork_info.tsv";
-
 		String fastaFile = wd + params.getProperty("fastaFile");
 		
-		String extractedAnnotationsFile = wd + args[2];
 		String motifFamilies = wd + args[3];
 		String motifOutputPrefixFile = wd + args[4];
 
-		PositionConservation p = new PositionConservation(fastaFile, proteinToRefSeqIdFile, protAnnotationFreqFile, 8, Integer.parseInt(args[1]));
-		p.getMotifPositions(motifFamilies, extractedAnnotationsFile, motifOutputPrefixFile, Integer.parseInt(args[5]));
+		PositionConservation p = new PositionConservation(fastaFile, 8, Integer.parseInt(args[1]));
+		p.getMotifPositionsFromLongestSequences(motifFamilies, fastaFile, motifOutputPrefixFile, Integer.parseInt(args[5]));
 
 
 	}
