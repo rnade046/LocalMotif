@@ -21,14 +21,13 @@ public class AssessMotifPositionConservation {
 			System.out.println("creating directory: MotifPosition/");
 			directory.mkdir();
 		}
-
-		String fastaFile = wd + params.getProperty("fastaFile");
 		
-		String motifFamilies = wd + args[3];
+		String motifFamilies = wd + args[2];
+		String filteredFastaFile = wd + args[3];
 		String motifOutputPrefixFile = wd + args[4];
 
-		PositionConservation p = new PositionConservation(fastaFile, 8, Integer.parseInt(args[1]));
-		p.getMotifPositionsFromLongestSequences(motifFamilies, fastaFile, motifOutputPrefixFile, Integer.parseInt(args[5]));
+		PositionConservation p = new PositionConservation(filteredFastaFile, 8, Integer.parseInt(args[1]));
+		p.getMotifPositionsFromLongestSequences(motifFamilies, filteredFastaFile, motifOutputPrefixFile);
 
 
 	}
