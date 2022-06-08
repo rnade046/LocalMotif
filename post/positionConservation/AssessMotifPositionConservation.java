@@ -24,12 +24,15 @@ public class AssessMotifPositionConservation {
 		
 		String motifFamilies = wd + args[2];
 		String filteredFastaFile = wd + args[3];
-		String motifOutputPrefixFile = wd + args[4];
+		String coreProtsFile = wd + args[4];
+		String idFile = wd + "MotifPosition/corrNetTop2_longestSequence.tsv";
+		
+		String motifOutputPrefixFile = wd + args[5];
 
 		PositionConservation p = new PositionConservation(filteredFastaFile, 8, Integer.parseInt(args[1]));
 		p.getMotifPositionsFromLongestSequences(motifFamilies, filteredFastaFile, motifOutputPrefixFile);
 
-
+		p.getMotifPositionsFromCoreProteins(motifFamilies, filteredFastaFile, coreProtsFile, idFile, motifOutputPrefixFile);
 	}
 
 }

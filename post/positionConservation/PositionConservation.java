@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -119,7 +120,7 @@ public class PositionConservation {
 		List<String> motifs = loadRepresentativeMotifs(representativeMotifsFile);
 
 		for(int i=0; i < motifs.size(); i++) {
-			
+
 			System.out.println("Motif : " + (i+1) );
 			/* Determine possible instance motifs */
 			HashSet<String> possibleInstances = getPossibleMotifInstances(motifs.get(i));
@@ -136,18 +137,10 @@ public class PositionConservation {
 				BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 				String line = input.readLine();
-//				int seqCount = 0;
 				while(line != null) {
 
 					/* load sequence; ignore lines that are identifiers*/
 					if(!line.startsWith(">")) {
-
-//						seqCount ++;
-//						System.out.print(seqCount + ".");
-//
-//						if(seqCount%50==0) {
-//							System.out.println();	
-//						}
 
 						/* format sequence */
 						String sequence = formatSequence(line);
@@ -167,19 +160,93 @@ public class PositionConservation {
 				System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
 
 				/* Print positions */
-				String motifOutputFile = motifOutputPrefixFile+ "motif" + (i+1);
-				String motifNormalizedOutputFile = motifOutputPrefixFile+ "Normalized_motif" + (i+1);
+				String motifOutputFile = motifOutputPrefixFile+ "allSeq_motif" + (i+1);
+				String motifNormalizedOutputFile = motifOutputPrefixFile+ "allSeq_Normalized_motif" + (i+1);
 				printMotifPosition(motifPositions, motifOutputFile);
 				printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
-			
+
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 		System.out.println("Done");
 
 	}
+
+	public void getMotifPositionsFromCoreProteins(String representativeMotifsFile, String filteredFastaFile, String coreProtFile, String idFile, String motifOutputPrefixFile) {
+
+		/* Load motifs to test */
+		System.out.println("Loading representative motifs");
+		List<String> motifs = loadRepresentativeMotifs(representativeMotifsFile);
+
+		for(int i=0; i < motifs.size(); i++) {
+
+			System.out.println("Motif : " + (i+1) );
+
+			/* Determine possible instance motifs */
+			HashSet<String> possibleInstances = getPossibleMotifInstances(motifs.get(i));
+
+			/* Obtain proteins associated to motif; then RefSeqIds*/
+			HashSet<String> idSet = loadCoreProteinIdsInNetwork(motifs.get(i), coreProtFile, idFile);
+
+			int[] motifPositions = new int[testLength];
+			this.motifFoundCount = 0;
+
+			int[] consideredSequences = new int[testLength];
+
+			/* Check for motif in all fasta of the filtered fasta file */
+			InputStream in;
+			try {
+				in = new FileInputStream(new File(filteredFastaFile));
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+				String line = input.readLine();
+
+				while(line != null) {
+
+					/* load sequence; ignore lines that are identifiers*/
+					if(line.startsWith(">")) {
+
+						/* check if RefSeqId is associated to a core protein */
+						String[] header = line.split("\\_");
+						String id = header[header.length-2] + "_" + header[header.length-1];
+
+						if(idSet.contains(id)) {
+
+							line = input.readLine();
+							/* format sequence */
+							String sequence = formatSequence(line);
+
+							/* search for motif positions */
+							motifPositions = getMotifPositions(possibleInstances, sequence, motifPositions);
+
+							/* update considered sequences*/
+							consideredSequences = updateCountOfConsideredSequences(consideredSequences, line.length());
+						}
+					}
+
+					line = input.readLine();
+				}
+				input.close();
+
+				System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
+
+				/* Print positions */
+				String motifOutputFile = motifOutputPrefixFile+ "coreProts_motif" + (i+1);
+				String motifNormalizedOutputFile = motifOutputPrefixFile+ "coreProts_Normalized_motif" + (i+1);
+				printMotifPosition(motifPositions, motifOutputFile);
+				printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+		System.out.println("Done");
+
+	}
+
 
 	private static List<String> loadRepresentativeMotifs(String inputFile){
 
@@ -195,10 +262,10 @@ public class PositionConservation {
 
 			while(line != null) {
 				motifs.add(line.split("\t")[1]);
-				
+
 				line = input.readLine();
 			}
-			
+
 			input.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -449,20 +516,24 @@ public class PositionConservation {
 	}
 
 
-	@SuppressWarnings("unused")
-	private static HashSet<String> loadAnnotatedProteinsInNetwork(String proteinFreqFile){
+	private static HashSet<String> loadCoreProteinIdsInNetwork(String motif, String coreProteinFile, String idFile){
 
-		HashSet<String> annotatedProteinSet = new HashSet<>();
+		HashSet<String> coreProteinSet = new HashSet<>();
+		HashSet<String> idSet = new HashSet<>();
 
 		InputStream in;
 		try {
-			in = new FileInputStream(new File(proteinFreqFile));
+			in = new FileInputStream(new File(coreProteinFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 			String line = input.readLine();
 			while(line != null) {
 
-				annotatedProteinSet.add(line.split("\t")[0]); // [0] = protein names
+				if(line.split("\t")[0].equals(motif)) { //motif
+					String[] proteins = line.split("\t")[2].split("\\|"); // list of proteins
+					coreProteinSet.addAll(Arrays.asList(proteins));
+					break;
+				}
 
 				line = input.readLine();
 			}
@@ -470,7 +541,26 @@ public class PositionConservation {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return annotatedProteinSet;
+
+		try {
+			in = new FileInputStream(new File(idFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+			while(line != null) {
+
+				if(coreProteinSet.contains(line.split("\t")[0])) { // [0] = protein
+					idSet.add(line.split("\t")[1]); // [1] = RefSeqId
+				}
+
+				line = input.readLine();
+			}
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return idSet;
 	}
 
 	/**
