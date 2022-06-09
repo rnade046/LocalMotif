@@ -261,7 +261,7 @@ public class PositionConservation {
 			line = input.readLine();
 
 			while(line != null) {
-				motifs.add(line.split("\t")[1]);
+				motifs.add(line.split("\t")[0]);
 
 				line = input.readLine();
 			}
@@ -419,6 +419,7 @@ public class PositionConservation {
 	}
 
 
+	@SuppressWarnings("unused")
 	private static void printMotifPosition(int[] motifPositions, String outputFile) {
 
 		try {
