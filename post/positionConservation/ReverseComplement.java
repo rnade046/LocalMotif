@@ -15,8 +15,8 @@ public class ReverseComplement {
 	public static void main(String[] args) {
 
 		String inputFile ="C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_longestSequence.tsv";
-		String fastaFile = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\coding-sequences-human.txt";
-		String outputFile = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_reverse-complement-sequences.txt";
+		String fastaFile = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_3UTRlongestSequences.txt";
+		String outputFile = "C:\\Users\\rnade046\\Documents\\LESMoNlocal\\analysis\\MotifPosition\\corrNetTop2_reverse-complement-sequences-3UTR.txt";
 
 		generateReverseComplements(inputFile, fastaFile, outputFile);
 		//listReverseComplementMotifs(inputFile, outputFile);
@@ -72,8 +72,8 @@ public class ReverseComplement {
 					
 					/* get current id */
 					String[] col = line.split("_|\\.");
-					id = col[2] + "_" + col[3]; // col[2] = type of ID (eg. NM) ; col[3] = number ID (#####)
-
+					//id = col[2] + "_" + col[3]; // col[2] = type of ID (eg. NM) ; col[3] = number ID (#####)
+					id = col[1] + "_" + col[2];
 					/* if id is in our list, store it's sequence to obtain it's reverse complement */
 					if(refSeqIdSet.contains(id)) {
 						storeSeq = true;

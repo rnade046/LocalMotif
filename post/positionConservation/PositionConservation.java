@@ -99,9 +99,9 @@ public class PositionConservation {
 					System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
 
 					/* Print positions */
-					String motifOutputFile = motifOutputPrefixFile+ "motif" + motifNumber;
+					//String motifOutputFile = motifOutputPrefixFile+ "motif" + motifNumber;
 					String motifNormalizedOutputFile = motifOutputPrefixFile+ "_Normalized_motif" + motifNumber;
-					printMotifPosition(motifPositions, motifOutputFile);
+					//printMotifPosition(motifPositions, motifOutputFile);
 					printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
 				}
 				line = input.readLine();
@@ -160,9 +160,9 @@ public class PositionConservation {
 				System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
 
 				/* Print positions */
-				String motifOutputFile = motifOutputPrefixFile+ "allSeq_motif" + (i+1);
+				//String motifOutputFile = motifOutputPrefixFile+ "allSeq_motif" + (i+1);
 				String motifNormalizedOutputFile = motifOutputPrefixFile+ "allSeq_Normalized_motif" + (i+1);
-				printMotifPosition(motifPositions, motifOutputFile);
+				//printMotifPosition(motifPositions, motifOutputFile);
 				printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
 
 			} catch (IOException e) {
@@ -233,9 +233,9 @@ public class PositionConservation {
 				System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
 
 				/* Print positions */
-				String motifOutputFile = motifOutputPrefixFile+ "coreProts_motif" + (i+1);
+				//String motifOutputFile = motifOutputPrefixFile+ "coreProts_motif" + (i+1);
 				String motifNormalizedOutputFile = motifOutputPrefixFile+ "coreProts_Normalized_motif" + (i+1);
-				printMotifPosition(motifPositions, motifOutputFile);
+				//printMotifPosition(motifPositions, motifOutputFile);
 				printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
 
 			} catch (IOException e) {
