@@ -1,4 +1,4 @@
- package ClusteredMotifs;
+package ClusteredMotifs;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -129,15 +129,15 @@ public class ClusteredMotifsMain {
 				}
 			}
 			/* output to R : perform hierarchical clustering*/
-			
-			
+
+
 			String wd4r = wd + "motifFamilies/" + familyFolder;
 			String projectName = networkName + clusteringName;
 			String[] argsR = new String[6];
 			f = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "_Dendrogram1.png");
 			if(!f.exists() && !f.isDirectory()) {
 				System.out.println("Launching initial hierarchical clustering analysis");
-				
+
 				argsR = new String[6];
 				argsR[0] = "Rscript";
 				argsR[1] = "HierarchicalClustering_1.R";
@@ -145,17 +145,17 @@ public class ClusteredMotifsMain {
 				argsR[3] = projectName;
 				argsR[4] = String.valueOf(pvalThreshold);
 				argsR[5] = "ward.D2";
-				
+
 				Runtime.getRuntime().exec(argsR);
 			}
-			
+
 			// run second R script when ready (e.g. testing h values [min max interval])
 			double[] hTest = Arrays.stream(params.getProperty("heightToTest", "0").split("\\s+")).mapToDouble(Double::parseDouble).toArray();
 			f2 = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "_Dendrogram2_"+ hTest[0] + "_" + hTest[1] +"_" + hTest[2]+".png");
-			
+
 			if(f.exists() && !f2.exists() && !f2.isDirectory()) {
 				System.out.println("Assessing number of groups at provided heights");
-				
+
 				argsR = new String[9];
 				argsR[0] = "Rscript";
 				argsR[1] = "HierarchicalClustering_2.R";
@@ -168,6 +168,8 @@ public class ClusteredMotifsMain {
 				argsR[8] = String.valueOf(hTest[2]);
 				Runtime.getRuntime().exec(argsR);
 
+			}
+
 			double height = Double.parseDouble(params.getProperty("height", "0"));
 			f3 = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "h_" + height + "_Dendrogram3.png");
 			if(f2.exists() && !f3.exists() && !f3.isDirectory()) {
@@ -178,9 +180,9 @@ public class ClusteredMotifsMain {
 					dir4.mkdir();
 				}
 				String condition = "Groups";
-				
+
 				argsR = new String[8];
-				argsR[0] = "Rscript";
+				argsR[0] = "/usr/local/bin/Rscript";
 				argsR[1] = "HierarchicalClustering_3.R";
 				argsR[2] = wd4r;
 				argsR[3] = projectName;
@@ -188,7 +190,7 @@ public class ClusteredMotifsMain {
 				argsR[5] = condition;
 				argsR[6] = String.valueOf(height);
 				argsR[7] = "ward.D2";
-				
+
 				System.out.println("Generating final dendogram at h = " + height);
 				Runtime.getRuntime().exec(argsR);
 			}
@@ -197,32 +199,32 @@ public class ClusteredMotifsMain {
 
 				/* output to R : perform hierarchical clustering for CoreProteins */
 				projectName = networkName + clusteringName + "_CoreProteins";
-				
+
 				f = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "_Dendrogram1.png");
 				if(!f.exists() && !f.isDirectory()) {
-					
+
 					argsR = new String[6];
-					argsR[0] = "Rscript";
+					argsR[0] = "/usr/local/bin/Rscript";
 					argsR[1] = "HierarchicalClustering_1.R";
 					argsR[2] = wd4r;
 					argsR[3] = projectName;
 					argsR[4] = String.valueOf(pvalThreshold);
 					argsR[5] = "ward.D2";
-					
-				}
+
+
 					System.out.println("Launching initial hierarchical clustering analysis - Core proteins");
 					Runtime.getRuntime().exec(argsR);
 				}
 				// run second R script when ready (e.g. testing h values [min max interval])
 				double[] hTest2 = Arrays.stream(params.getProperty("coreHeightToTest", "0").split("\\s+")).mapToDouble(Double::parseDouble).toArray();
-				
+
 				f2 = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "_Dendrogram2_"+ hTest2[0] + "_" + hTest2[1] +"_" + hTest2[2]+".png");
-				
+
 				if(f.exists() && !f2.exists() && !f2.isDirectory()) {
 					System.out.println("Assessing number of groups at provided heights - Core proteins");
-					
+
 					argsR = new String[9];
-					argsR[0] = "Rscript";
+					argsR[0] = "/usr/local/bin/Rscript";
 					argsR[1] = "HierarchicalClustering_2.R";
 					argsR[2] = wd4r;
 					argsR[3] = projectName;
@@ -236,8 +238,8 @@ public class ClusteredMotifsMain {
 
 				// run second R script when ready (e.g. h is set)
 				double height2 = Double.parseDouble(params.getProperty("coreHeight", "0"));
-				
-				f3 = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "h_" + height + "_Dendrogram3.png");
+
+				f3 = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "h_" + height2 + "_Dendrogram3.png");
 				if(f2.exists() && !f3.exists() && !f3.isDirectory()) {
 
 					String condition = "Groups_CoreProteins";
@@ -246,9 +248,9 @@ public class ClusteredMotifsMain {
 						System.out.println("creating directory: " + condition+ "_h" + height2  + "\n");
 						dir4.mkdir();
 					}
-					
+
 					argsR = new String[8];
-					argsR[0] = "Rscript";
+					argsR[0] = "/usr/local/bin/Rscript";
 					argsR[1] = "HierarchicalClustering_3.R";
 					argsR[2] = wd4r;
 					argsR[3] = projectName;
@@ -260,10 +262,11 @@ public class ClusteredMotifsMain {
 					System.out.println("Generating final dendogram - core proteins - at h = " + height2);
 				}
 			}
+
 		}
 		/* Assess motif families */ 
 		if(Boolean.parseBoolean(params.getProperty("assessMotifFamilies"))) {
-			
+
 			String familyFolder = networkName + clusteringName + "_p" + pvalThreshold + "/";
 
 			String height = params.getProperty("height", "0");
@@ -281,21 +284,21 @@ public class ClusteredMotifsMain {
 
 			System.out.println("**Assessing motif families**");
 			MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, extractedAnnotationsFile);
-			
+
 			String wd4r = wd + "motifFamilies/" + familyFolder + condition;
 			String projectName = networkName + clusteringName;
-			
+
 			String[] argsR = new String[6];
-			argsR[0] = "Rscript";
+			argsR[0] = "/usr/local/bin/Rscript";
 			argsR[1] = "seqLogo.R";
 			argsR[2] = wd4r;
 			argsR[3] = projectName;
 			argsR[4] = String.valueOf(numberOfFamilies);
 			argsR[5] = String.valueOf(height);
-			
+
 			Runtime.getRuntime().exec(argsR);
-			
-			
+
+
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
 				height = params.getProperty("coreHeight", "0");
 				double height2 = Double.parseDouble(params.getProperty("coreHeight", "0"));
@@ -310,18 +313,18 @@ public class ClusteredMotifsMain {
 
 				System.out.println("**Assessing motif instances for Core Proteins**");
 				MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, numberOfCoreFamilies, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, corePorteinsFile);
-				
+
 				/* Generate */ 
 				wd4r = wd + "motifFamilies/" + familyFolder + condition;
 				projectName = networkName + clusteringName + "_CoreProteins";
-				
-				argsR[0] = "Rscript";
+
+				argsR[0] = "/usr/local/bin/Rscript";
 				argsR[1] = "seqLogo.R";
 				argsR[2] = wd4r;
 				argsR[3] = projectName;
 				argsR[4] = String.valueOf(numberOfFamilies);
 				argsR[5] = String.valueOf(height);
-				
+
 				Runtime.getRuntime().exec(argsR);
 
 			}
