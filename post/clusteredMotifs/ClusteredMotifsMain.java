@@ -133,10 +133,20 @@ public class ClusteredMotifsMain {
 			
 			String wd4r = wd + "motifFamilies/" + familyFolder;
 			String projectName = networkName + clusteringName;
+			String[] argsR = new String[6];
 			f = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "_Dendrogram1.png");
 			if(!f.exists() && !f.isDirectory()) {
 				System.out.println("Launching initial hierarchical clustering analysis");
-				Runtime.getRuntime().exec("Rscript HierarchicalClustering_1.R " + wd4r + " " + projectName + " " + pvalThreshold + " ward.D2"); 
+				
+				argsR = new String[6];
+				argsR[0] = "Rscript";
+				argsR[1] = "HierarchicalClustering_1.R";
+				argsR[2] = wd4r;
+				argsR[3] = projectName;
+				argsR[4] = String.valueOf(pvalThreshold);
+				argsR[5] = "ward.D2";
+				
+				Runtime.getRuntime().exec(argsR);
 			}
 			
 			// run second R script when ready (e.g. testing h values [min max interval])
@@ -145,8 +155,18 @@ public class ClusteredMotifsMain {
 			
 			if(f.exists() && !f2.exists() && !f2.isDirectory()) {
 				System.out.println("Assessing number of groups at provided heights");
-				Runtime.getRuntime().exec("Rscript HierarchicalClustering_2.R " + wd4r + " " + projectName + " " + pvalThreshold + " ward.D2 " + hTest[0] + " " + hTest[1] + " " + hTest[2]); 
-			}
+				
+				argsR = new String[9];
+				argsR[0] = "Rscript";
+				argsR[1] = "HierarchicalClustering_2.R";
+				argsR[2] = wd4r;
+				argsR[3] = projectName;
+				argsR[4] = String.valueOf(pvalThreshold);
+				argsR[5] = "ward.D2";
+				argsR[6] = String.valueOf(hTest[0]);
+				argsR[7] = String.valueOf(hTest[1]);
+				argsR[8] = String.valueOf(hTest[2]);
+				Runtime.getRuntime().exec(argsR);
 
 			double height = Double.parseDouble(params.getProperty("height", "0"));
 			f3 = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "h_" + height + "_Dendrogram3.png");
@@ -159,8 +179,18 @@ public class ClusteredMotifsMain {
 				}
 				String condition = "Groups";
 				
+				argsR = new String[8];
+				argsR[0] = "Rscript";
+				argsR[1] = "HierarchicalClustering_3.R";
+				argsR[2] = wd4r;
+				argsR[3] = projectName;
+				argsR[4] = String.valueOf(pvalThreshold);
+				argsR[5] = condition;
+				argsR[6] = String.valueOf(height);
+				argsR[7] = "ward.D2";
+				
 				System.out.println("Generating final dendogram at h = " + height);
-				Runtime.getRuntime().exec("Rscript HierarchicalClustering_3.R " + wd4r + " " + projectName + " " + pvalThreshold + " " + condition + " "+ height  + " ward.D2"); 
+				Runtime.getRuntime().exec(argsR);
 			}
 
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
@@ -170,8 +200,18 @@ public class ClusteredMotifsMain {
 				
 				f = new File(wd4r + projectName + "_p" + pvalThreshold + "_ward.D2"+ "_Dendrogram1.png");
 				if(!f.exists() && !f.isDirectory()) {
+					
+					argsR = new String[6];
+					argsR[0] = "Rscript";
+					argsR[1] = "HierarchicalClustering_1.R";
+					argsR[2] = wd4r;
+					argsR[3] = projectName;
+					argsR[4] = String.valueOf(pvalThreshold);
+					argsR[5] = "ward.D2";
+					
+				}
 					System.out.println("Launching initial hierarchical clustering analysis - Core proteins");
-					Runtime.getRuntime().exec("Rscript HierarchicalClustering_1.R " + wd4r + " " + projectName + " " + pvalThreshold + " ward.D2"); 
+					Runtime.getRuntime().exec(argsR);
 				}
 				// run second R script when ready (e.g. testing h values [min max interval])
 				double[] hTest2 = Arrays.stream(params.getProperty("coreHeightToTest", "0").split("\\s+")).mapToDouble(Double::parseDouble).toArray();
@@ -180,7 +220,18 @@ public class ClusteredMotifsMain {
 				
 				if(f.exists() && !f2.exists() && !f2.isDirectory()) {
 					System.out.println("Assessing number of groups at provided heights - Core proteins");
-					Runtime.getRuntime().exec("Rscript HierarchicalClustering_2.R " + wd4r + " " + projectName + " " + pvalThreshold + " ward.D2 " + hTest2[0] + " " + hTest2[1] + " " + hTest2[2]); 
+					
+					argsR = new String[9];
+					argsR[0] = "Rscript";
+					argsR[1] = "HierarchicalClustering_2.R";
+					argsR[2] = wd4r;
+					argsR[3] = projectName;
+					argsR[4] = String.valueOf(pvalThreshold);
+					argsR[5] = "ward.D2";
+					argsR[6] = String.valueOf(hTest[0]);
+					argsR[7] = String.valueOf(hTest[1]);
+					argsR[8] = String.valueOf(hTest[2]);
+					Runtime.getRuntime().exec(argsR);
 				}
 
 				// run second R script when ready (e.g. h is set)
@@ -196,7 +247,16 @@ public class ClusteredMotifsMain {
 						dir4.mkdir();
 					}
 					
-					Runtime.getRuntime().exec("Rscript HierarchicalClustering_3.R " + wd4r + " " + projectName + " " + pvalThreshold  + " " + condition + " " + height2  + " ward.D2"); 
+					argsR = new String[8];
+					argsR[0] = "Rscript";
+					argsR[1] = "HierarchicalClustering_3.R";
+					argsR[2] = wd4r;
+					argsR[3] = projectName;
+					argsR[4] = String.valueOf(pvalThreshold);
+					argsR[5] = condition;
+					argsR[6] = String.valueOf(height);
+					argsR[7] = "ward.D2";
+					Runtime.getRuntime().exec(argsR);
 					System.out.println("Generating final dendogram - core proteins - at h = " + height2);
 				}
 			}
@@ -225,7 +285,15 @@ public class ClusteredMotifsMain {
 			String wd4r = wd + "motifFamilies/" + familyFolder + condition;
 			String projectName = networkName + clusteringName;
 			
-			Runtime.getRuntime().exec("Rscript seqLogo.R " + wd4r + " " + projectName + " " + numberOfFamilies + " " + height); 
+			String[] argsR = new String[6];
+			argsR[0] = "Rscript";
+			argsR[1] = "seqLogo.R";
+			argsR[2] = wd4r;
+			argsR[3] = projectName;
+			argsR[4] = String.valueOf(numberOfFamilies);
+			argsR[5] = String.valueOf(height);
+			
+			Runtime.getRuntime().exec(argsR);
 			
 			
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
@@ -246,7 +314,15 @@ public class ClusteredMotifsMain {
 				/* Generate */ 
 				wd4r = wd + "motifFamilies/" + familyFolder + condition;
 				projectName = networkName + clusteringName + "_CoreProteins";
-				Runtime.getRuntime().exec("Rscript seqLogo.R " + wd4r + " " + projectName + " " + numberOfFamilies + " " + height); 
+				
+				argsR[0] = "Rscript";
+				argsR[1] = "seqLogo.R";
+				argsR[2] = wd4r;
+				argsR[3] = projectName;
+				argsR[4] = String.valueOf(numberOfFamilies);
+				argsR[5] = String.valueOf(height);
+				
+				Runtime.getRuntime().exec(argsR);
 
 			}
 
