@@ -18,14 +18,16 @@ import java.util.List;
 public class CompareProteinSetSimilarity {
 
 	public static void main(String[] args) {
+		
+		String wd = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/";
 
-		String mclClustersFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\mclOutput_i2.txt";
-		String proteinInfoFile = "C://Users//Rachel//Documents//LESMoNlocal//analysis//corrNetTop2-400_proteinsInNetwork_info.tsv";
+		String mclClustersFile = wd + "benchmark/mclOutput_i2.txt";
+		String proteinInfoFile = wd + "corrNetTop2-400_proteinsInNetwork_info.tsv";
 
-		String motifFamilySummaryFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\corrNetTop2-400_TPPD_p0.3_coreProteins_h0.4_motifFamiliesInfo.tsv";
-		String annotationSubsetFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\corrNetTop2-400_TPPD_p0.3_coreProteinsByMotif.tsv";
+		String motifFamilySummaryFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
+		String annotationSubsetFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
 
-		String outputFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\corrNetTop2-400_TPPD_p0.3_MCL_i2_similarity_coreProts.tsv";
+		String outputFile = wd + "benchmark/corrNetTop2-400_coreTPD_p0.4_MCL_i2_similarity_coreProts.tsv";
 		//String protDistribution = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\corrNetTop2-400_coreTPD_p0.4_MCL_i2_proteinDistribution_coreProts.tsv";
 
 		/* Load MCL clusters (protein sets) as list<Set<Proteins>> */ 
