@@ -129,7 +129,7 @@ public class CompareProteinSetSimilarity {
 			line = input.readLine();
 			int motifCount = 0;
 			while(line!=null) {
-				motifFamilies.put(line.split("\t")[1], motifCount); // [1] = motif representation XXXXXXXX
+				motifFamilies.put(line.split("\t")[0], motifCount); // [1] = motif representation XXXXXXXX
 				line = input.readLine();
 				motifCount++;
 			}

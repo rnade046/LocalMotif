@@ -15,11 +15,12 @@ public class GetMotifFamiliesSequenceForBenchmarkComparison {
 
 	public static void main(String[] args) {
 
-		String similarityMatrix = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\corrNetTop2-400_TPPD_p0.3_MCL_i2_similarity_coreProts.tsv";
+		String wd = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/";
+		String similarityMatrix = wd + "benchmark/corrNetTop2-400_coreTPD_p0.4_MCL_i2_similarity_coreProts.tsv";
 		double threshold = 0.5;
 		
-		String motifFamiliesPPMprefix = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\motifFamilies\\corrNetTop2-400_TPPD_p0.3_p1.14704202197871E-11\\Groups_CoreProteins_h0.4\\corrNetTop2-400_TPPD_p0.3_coreProteins_h0.4_ppm_motifFamilyGroup";
-		String outputPrefix = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\fasta-TPPD\\corrNetTop2-400_TPPD_p0.3_coreProts_TomTomFormatted_mclCluster";
+		String motifFamiliesPPMprefix = wd + "motifFamilies/corrNetTop2-400_coreTPD_p0.4_p6.94181641095822E-7/Groups_CoreProteins_h0.7/corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_ppm_motifFamilyGroup";
+		String outputPrefix = wd + "benchmark/fasta-coreTPD/corrNetTop2-400_coreTPD_p0.4_coreProts_TomTomFormatted_mclCluster";
 	
 		
 		/* Iterate through similarity matrix - assess mcl clusters individually */
