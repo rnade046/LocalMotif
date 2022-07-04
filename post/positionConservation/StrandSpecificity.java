@@ -55,6 +55,7 @@ public class StrandSpecificity {
 			/* determine significance */
 			double trials = fwdSum + rvcSum;
 			BinomialDistribution bd = new BinomialDistribution((int)trials, 0.5);
+			double p = bd.cumulativeProbability((int)specificity);
 			
 		}
 		
