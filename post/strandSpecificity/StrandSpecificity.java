@@ -1,4 +1,4 @@
-package positionConservation;
+package strandSpecificity;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
