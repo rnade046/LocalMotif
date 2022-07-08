@@ -21,18 +21,21 @@ public class AssessMotifPositionConservation {
 			System.out.println("creating directory: MotifPosition/");
 			directory.mkdir();
 		}
-		
+
 		String motifFamilies = wd + args[2];
 		String filteredFastaFile = wd + args[3];
 		String coreProtsFile = wd + args[4];
 		String idFile = wd + "MotifPosition/corrNetTop2_longestSequence.tsv";
 		
+		
 		String motifOutputPrefixFile = wd + args[5];
+		String nucleotideFrequencyFile = wd + args[6];
 
 		PositionConservation p = new PositionConservation(filteredFastaFile, 8, Integer.parseInt(args[1]));
-		p.getMotifPositionsFromLongestSequences(motifFamilies, filteredFastaFile, motifOutputPrefixFile);
-
-		p.getMotifPositionsFromCoreProteins(motifFamilies, filteredFastaFile, coreProtsFile, idFile, motifOutputPrefixFile);
+		//p.getMotifPositionsFromLongestSequences(motifFamilies, filteredFastaFile, motifOutputPrefixFile);
+		p.calculateNucleotideFrequenciesFromAllSequences(filteredFastaFile, nucleotideFrequencyFile);
+		
+		//p.getMotifPositionsFromCoreProteins(motifFamilies, filteredFastaFile, coreProtsFile, idFile, motifOutputPrefixFile);
 	}
 
 }

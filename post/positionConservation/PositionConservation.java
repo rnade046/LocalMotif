@@ -38,80 +38,7 @@ public class PositionConservation {
 		//this.annotatedProteins = loadAnnotatedProteinsInNetwork(protFreqFile); // load {protein1 | prot2 |..| n} proteins in network
 		// can remove annotatedProteins -- annotation subset files are generate with only the annotated proteins
 	}
-	/**
-	 * @deprecated
-	 */
-	public void getMotifPositions(String representativeMotifsFile, String extractedAnnotationsFile, String motifOutputPrefixFile, int motifNumber) {
 
-		/* Load motif to test */
-		String motif = loadRepresentativeMotif(representativeMotifsFile, motifNumber);
-
-		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */
-		InputStream in;
-		try {
-			in = new FileInputStream(new File(extractedAnnotationsFile));
-			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-
-			String line = input.readLine();
-			int motifCount = 0;
-			while(line != null) {
-
-				String currentMotif = line.split("\t")[0];
-
-				if(currentMotif.equals(motif)) {
-					motifCount ++;
-					System.out.println("Testing motif : " + motifCount);
-
-					/* Determine possible instance motifs */
-					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
-
-					int[] motifPositions = new int[testLength];
-					this.motifFoundCount = 0;
-
-					int[] consideredSequences = new int[testLength];
-
-					int protCount = 0;
-					String[] proteins = line.split("\t")[2].split("\\|");
-					System.out.println("proteins to check: " + proteins.length);
-
-					for(String prot: proteins) {
-						if(this.annotatedProteins.contains(prot) && this.proteinInfoMap.containsKey(prot)) {
-
-							/* obtain longest 3'UTR sequence corresponding to protein */
-							String longestSeq = getLongestSequence(prot);
-
-							/* format sequence to fit 1000 nucleotides */
-							String finalSeq = formatSequence(longestSeq);
-
-							/* search for motif positions */
-							motifPositions = getMotifPositions(possibleInstances, finalSeq, motifPositions);
-
-							/* update considered sequences*/
-							consideredSequences = updateCountOfConsideredSequences(consideredSequences, longestSeq.length());
-						}
-						protCount++;
-						System.out.print(protCount + ".");
-						if(protCount % 50 == 0) {
-							System.out.println();
-						}
-					}
-					System.out.println("Done");
-					System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
-
-					/* Print positions */
-					//String motifOutputFile = motifOutputPrefixFile+ "motif" + motifNumber;
-					String motifNormalizedOutputFile = motifOutputPrefixFile+ "_Normalized_motif" + motifNumber;
-					//printMotifPosition(motifPositions, motifOutputFile);
-					printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
-				}
-				line = input.readLine();
-			}
-			input.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
 
 	public void getMotifPositionsFromLongestSequences(String representativeMotifsFile, String filteredFastaFile, String motifOutputPrefixFile) {
 
@@ -130,7 +57,7 @@ public class PositionConservation {
 
 			int[] consideredSequences = new int[testLength];
 
-			/* Check for motif in all fasta of the filtered fasta file */
+			/* Check for motif in all FASTA of the filtered FASTA file */
 			InputStream in;
 			try {
 				in = new FileInputStream(new File(filteredFastaFile));
@@ -139,18 +66,24 @@ public class PositionConservation {
 				String line = input.readLine();
 				while(line != null) {
 
-					/* load sequence; ignore lines that are identifiers*/
+					/* load sequence; ignore lines that are identifiers */
 					if(!line.startsWith(">")) {
 
 						/* format sequence */
 						String sequence = formatSequence(line);
 
+						/* nucleotide frequency count */
+
+						int currentMotifCount = this.motifFoundCount;
 						/* search for motif positions */
 						motifPositions = getMotifPositions(possibleInstances, sequence, motifPositions);
 
-						/* update considered sequences*/
-						consideredSequences = updateCountOfConsideredSequences(consideredSequences, line.length());
+						int newMotifCount = this.motifFoundCount;
 
+						if(newMotifCount > currentMotifCount) {
+							/* update considered sequences*/
+							consideredSequences = updateCountOfConsideredSequences(consideredSequences, line.length());
+						}
 					}
 
 					line = input.readLine();
@@ -218,11 +151,16 @@ public class PositionConservation {
 							/* format sequence */
 							String sequence = formatSequence(line);
 
+							int currentMotifCount = this.motifFoundCount;
 							/* search for motif positions */
 							motifPositions = getMotifPositions(possibleInstances, sequence, motifPositions);
 
-							/* update considered sequences*/
-							consideredSequences = updateCountOfConsideredSequences(consideredSequences, line.length());
+							int newMotifCount = this.motifFoundCount;
+
+							if(newMotifCount > currentMotifCount) {
+								/* update considered sequences*/
+								consideredSequences = updateCountOfConsideredSequences(consideredSequences, line.length());
+							}
 						}
 					}
 
@@ -247,6 +185,48 @@ public class PositionConservation {
 
 	}
 
+	public void calculateNucleotideFrequenciesFromAllSequences(String fastaFile, String outputFile) {
+
+		/* initialize list to contain nucleotide frequencies */
+		List<List<double[]>> allNucleotideFrequencies = new ArrayList<>();
+
+		/* test all sequences contained in filtered FASTA */
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(fastaFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+			while(line != null) {
+
+				/* load sequence; ignore lines that are identifiers */
+				if(!line.startsWith(">")) {
+
+					/* format sequence */
+					String sequence = formatSequence(line);
+
+					/* search sequence in blocks of 125 BP; ignore the filler part */
+					List<double[]> sequenceFreq = calculateNucleotideFrequenciesForSequence(sequence);
+
+					/* store sequence nucleotide frequency */
+					allNucleotideFrequencies.add(sequenceFreq);
+				}
+				line = input.readLine();
+			}
+			input.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		/* calculate nucleotide frequency for each bin */
+		List<double[]> overallBinFrequency = calculateOverallBinNucleotideFrequency(allNucleotideFrequencies);
+
+		double[] overallNucleotideFrequency = calculateOverallNucleotideFrequency(overallBinFrequency);
+
+		printNucleotideFrequency(overallNucleotideFrequency, overallBinFrequency, outputFile);
+
+	}
 
 	private static List<String> loadRepresentativeMotifs(String inputFile){
 
@@ -705,6 +685,162 @@ public class PositionConservation {
 		return charMap;
 	}
 
+	/**
+	 * Determine nucleotide frequencies in bins of 125 BP
+	 * Sequences are formatted to be contained in 2000 BP; 
+	 * - if original sequence was too short it has been padded with "X"s in the middle
+	 * - if original sequence was too long it was truncated **/
+	private List<double[]> calculateNucleotideFrequenciesForSequence(String sequence) {
+		List<double[]> sequenceNucleotideFrequency = new ArrayList<>();
+
+		/* search individual bins of 125 BP */
+		for(int i=0; i<sequence.length(); i=i+125) {
+
+			/* count nucleotide occurrence in bin */
+			int[] binOccurrence = new int[4]; // [A, U, C, G] 
+			int numPositions = 0;
+
+			/* search each nucleotide in bin */
+			for (int j=i; j<i+124; j++) {
+
+				char nucl = sequence.charAt(j);
+
+				switch(nucl) {
+				case 'A': 
+					binOccurrence[0] += 1;
+					numPositions++;
+					break;
+				case 'T': 
+					binOccurrence[1] += 1;
+					numPositions++;
+					break;
+				case 'C':
+					binOccurrence[2] += 1;
+					numPositions++;
+					break;
+				case 'G': 
+					binOccurrence[3] += 1;
+					numPositions++;
+					break;
+				}
+
+			}
+
+			/* determine nucleotide frequency for bin */
+			double[] binFrequency = new double[4];
+
+			for(int j=0; j<binOccurrence.length; j++) {
+				if(binOccurrence[j] == 0) {
+					binFrequency[j] = 0;
+				} else {
+					binFrequency[j] = binOccurrence[j] / (double) numPositions;
+				}
+				
+			}
+
+			/* store bin nucleotide frequency */
+			sequenceNucleotideFrequency.add(binFrequency);
+
+		}
+		return sequenceNucleotideFrequency;
+	}
+
+	private List<double[]> calculateOverallBinNucleotideFrequency(List<List<double[]>> allSequenceFrequencies){
+		List<double[]> allBinFrequencies = new ArrayList<>();
+		
+		
+		
+		/* search all bins individually; i = current bin */
+		for(int i=0; i<allSequenceFrequencies.get(0).size(); i++) {
+
+			/* for current bin; search all sequences and add nucleotide frequencies */
+			double[] sumBinFrequency = new double[4]; // [A, U, C, G] 
+			int seqCountPerBin = 0;
+			
+			for(int j=0; j<allSequenceFrequencies.size(); j++) { // j = current sequence
+				
+				double sumFreqCurrentSeqBin = 0;
+				double[] currentSequenceBinFrequency = allSequenceFrequencies.get(j).get(i);
+				
+				for(int h=0; h<currentSequenceBinFrequency.length; h++) { // h = current nucleotide frequency
+					sumBinFrequency[h] += currentSequenceBinFrequency[h];
+					sumFreqCurrentSeqBin += currentSequenceBinFrequency[h];
+				}
+				
+				if(sumFreqCurrentSeqBin > 0) {
+					seqCountPerBin ++; 
+				}
+			}
+
+			/* average frequency by number of sequences */
+			double[] meanBinFrequency = new double[4]; // [A, U, C, G]
+			for(int j=0; j<sumBinFrequency.length; j++) {
+				meanBinFrequency[j] = sumBinFrequency[j] / (double) seqCountPerBin;
+			}
+
+			/* store current bin frequency */
+			allBinFrequencies.add(meanBinFrequency);
+		}
+
+		return allBinFrequencies;
+	}
+
+	private double[] calculateOverallNucleotideFrequency(List<double[]> frequencyAccrossBins) {
+		double[] frequencies = new double[4]; // [A, U, C, G] 
+
+
+		/* calculate the sum of frequencies across all bins */
+		double[] sumFreq = new double[4]; // [A, U, C, G] 
+
+		for(int i=0; i<frequencyAccrossBins.size(); i++) {
+			for(int j=0; j<frequencyAccrossBins.get(i).length; j++) {
+				sumFreq[j] += frequencyAccrossBins.get(i)[j];
+			}
+		}
+
+		/* normalize sum of frequencies by number of bins */
+		for(int i=0; i<sumFreq.length; i++) {
+			frequencies[i] = sumFreq[i] / (double) frequencyAccrossBins.size(); // size = number of bins
+		}
+
+		return frequencies;
+	}
+
+	private void printNucleotideFrequency(double[] overallFreq, List<double[]> binFrequencies, String outputFile) {
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+
+			out.write("Item\tA\tU\tC\tG\nOverall\t"); //header
+
+			/* Sequence summary */
+			for(int i=0; i<overallFreq.length; i++) {
+				out.write(overallFreq[i] + "\t");
+			}
+			out.write("\n");
+			out.flush();
+
+			/* Print individual bins */
+			for(int i=0; i<binFrequencies.size(); i++) {
+				int binStart = (i * 125) + 1 ;
+				int binEnd = binStart + 124;
+
+				out.write("bin(" + binStart + "-" + binEnd + ")\t");
+
+				for(int j=0; j<binFrequencies.get(i).length; j++) {
+					out.write(binFrequencies.get(i)[j] + "\t");
+				}
+				out.write("\n");
+				out.flush();
+
+			}
+			out.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	@SuppressWarnings("unused")
 	private void printMotifPositions(String proteinName, String[] refSeqIds, ArrayList<ArrayList<Integer>> motifPositionByRefSeqID, String outputFile) {
 
@@ -823,6 +959,83 @@ public class PositionConservation {
 
 			out.flush();
 			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public void getMotifPositions(String representativeMotifsFile, String extractedAnnotationsFile, String motifOutputPrefixFile, int motifNumber) {
+
+		/* Load motif to test */
+		String motif = loadRepresentativeMotif(representativeMotifsFile, motifNumber);
+
+		/* Load significant motif and its annotated proteins from extracted annotation 1 at a time */
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(extractedAnnotationsFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine();
+			int motifCount = 0;
+			while(line != null) {
+
+				String currentMotif = line.split("\t")[0];
+
+				if(currentMotif.equals(motif)) {
+					motifCount ++;
+					System.out.println("Testing motif : " + motifCount);
+
+					/* Determine possible instance motifs */
+					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
+
+					int[] motifPositions = new int[testLength];
+					this.motifFoundCount = 0;
+
+					int[] consideredSequences = new int[testLength];
+
+					int protCount = 0;
+					String[] proteins = line.split("\t")[2].split("\\|");
+					System.out.println("proteins to check: " + proteins.length);
+
+					for(String prot: proteins) {
+						if(this.annotatedProteins.contains(prot) && this.proteinInfoMap.containsKey(prot)) {
+
+							/* obtain longest 3'UTR sequence corresponding to protein */
+							String longestSeq = getLongestSequence(prot);
+
+							/* format sequence to fit 1000 nucleotides */
+							String finalSeq = formatSequence(longestSeq);
+
+							/* search for motif positions */
+							motifPositions = getMotifPositions(possibleInstances, finalSeq, motifPositions);
+
+							/* update considered sequences*/
+							consideredSequences = updateCountOfConsideredSequences(consideredSequences, longestSeq.length());
+
+
+						}
+						protCount++;
+						System.out.print(protCount + ".");
+						if(protCount % 50 == 0) {
+							System.out.println();
+						}
+					}
+					System.out.println("Done");
+					System.out.println("Sequences containing motifs in search range: " + this.motifFoundCount);
+
+					/* Print positions */
+					//String motifOutputFile = motifOutputPrefixFile+ "motif" + motifNumber;
+					String motifNormalizedOutputFile = motifOutputPrefixFile+ "_Normalized_motif" + motifNumber;
+					//printMotifPosition(motifPositions, motifOutputFile);
+					printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
+				}
+				line = input.readLine();
+			}
+			input.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
