@@ -40,7 +40,7 @@ public class PositionConservation {
 	}
 
 
-	public void getMotifPositionsFromLongestSequences(String representativeMotifsFile, String filteredFastaFile, String motifOutputPrefixFile) {
+	public void getMotifPositionsFromLongestSequences(String representativeMotifsFile, String filteredFastaFile, String motifOutputPrefixFile, String nucleotideFreqFile) {
 
 		/* Load motifs to test */
 		System.out.println("Loading representative motifs");
@@ -56,6 +56,9 @@ public class PositionConservation {
 			this.motifFoundCount = 0;
 
 			int[] consideredSequences = new int[testLength];
+			
+			/* initialize list to contain nucleotide frequencies */
+			List<List<double[]>> allNucleotideFrequencies = new ArrayList<>();
 
 			/* Check for motif in all FASTA of the filtered FASTA file */
 			InputStream in;
@@ -83,6 +86,13 @@ public class PositionConservation {
 						if(newMotifCount > currentMotifCount) {
 							/* update considered sequences*/
 							consideredSequences = updateCountOfConsideredSequences(consideredSequences, line.length());
+							
+							/* perform nucleotide frequency calculations */
+							/* search sequence in blocks of 125 BP; ignore the filler part */
+							List<double[]> sequenceFreq = calculateNucleotideFrequenciesForSequence(sequence);
+
+							/* store sequence nucleotide frequency */
+							allNucleotideFrequencies.add(sequenceFreq);
 						}
 					}
 
@@ -97,6 +107,17 @@ public class PositionConservation {
 				String motifNormalizedOutputFile = motifOutputPrefixFile+ "allSeq_Normalized_motif" + (i+1);
 				//printMotifPosition(motifPositions, motifOutputFile);
 				printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
+				
+				
+				System.out.println("nucleotide frequency calc");
+				/* calculate nucleotide frequency for each bin */
+				List<double[]> overallBinFrequency = calculateOverallBinNucleotideFrequency(allNucleotideFrequencies);
+
+				double[] overallNucleotideFrequency = calculateOverallNucleotideFrequency(overallBinFrequency);
+
+				printNucleotideFrequency(overallNucleotideFrequency, overallBinFrequency, nucleotideFreqFile + "_motif" + (i+1) + ".tsv");
+
+				
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -186,7 +207,7 @@ public class PositionConservation {
 	}
 
 	public void calculateNucleotideFrequenciesFromAllSequences(String fastaFile, String outputFile) {
-
+		System.out.println("Calculating overall nucleotide frequency");
 		/* initialize list to contain nucleotide frequencies */
 		List<List<double[]>> allNucleotideFrequencies = new ArrayList<>();
 
