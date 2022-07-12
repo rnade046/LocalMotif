@@ -44,13 +44,13 @@ public class PositionConservation {
 
 		/* Load motifs to test */
 		System.out.println("Loading representative motifs");
-		List<String> motifs = loadRepresentativeMotifs(representativeMotifsFile);
+		List<String> motifs = SequenceUtils.loadRepresentativeMotifs(representativeMotifsFile);
 
 		for(int i=0; i < motifs.size(); i++) {
 
 			System.out.println("Motif : " + (i+1) );
 			/* Determine possible instance motifs */
-			HashSet<String> possibleInstances = getPossibleMotifInstances(motifs.get(i));
+			HashSet<String> possibleInstances = SequenceUtils.getPossibleMotifInstances(motifs.get(i));
 
 			int[] motifPositions = new int[testLength];
 			this.motifFoundCount = 0;
@@ -73,7 +73,7 @@ public class PositionConservation {
 					if(!line.startsWith(">")) {
 
 						/* format sequence */
-						String sequence = formatSequence(line);
+						String sequence = SequenceUtils.formatSequence(line, this.testLength);
 
 						/* nucleotide frequency count */
 
@@ -132,14 +132,14 @@ public class PositionConservation {
 
 		/* Load motifs to test */
 		System.out.println("Loading representative motifs");
-		List<String> motifs = loadRepresentativeMotifs(representativeMotifsFile);
+		List<String> motifs = SequenceUtils.loadRepresentativeMotifs(representativeMotifsFile);
 
 		for(int i=0; i < motifs.size(); i++) {
 
 			System.out.println("Motif : " + (i+1) );
 
 			/* Determine possible instance motifs */
-			HashSet<String> possibleInstances = getPossibleMotifInstances(motifs.get(i));
+			HashSet<String> possibleInstances = SequenceUtils.getPossibleMotifInstances(motifs.get(i));
 
 			/* Obtain proteins associated to motif; then RefSeqIds*/
 			HashSet<String> idSet = loadCoreProteinIdsInNetwork(motifs.get(i), coreProtFile, idFile);
@@ -170,7 +170,7 @@ public class PositionConservation {
 
 							line = input.readLine();
 							/* format sequence */
-							String sequence = formatSequence(line);
+							String sequence = SequenceUtils.formatSequence(line, this.testLength);
 
 							int currentMotifCount = this.motifFoundCount;
 							/* search for motif positions */
@@ -224,7 +224,7 @@ public class PositionConservation {
 				if(!line.startsWith(">")) {
 
 					/* format sequence */
-					String sequence = formatSequence(line);
+					String sequence = SequenceUtils.formatSequence(line, this.testLength);
 
 					/* search sequence in blocks of 125 BP; ignore the filler part */
 					List<double[]> sequenceFreq = calculateNucleotideFrequenciesForSequence(sequence);
@@ -247,32 +247,6 @@ public class PositionConservation {
 
 		printNucleotideFrequency(overallNucleotideFrequency, overallBinFrequency, outputFile);
 
-	}
-
-	private static List<String> loadRepresentativeMotifs(String inputFile){
-
-		List<String> motifs = new ArrayList<>();
-
-		InputStream in;
-		try {
-			in = new FileInputStream(new File(inputFile));
-			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-
-			String line = input.readLine(); // header
-			line = input.readLine();
-
-			while(line != null) {
-				motifs.add(line.split("\t")[0]);
-
-				line = input.readLine();
-			}
-
-			input.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return motifs;
 	}
 
 	private static String loadRepresentativeMotif(String inputFile, int motifToFind){
@@ -327,36 +301,7 @@ public class PositionConservation {
 		return longestSeq;
 	}
 
-	private String formatSequence(String seq) {
-		String finalSeq = "";
 
-		int l = seq.length();
-
-		if(l == testLength) {
-			finalSeq = seq;
-
-		} else if(l < testLength) {
-
-			String fill = "";
-			for(int i=0; i<(testLength-l); i++) {
-				fill += "X";
-			}
-
-			int half = (int) Math.floor(l/2);
-			String start = seq.substring(0, half);
-			String end = seq.substring(half, l);
-
-			finalSeq = start + fill + end;
-		} else {
-
-			int half = (int) Math.floor(testLength/2);
-			String start = seq.substring(0, half);
-			String end = seq.substring(l-half, l);
-			finalSeq = start + end;
-		}
-
-		return finalSeq;
-	}
 
 	private int[] getMotifPositions(HashSet<String> possibleMotifs, String sequence, int[] motifPositions){
 
@@ -606,7 +551,7 @@ public class PositionConservation {
 	private ArrayList<Integer> searchForMotifPositionsInSequence(String motif, String sequence){
 
 		ArrayList<Integer> motifPositions = new ArrayList<>();
-		HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
+		HashSet<String> possibleInstances = SequenceUtils.getPossibleMotifInstances(motif);
 
 
 		int currentPosition = 0;
@@ -623,152 +568,12 @@ public class PositionConservation {
 		return motifPositions;
 	}
 
-	private HashSet<String> getPossibleMotifInstances(String motif){
-
-		HashSet<String> motifs = new HashSet<>();
-
-		HashMap<Character, Character[]> degenCharacterMap = defineDegenCharacterMap();
-		int solutions = calculateSolutions(motif, degenCharacterMap);
-
-		/* generate all solutions */
-		for(int i = 0; i < solutions; i++) {
-			int j = 1;
-			String seq = "";
-			/* generate a given motif */
-			for(int k=0; k < motif.length() ; k++) {
-				Character[] set = degenCharacterMap.get(motif.charAt(k));
-
-				char charToAppend = set[(i/j)%set.length]; // magic
-				seq += charToAppend;
-				j *= set.length;
-			}
-
-			motifs.add(seq);
-
-		}
-		return motifs;
-
-	}
-
-	/**
-	 * Determine the number of possible solutions that will be generated for the given motif length
-	 * This function works simply because there's the same amount of possible letters for each nucleotide
-	 * Therefore the number of solutions will be the same.
-	 *
-	 * @param motifLength	int - number of nucleotides considered for a motif (motif size)
-	 * @param charMap		HashMap<Character, Character[]> - map of {nucleotides : list of substitutions}
-	 *
-	 * @return solutions	int - number of solutions for a given motif of length 8
-	 */
-	private int calculateSolutions(String motif, HashMap<Character, Character[]> degenCharacterMap) {
-		int solutions = 1;
-		for(int i = 0; i < motif.length(); i++) {
-			solutions *= degenCharacterMap.get(motif.charAt(i)).length;
-		}
-		return solutions;
-	}
 
 
-	/**
-	 * Define the RNA nucleotide mapping to their possible substitutions (ie. degenerate characters)
-	 * Note: for now this is fix - this could be passed as an input parameter in the future to enable
-	 * flexible motif representation for users
-	 * Maps RNA nucleotides {A, U, C, G} to possible substitutions (themselves + degenerate characters)
-	 *
-	 * @return charMap	 HashMap<Character, Character[]> - map {nucleotide : list of possible characters}
-	 */
-	private HashMap<Character, Character[]> defineDegenCharacterMap(){
-		HashMap<Character, Character[]> charMap = new HashMap<>();
 
-		Character[] a = {'A'};
-		Character[] t = {'T'};
-		Character[] g = {'G'};
-		Character[] c = {'C'};
-		Character[] r = {'A', 'G'};
-		Character[] y = {'T', 'C'};
-		Character[] d = {'A', 'T', 'G'};
-		Character[] b = {'T', 'G', 'C'};
-		Character[] h = {'A', 'T', 'C'};
-		Character[] v = {'A', 'G', 'C'};
-		Character[] x = {'A', 'T', 'G', 'C'};
-
-		charMap.put('A', a);
-		charMap.put('T', t);
-		charMap.put('G', g);
-		charMap.put('C', c);
-		charMap.put('R', r);
-		charMap.put('Y', y);
-		charMap.put('D', d);
-		charMap.put('B', b);
-		charMap.put('H', h);
-		charMap.put('V', v);
-		charMap.put('*', x);
-		return charMap;
-	}
-
-	/**
-	 * Determine nucleotide frequencies in bins of 125 BP
-	 * Sequences are formatted to be contained in 2000 BP; 
-	 * - if original sequence was too short it has been padded with "X"s in the middle
-	 * - if original sequence was too long it was truncated **/
-	private List<double[]> calculateNucleotideFrequenciesForSequence(String sequence) {
-		List<double[]> sequenceNucleotideFrequency = new ArrayList<>();
-
-		/* search individual bins of 125 BP */
-		for(int i=0; i<sequence.length(); i=i+125) {
-
-			/* count nucleotide occurrence in bin */
-			int[] binOccurrence = new int[4]; // [A, U, C, G] 
-			int numPositions = 0;
-
-			/* search each nucleotide in bin */
-			for (int j=i; j<i+124; j++) {
-
-				char nucl = sequence.charAt(j);
-
-				switch(nucl) {
-				case 'A': 
-					binOccurrence[0] += 1;
-					numPositions++;
-					break;
-				case 'T': 
-					binOccurrence[1] += 1;
-					numPositions++;
-					break;
-				case 'C':
-					binOccurrence[2] += 1;
-					numPositions++;
-					break;
-				case 'G': 
-					binOccurrence[3] += 1;
-					numPositions++;
-					break;
-				}
-
-			}
-
-			/* determine nucleotide frequency for bin */
-			double[] binFrequency = new double[4];
-
-			for(int j=0; j<binOccurrence.length; j++) {
-				if(binOccurrence[j] == 0) {
-					binFrequency[j] = 0;
-				} else {
-					binFrequency[j] = binOccurrence[j] / (double) numPositions;
-				}
-				
-			}
-
-			/* store bin nucleotide frequency */
-			sequenceNucleotideFrequency.add(binFrequency);
-
-		}
-		return sequenceNucleotideFrequency;
-	}
 
 	private List<double[]> calculateOverallBinNucleotideFrequency(List<List<double[]>> allSequenceFrequencies){
 		List<double[]> allBinFrequencies = new ArrayList<>();
-		
 		
 		
 		/* search all bins individually; i = current bin */
@@ -1011,7 +816,7 @@ public class PositionConservation {
 					System.out.println("Testing motif : " + motifCount);
 
 					/* Determine possible instance motifs */
-					HashSet<String> possibleInstances = getPossibleMotifInstances(motif);
+					HashSet<String> possibleInstances = SequenceUtils.getPossibleMotifInstances(motif);
 
 					int[] motifPositions = new int[testLength];
 					this.motifFoundCount = 0;
@@ -1029,7 +834,7 @@ public class PositionConservation {
 							String longestSeq = getLongestSequence(prot);
 
 							/* format sequence to fit 1000 nucleotides */
-							String finalSeq = formatSequence(longestSeq);
+							String finalSeq = SequenceUtils.formatSequence(longestSeq, this.testLength);
 
 							/* search for motif positions */
 							motifPositions = getMotifPositions(possibleInstances, finalSeq, motifPositions);
@@ -1063,5 +868,64 @@ public class PositionConservation {
 
 	}
 
+	/**
+	 * Determine nucleotide frequencies in bins of 125 BP
+	 * Sequences are formatted to be contained in 2000 BP; 
+	 * - if original sequence was too short it has been padded with "X"s in the middle
+	 * - if original sequence was too long it was truncated **/
+	private List<double[]> calculateNucleotideFrequenciesForSequence(String sequence) {
+		List<double[]> sequenceNucleotideFrequency = new ArrayList<>();
+
+		/* search individual bins of 125 BP */
+		for(int i=0; i<sequence.length(); i=i+125) {
+
+			/* count nucleotide occurrence in bin */
+			int[] binOccurrence = new int[4]; // [A, U, C, G] 
+			int numPositions = 0;
+
+			/* search each nucleotide in bin */
+			for (int j=i; j<i+124; j++) {
+
+				char nucl = sequence.charAt(j);
+
+				switch(nucl) {
+				case 'A': 
+					binOccurrence[0] += 1;
+					numPositions++;
+					break;
+				case 'T': 
+					binOccurrence[1] += 1;
+					numPositions++;
+					break;
+				case 'C':
+					binOccurrence[2] += 1;
+					numPositions++;
+					break;
+				case 'G': 
+					binOccurrence[3] += 1;
+					numPositions++;
+					break;
+				}
+
+			}
+
+			/* determine nucleotide frequency for bin */
+			double[] binFrequency = new double[4];
+
+			for(int j=0; j<binOccurrence.length; j++) {
+				if(binOccurrence[j] == 0) {
+					binFrequency[j] = 0;
+				} else {
+					binFrequency[j] = binOccurrence[j] / (double) numPositions;
+				}
+				
+			}
+
+			/* store bin nucleotide frequency */
+			sequenceNucleotideFrequency.add(binFrequency);
+
+		}
+		return sequenceNucleotideFrequency;
+	}
 
 }
