@@ -1,6 +1,2 @@
-/fdr/
-/benchmark/
-/positionConservation/
-/strandSpecificity/
-/randomSeq/
-/nucleotideFrequency/
+/ClusteredMotifs/
+/evolutionConservation/

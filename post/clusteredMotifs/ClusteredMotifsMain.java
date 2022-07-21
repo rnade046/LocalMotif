@@ -139,7 +139,7 @@ public class ClusteredMotifsMain {
 				System.out.println("Launching initial hierarchical clustering analysis");
 
 				argsR = new String[6];
-				argsR[0] = "Rscript";
+				argsR[0] = "/usr/local/bin/Rscript";
 				argsR[1] = "HierarchicalClustering_1.R";
 				argsR[2] = wd4r;
 				argsR[3] = projectName;
@@ -157,7 +157,7 @@ public class ClusteredMotifsMain {
 				System.out.println("Assessing number of groups at provided heights");
 
 				argsR = new String[9];
-				argsR[0] = "Rscript";
+				argsR[0] = "/usr/local/bin/Rscript";
 				argsR[1] = "HierarchicalClustering_2.R";
 				argsR[2] = wd4r;
 				argsR[3] = projectName;
