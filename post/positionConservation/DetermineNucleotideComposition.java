@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import opt.checkAnnotations;
 
 public class DetermineNucleotideComposition {
 
