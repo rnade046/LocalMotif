@@ -40,7 +40,7 @@ public class PositionConservation {
 	}
 
 
-	public void getMotifPositionsFromLongestSequences(String representativeMotifsFile, String filteredFastaFile, String motifOutputPrefixFile, String nucleotideFreqFile) {
+	public void getMotifPositionsFromLongestSequences(String representativeMotifsFile, String filteredFastaFile, String motifOutputPrefixFile, String nucleotideFreqFile, String protPerBinFile) {
 
 		/* Load motifs to test */
 		System.out.println("Loading representative motifs");
@@ -56,10 +56,15 @@ public class PositionConservation {
 			this.motifFoundCount = 0;
 
 			int[] consideredSequences = new int[testLength];
-			
+
 			/* initialize list to contain nucleotide frequencies */
 			List<List<double[]>> allNucleotideFrequencies = new ArrayList<>();
-
+			List<HashSet<String>> proteinsInBin = new ArrayList<>();
+			for(int j=0; j<1000; j=j+125) {
+				proteinsInBin.add(new HashSet<String>());
+			}
+			String proteinName = "";
+			
 			/* Check for motif in all FASTA of the filtered FASTA file */
 			InputStream in;
 			try {
@@ -69,6 +74,10 @@ public class PositionConservation {
 				String line = input.readLine();
 				while(line != null) {
 
+					if(line.startsWith(">")) {
+						String[] header = line.split("\\_");
+						proteinName = header[header.length-2] + "_" + header[header.length-1];					}
+					
 					/* load sequence; ignore lines that are identifiers */
 					if(!line.startsWith(">")) {
 
@@ -86,13 +95,15 @@ public class PositionConservation {
 						if(newMotifCount > currentMotifCount) {
 							/* update considered sequences*/
 							consideredSequences = updateCountOfConsideredSequences(consideredSequences, line.length());
-							
+
 							/* perform nucleotide frequency calculations */
 							/* search sequence in blocks of 125 BP; ignore the filler part */
 							List<double[]> sequenceFreq = calculateNucleotideFrequenciesForSequence(sequence);
 
 							/* store sequence nucleotide frequency */
 							allNucleotideFrequencies.add(sequenceFreq);
+						
+							determineProteinsInBins(sequence, proteinsInBin, possibleInstances, proteinName);
 						}
 					}
 
@@ -107,7 +118,9 @@ public class PositionConservation {
 				String motifNormalizedOutputFile = motifOutputPrefixFile+ "allSeq_Normalized_motif" + (i+1);
 				//printMotifPosition(motifPositions, motifOutputFile);
 				printNormalizedMotifPosition(motifPositions, consideredSequences, motifNormalizedOutputFile);
-				
+
+				double[] normalizedFreqs = normalizeNucleotideFrequencies(motifPositions, consideredSequences);
+				printProteinsPerBin(proteinsInBin, normalizedFreqs, protPerBinFile + "_motif" + (i+1) + ".tsv");
 				
 				System.out.println("nucleotide frequency calc");
 				/* calculate nucleotide frequency for each bin */
@@ -117,7 +130,6 @@ public class PositionConservation {
 
 				printNucleotideFrequency(overallNucleotideFrequency, overallBinFrequency, nucleotideFreqFile + "_motif" + (i+1) + ".tsv");
 
-				
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -396,6 +408,21 @@ public class PositionConservation {
 		}
 	}
 
+		private static double[] normalizeNucleotideFrequencies(int[] motifPositions, int[] consideredSequences) {
+			
+			double[] normalizedFreqs = new double[motifPositions.length];
+			
+			for(int i=0; i<motifPositions.length; i++) {
+				normalizedFreqs[i] = motifPositions[i]/(double)consideredSequences[i];
+				
+				if(normalizedFreqs[i] > 0.20) { 
+					
+				}
+			}
+			
+			return normalizedFreqs;
+		}
+
 	/**
 	 * Generate an index for the FASTA file; identifying the line number for the different refseq identifiers
 	 *
@@ -574,25 +601,25 @@ public class PositionConservation {
 
 	private List<double[]> calculateOverallBinNucleotideFrequency(List<List<double[]>> allSequenceFrequencies){
 		List<double[]> allBinFrequencies = new ArrayList<>();
-		
-		
+
+
 		/* search all bins individually; i = current bin */
 		for(int i=0; i<allSequenceFrequencies.get(0).size(); i++) {
 
 			/* for current bin; search all sequences and add nucleotide frequencies */
 			double[] sumBinFrequency = new double[4]; // [A, U, C, G] 
 			int seqCountPerBin = 0;
-			
+
 			for(int j=0; j<allSequenceFrequencies.size(); j++) { // j = current sequence
-				
+
 				double sumFreqCurrentSeqBin = 0;
 				double[] currentSequenceBinFrequency = allSequenceFrequencies.get(j).get(i);
-				
+
 				for(int h=0; h<currentSequenceBinFrequency.length; h++) { // h = current nucleotide frequency
 					sumBinFrequency[h] += currentSequenceBinFrequency[h];
 					sumFreqCurrentSeqBin += currentSequenceBinFrequency[h];
 				}
-				
+
 				if(sumFreqCurrentSeqBin > 0) {
 					seqCountPerBin ++; 
 				}
@@ -666,7 +693,7 @@ public class PositionConservation {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@SuppressWarnings("unused")
 	private void printMotifPositions(String proteinName, String[] refSeqIds, ArrayList<ArrayList<Integer>> motifPositionByRefSeqID, String outputFile) {
 
@@ -918,7 +945,7 @@ public class PositionConservation {
 				} else {
 					binFrequency[j] = binOccurrence[j] / (double) numPositions;
 				}
-				
+
 			}
 
 			/* store bin nucleotide frequency */
@@ -928,4 +955,58 @@ public class PositionConservation {
 		return sequenceNucleotideFrequency;
 	}
 
+	private List<HashSet<String>> determineProteinsInBins(String seq, List<HashSet<String>> proteinsPerBin, HashSet<String> possibleMotifs, String proteinName){
+		
+		/* search individual bins of 125 BP */
+		for(int i=0; i<proteinsPerBin.size(); i++) {
+
+			int binStart = i*125;
+			int binEnd = binStart + 125;
+			for(int j=binStart; j<binEnd-motifLength; j++) {
+
+				String substring = seq.substring(j, j+motifLength);
+
+				/* if current substring is a motif instance, add protein name to current bin list */
+				if(possibleMotifs.contains(substring)) {
+					proteinsPerBin.get(i).add(proteinName);
+				}
+			}
+		}
+		return proteinsPerBin;
+	}
+	
+	private void printProteinsPerBin(List<HashSet<String>> proteinsPerBin, double[] normalizedPositions, String outputFile) {
+		
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			out.write("bin\tmax-freq\tnumOfProts\trefSeqIds\n");
+			
+			
+			for(int i=0; i<proteinsPerBin.size(); i++) {
+				
+				int binStart = i*125;
+				int binEnd = binStart + 125;
+				
+				double maxFreq = 0; // initialize maximum frequency
+				for(int j=binStart; j<binEnd; j++) {
+					if(normalizedPositions[j] > maxFreq) {
+						maxFreq = normalizedPositions[j];
+					}
+				}
+				
+				out.write(binStart + "-" + binEnd + "\t" + maxFreq + "\t" + proteinsPerBin.get(i).size() + "\t");
+				for(String prot : proteinsPerBin.get(i)) {
+					out.write(prot + "|");
+				}
+				out.write("\n");
+				out.flush();
+			}
+			
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}
 }

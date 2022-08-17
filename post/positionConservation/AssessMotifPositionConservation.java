@@ -30,9 +30,10 @@ public class AssessMotifPositionConservation {
 		
 		String motifOutputPrefixFile = wd + args[5];
 		String nucleotideFrequencyFile = wd + args[6];
+		String protsPerBinFile = wd + args[7];
 
 		PositionConservation p = new PositionConservation(filteredFastaFile, 8, Integer.parseInt(args[1]));
-		p.getMotifPositionsFromLongestSequences(motifFamilies, filteredFastaFile, motifOutputPrefixFile, nucleotideFrequencyFile);
+		p.getMotifPositionsFromLongestSequences(motifFamilies, filteredFastaFile, motifOutputPrefixFile, nucleotideFrequencyFile, protsPerBinFile);
 		p.calculateNucleotideFrequenciesFromAllSequences(filteredFastaFile, nucleotideFrequencyFile + "allSeqs.tsv");
 		
 		p.getMotifPositionsFromCoreProteins(motifFamilies, filteredFastaFile, coreProtsFile, idFile, motifOutputPrefixFile);
