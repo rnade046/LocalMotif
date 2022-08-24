@@ -13,14 +13,17 @@ import java.util.List;
 
 public class PositionConservationInBins {
 
-	private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/corrNetTop2_3UTRlongestSequences.txt";
+	//private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/corrNetTop2_CDS_longestSequences.txt";
+	private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/corrNetTop2_reverse-complement-sequences-CDS.txt";
+	//private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/LocalRandom_CodingSequences.txt";
+	
 	private static int motifLength = 8;
 	private static int bins = 100;
 
 	public static void main (String[] args) {
 
 		String listOfMotifs = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/coreTPD0.4/percentile/corrNet2-400_coreTPD_p0.4_3UTR_FWD_motifPositionsByBins_motif";
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/coreTPD0.4/percentile/corrNet2-400_coreTPD_p0.4_CDS_RevC_motifPositionsByBins_b" + bins + "_";
 
 		getMotifPositionsFromLongestSequences(listOfMotifs, outputFile);
 
@@ -59,6 +62,7 @@ public class PositionConservationInBins {
 				in = new FileInputStream(new File(fasta));
 				BufferedReader input = new BufferedReader(new InputStreamReader(in));
 				int consideredSeqs = 0;
+				int totalSeqs = 0;
 				String line = input.readLine();
 				while(line != null) {
 
@@ -68,6 +72,7 @@ public class PositionConservationInBins {
 
 					/* load sequence; ignore lines that are identifiers */
 					if(!line.startsWith(">")) {
+						totalSeqs++;
 
 						if(Math.floor(line.length() / bins) >= motifLength) {
 							consideredSeqs++; 
@@ -94,7 +99,7 @@ public class PositionConservationInBins {
 					line = input.readLine();
 				}
 				input.close();
-				System.out.println("considered sequences = " + consideredSeqs);
+				System.out.println("considered sequences = " + consideredSeqs + " / " + totalSeqs);
 				/* Print positions */
 				//String motifOutputFile = motifOutputPrefixFile+ "allSeq_motif" + (i+1);
 				String motifNormalizedOutputFile = motifOutputPrefixFile+ "allSeq_Normalized_motif" + (i+1);
@@ -155,9 +160,15 @@ public class PositionConservationInBins {
 			}
 		}
 
-		/* get sequence substring */ 
+		/* get sequence substring */
+		int currentIdx = 0;
 		for(int i=0; i<bins; i++) {
-			sequenceBins[i] = sequence.substring(i*binSizesReodered[i], (i+1)*binSizesReodered[i]);
+			
+			int start = currentIdx;
+			int end = start + binSizesReodered[i];
+			currentIdx += binSizesReodered[i];
+			
+			sequenceBins[i] = sequence.substring(start, end);
 		}
 		return sequenceBins;
 	}
@@ -173,7 +184,7 @@ public class PositionConservationInBins {
 			for(int j=0; j<subsequence.length()-motifLength; j++) {
 
 				/* update count when motif is found */
-				if(motifPossibilities.contains(subsequence.substring(i, i+8))) {
+				if(motifPossibilities.contains(subsequence.substring(j, j+8))) {
 					motifPositions[i] += 1;
 				}
 			}
@@ -186,8 +197,8 @@ public class PositionConservationInBins {
 		/* iterate over each bin */
 		for(int i=0; i<sequence.length; i++) {
 
-			/* update count based on sequence length */
-			int currentLength = sequence.length - motifLength;
+			/* determine number of motifs tested for each subsequence (i.e. bins)  */
+			int currentLength = sequence[i].length() - motifLength;
 			consideredSequences[i] += currentLength;
 		}
 		return consideredSequences;
