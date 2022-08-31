@@ -14,16 +14,21 @@ import java.util.List;
 public class PositionConservationInBins {
 
 	//private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/corrNetTop2_CDS_longestSequences.txt";
-	private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/corrNetTop2_reverse-complement-sequences-CDS.txt";
+	//private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/corrNetTop2_reverse-complement-sequences-CDS.txt";
 	//private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/LocalRandom_CodingSequences.txt";
+	
+	private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/corrNetTop2_reverse-complement-sequences-3UTR.txt";
+	//private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/corrNetTop2_3UTRlongestSequences.txt";
+	//private static String fasta = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/random_humanCellMap_3UTRsequences.txt";
+
 	
 	private static int motifLength = 8;
 	private static int bins = 100;
 
 	public static void main (String[] args) {
 
-		String listOfMotifs = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/coreTPD0.4/percentile/corrNet2-400_coreTPD_p0.4_CDS_RevC_motifPositionsByBins_b" + bins + "_";
+		String listOfMotifs = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2-400_TPPD_p0.3_coreProteins_h0.4_motifFamiliesInfo.tsv";
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/MotifPosition/TPPD0.3/corrNet2-400_TPPD_p0.3_3UTR_RevC_motifPositionsByBins_b" + bins + "_";
 
 		getMotifPositionsFromLongestSequences(listOfMotifs, outputFile);
 
