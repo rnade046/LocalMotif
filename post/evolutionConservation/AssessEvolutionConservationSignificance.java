@@ -17,7 +17,7 @@ public class AssessEvolutionConservationSignificance {
 	public static void main(String[] args) {
 
 		String featureBitsFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput.out";
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance.tsv";
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance3.tsv";
 		
 		double prob = 0.218524153;
 		int motifs = 31;
@@ -82,7 +82,7 @@ public class AssessEvolutionConservationSignificance {
 			
 			if(phastCons > 0 && motifCons > 0) {
 				double mean = motifCons * prob;
-				double sdev = motifCons * prob * (1-prob); 
+				double sdev = Math.sqrt(motifCons * prob * (1-prob)); 
 				
 				NormalDistribution nd = new NormalDistribution(mean, sdev);
 				double pval = nd.probability(phastCons, motifCons);
