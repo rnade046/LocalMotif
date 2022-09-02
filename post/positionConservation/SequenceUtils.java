@@ -43,8 +43,8 @@ public class SequenceUtils {
 
 		return finalSeq;
 	}
-	
-	
+
+
 	public static HashSet<String> getPossibleMotifInstances(String motif){
 
 		HashSet<String> motifs = new HashSet<>();
@@ -71,7 +71,7 @@ public class SequenceUtils {
 		return motifs;
 
 	}
-	
+
 	/**
 	 * Determine the number of possible solutions that will be generated for the given motif length
 	 * This function works simply because there's the same amount of possible letters for each nucleotide
@@ -153,5 +153,101 @@ public class SequenceUtils {
 
 		return motifs;
 	}
-	
+
+	public static String getFastaForId(String refSeqId, String fastaFile) {
+
+		String sequence = "";
+
+		/* search for FASTA */
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader (new FileInputStream(new File(fastaFile))));
+			String line = in.readLine();
+
+			boolean storeSeq = false;
+			String seq = "";
+			String id = "";
+
+			while(line!=null) {
+
+				/* store sequence (add multiple lines) */
+				if(storeSeq) {
+					seq += line;
+				}
+
+				if(line.startsWith(">")) {
+
+					/* store length */
+					if(!seq.isEmpty()) {
+						sequence = seq;
+
+						break;
+					}
+
+					storeSeq = false;
+					seq = "";
+
+					String[] col = line.split("_|\\.");
+					id = col[2] + "_" + col[3]; // col[2] = type of ID (eg. NM) ; col[3] = number ID (#####)
+
+					if(refSeqId.equals(id)) {
+						storeSeq = true;
+					}
+				}
+				line = in.readLine();
+			}
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return sequence;
+	}
+
+	public static String[] formatSequenceInBins(String sequence, int bins) {
+
+		String[] sequenceBins = new String[bins];
+
+		int[] binSizes = new int[bins];
+		int[] binSizesReodered = new int[bins];
+
+		int minimumBinSize = (int) Math.floor(sequence.length() / (double) bins); 
+		int binRemainder = sequence.length() % bins; 
+
+		/* determine size of bins (adding remainder to minimum bin sizes) */
+		for(int i=0; i<bins; i++) {
+
+			// determining indexes for unequal bins : https://stackoverflow.com/questions/2130016/splitting-a-list-into-n-parts-of-approximately-equal-length
+			int binStart = i*minimumBinSize + Math.min(i, binRemainder);
+			int binEnd = (i+1) * minimumBinSize + Math.min(i+1, binRemainder);
+			int binRange = binEnd - binStart;
+
+			binSizes[i] = binRange;
+		}
+
+		/* re-ordering bin sizes to pad edges */
+		int countEven = 0;
+		int countOdd = bins-1;
+		for(int i=0; i<bins; i++) {
+			if(i%2 ==0) {
+				binSizesReodered[countEven] = binSizes[i];
+				countEven++;
+			} else { 
+				binSizesReodered[countOdd] = binSizes[i];
+				countOdd--;
+			}
+		}
+
+		/* get sequence substring */
+		int currentIdx = 0;
+		for(int i=0; i<bins; i++) {
+
+			int start = currentIdx;
+			int end = start + binSizesReodered[i];
+			currentIdx += binSizesReodered[i];
+
+			sequenceBins[i] = sequence.substring(start, end);
+		}
+		return sequenceBins;
+
+	}
 }
