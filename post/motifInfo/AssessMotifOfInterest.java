@@ -73,14 +73,17 @@ public class AssessMotifOfInterest {
 					out.write(protein + "\t" + localization + "\t");
 
 					for(Entry<String, List<String>> refSeqEntry : motifPositions.entrySet()) {
+						
+						if(!refSeqEntry.getValue().isEmpty()){
+							
+							out.write(refSeqEntry.getKey() + "=");
 
-						out.write(refSeqEntry.getKey() + "=");
+							for(String bin : refSeqEntry.getValue()) {
+								out.write(bin + ",");
+							}
 
-						for(String bin : refSeqEntry.getValue()) {
-							out.write(bin + ",");
+							out.write("|");
 						}
-
-						out.write("|");
 
 					}
 					out.write("\n");
