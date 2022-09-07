@@ -21,12 +21,12 @@ public class DetermineMotifGenomePostions {
 
 		String wd = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/";
 		
-		String motifFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
+		String motifFile = wd + "corrNetTop2-400_TPPD_p0.3_coreProteins_h0.4_motifFamiliesInfo.tsv";
 		String fastaFile = wd + "input_files/human_3UTRsequences.txt";
 		String refSeqIdFile = wd + "corrNetTop2_proteinsInNetwork_info.tsv";
 		
-		String positionFilePrefix = wd + "evolutionConservation/CoreTPD/corrNet2-400_coreTPD_p0.4_h0.7_genomicPositions_motif";
-		String bedFilePrefix = wd + "evolutionConservation/CoreTPD/corrNet2-400_coreTPD_p0.4_h0.7_genomicPositions_motif";
+		String positionFilePrefix = wd + "evolutionConservation/TPPD/corrNet2-400_TPPD_p0.3_h0.4_genomicPositions_motif";
+		String bedFilePrefix = wd + "evolutionConservation/TPPD/corrNet2-400_TPPD_p0.3_h0.4_genomicPositions_motif";
 
 		getGenomePositionsForMotif(motifFile, fastaFile, refSeqIdFile, positionFilePrefix, bedFilePrefix);
 	}
