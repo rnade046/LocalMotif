@@ -16,13 +16,15 @@ public class AssessEvolutionConservationSignificance {
 
 	public static void main(String[] args) {
 
-		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_motifFreq.out";
-		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_motifCons.out";
+		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_FeatureBitsOutput_motifFreq.out";
+		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_FeatureBitsOutput_phastCons30_motifCons.out";
 		
 		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance.tsv";
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_evolutionConservationSignificance_phastCons30.tsv";
 
-		double prob = 0.218524153;
-		int motifs = 31;
+		//double prob = 0.218524153; // phastCons 20
+		double prob = 0.22523417; // phastCons 30
+		int motifs = 26;
 
 		assessEvolutionSignificance(motifFreqFile, motifConservationFile, motifs, prob, outputFile);
 	}
@@ -51,7 +53,8 @@ public class AssessEvolutionConservationSignificance {
 				motifSignificance.add(values);
 				
 			} else {
-				motifSignificance.add(new String[0]);
+				String[] values = new String[] {Double.toString(motifCons[i]), Double.toString(motifFreqs[i]), "0"};
+				motifSignificance.add(values);
 			}
 		}
 		printMotifSignificance(motifSignificance, outputFile);
@@ -107,6 +110,22 @@ public class AssessEvolutionConservationSignificance {
 		}
 	}
 	
+	
+	/* test that this works !! */
+	public static double computeNormPvalue(double mean, double var, double value, double max){
+		double prob = 0.0;
+		
+		for(double j = value; j <= max; j=j+0.01){
+			
+			double s2Pi = Math.sqrt(2*Math.PI);
+			double sd = Math.sqrt(var);
+			double exp = (-((j-mean)*(j-mean)))/(2*var);
+			prob = prob + ((1/(sd*s2Pi))*Math.pow(Math.E,exp)*0.01);
+		}
+		
+		return prob;
+		
+	}
 
 //	private static void assessSignification (String inputFile, int motifs, double prob, String outputFile) {
 //
