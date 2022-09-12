@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -25,9 +24,10 @@ public class StrandSpecificity {
 
 		String motifsFile = wd + "corrNetTop2-400_TPPD_p0.3_coreProteins_h0.4_motifFamiliesInfo.tsv";
 
-		String output = wd + "/MotifPosition/TPPD0.3/StrandSpecificity_corrNet2-400_TPPD_p0.3_3UTR_MotifFamilies_h0.4.tsv";
+		String output = wd + "/MotifPosition/TPPD0.3/StrandSpecificity_corrNet2-400_TPPD_p0.3_3UTR_MotifFamilies_h0.4_v2.tsv";
 
-		HashMap<String, Double> specificityMap = determineStrandSpecificity(fwdFasta, revCFasta, motifsFile, output);
+		
+		determineStrandSpecificity(fwdFasta, revCFasta, motifsFile, output);
 		
 	}
 
@@ -91,9 +91,9 @@ public class StrandSpecificity {
 		return motifCount;
 	}
 
-	private static HashMap<String, Double> determineStrandSpecificity(String fwdFasta, String revCFasta, String motifsFile, String outputFile) {
+	private static void determineStrandSpecificity(String fwdFasta, String revCFasta, String motifsFile, String outputFile) {
 
-		HashMap<String, Double> specificityMap = new HashMap<>();
+		//HashMap<String, Double> specificityMap = new HashMap<>();
 		
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
@@ -129,20 +129,20 @@ public class StrandSpecificity {
 				double sdev = Math.sqrt(trials * p * (1-p));
 				
 				NormalDistribution nd = new NormalDistribution(mean, sdev);
-				double probability = nd.probability(fwdMotifCount, trials);
+				double probability = nd.probability(fwdMotifCount-1, trials);
 				
 				/* output info */
 				out.write(motif + "\t" + fwdMotifCount + "\t" + revCMotifCount + "\t" + ss + "\t" + probability + "\n");
 				out.flush();
 				
-				specificityMap.put(motif, probability);
+				//specificityMap.put(motif, probability);
 			}
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		return specificityMap;
+		//return specificityMap;
 	}
 	
 	
@@ -185,4 +185,25 @@ public class StrandSpecificity {
 		}
 
 	}
+	
+	@SuppressWarnings("unused")
+	private static void testND() {
+		
+		int trials = 1000;
+		double p = 0.5;
+		
+		/* normal distribution approximation */
+		double mean = trials * p;
+		double sdev = Math.sqrt(trials * p * (1-p));
+		
+		int fwdCount = 700;
+		
+		NormalDistribution nd = new NormalDistribution(mean, sdev);
+		double probability = 1- nd.probability(0, fwdCount);
+	
+		
+		System.out.println("test : " + probability);
+	}
+	
+
 }
