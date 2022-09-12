@@ -19,7 +19,6 @@ public class AssessEvolutionConservationSignificance {
 		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_FeatureBitsOutput_motifFreq.out";
 		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_FeatureBitsOutput_phastCons30_motifCons.out";
 		
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance.tsv";
 		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_evolutionConservationSignificance_phastCons30.tsv";
 
 		//double prob = 0.218524153; // phastCons 20
