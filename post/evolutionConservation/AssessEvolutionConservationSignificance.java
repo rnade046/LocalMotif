@@ -16,16 +16,17 @@ public class AssessEvolutionConservationSignificance {
 
 	public static void main(String[] args) {
 
-		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_FeatureBitsOutput_motifFreq.out";
-		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_FeatureBitsOutput_phastCons30_motifCons.out";
+		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_motifFreq.out";
+		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_phastCons30_motifCons.out";
 		
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/TPPD0.3_evolutionConservationSignificance_phastCons30.tsv";
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance_phastCons30_test3.tsv";
 
 		//double prob = 0.218524153; // phastCons 20
 		double prob = 0.22523417; // phastCons 30
-		int motifs = 26;
+		int motifs = 31;
 
 		assessEvolutionSignificance(motifFreqFile, motifConservationFile, motifs, prob, outputFile);
+		//testNormPvalue();
 	}
 
 
@@ -43,11 +44,12 @@ public class AssessEvolutionConservationSignificance {
 			if(motifFreqs[i] > 0 && motifCons[i] > 0) {
 				
 				double mean = motifFreqs[i] * prob;
-				double sdev = Math.sqrt(motifFreqs[i] * prob * (1-prob)); 
+				double sdev = mean* (1-prob); 
 
 				NormalDistribution nd = new NormalDistribution(mean, sdev);
-				double pval = nd.probability(motifCons[i], motifFreqs[i]);
-
+				//double pval = nd.probability(motifCons[i], motifFreqs[i]);
+				double pval = computeNormPvalue(mean, sdev, motifCons[i], motifFreqs[i]);
+				
 				String[] values = new String[] {Double.toString(motifCons[i]), Double.toString(motifFreqs[i]), Double.toString(pval)};
 				motifSignificance.add(values);
 				
@@ -111,21 +113,47 @@ public class AssessEvolutionConservationSignificance {
 	
 	
 	/* test that this works !! */
-	public static double computeNormPvalue(double mean, double var, double value, double max){
+	public static double computeNormPvalue(double mean, double stdev, double value, double max){
 		double prob = 0.0;
 		
-		for(double j = value; j <= max; j=j+0.01){
+		for(double j = value; j <= max; j=j+0.0001){
 			
 			double s2Pi = Math.sqrt(2*Math.PI);
-			double sd = Math.sqrt(var);
-			double exp = (-((j-mean)*(j-mean)))/(2*var);
-			prob = prob + ((1/(sd*s2Pi))*Math.pow(Math.E,exp)*0.01);
+			double sd = Math.sqrt(stdev);
+			double exp = (-((j-mean)*(j-mean)))/(2*stdev);
+			double add = ((1/(sd*s2Pi))*Math.pow(Math.E,exp)*0.0001);
+			prob = prob + add;
 		}
 		
 		return prob;
 		
 	}
 
+	
+	public static void testNormPvalue(){
+		double prob = 0.0;
+		double mean = 20; 
+		double stdev = 4;
+		double value = 28;
+		double max = 34;
+		
+		for(double j = value; j <= max; j=j+0.001){
+			
+			double s2Pi = Math.sqrt(2*Math.PI);
+			double sd = Math.sqrt(stdev);
+			double exp = (-((j-mean)*(j-mean)))/(2*stdev);
+			double add = ((1/(sd*s2Pi))*Math.pow(Math.E,exp)*0.001);
+			prob = prob + add;
+		}
+		
+		System.out.println(prob);
+		//return prob;
+		
+	}
+
+	
+	
+	
 //	private static void assessSignification (String inputFile, int motifs, double prob, String outputFile) {
 //
 //		List<String[]> motifSignificance = new ArrayList<>();
