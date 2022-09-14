@@ -22,9 +22,9 @@ public class StrandSpecificity {
 		String fwdFasta = wd + "/MotifPosition/corrNetTop2_3UTRlongestSequences.txt";
 		String revCFasta = wd + "/MotifPosition/corrNetTop2_reverse-complement-sequences-3UTR.txt";
 
-		String motifsFile = wd + "corrNetTop2-400_TPPD_p0.3_coreProteins_h0.4_motifFamiliesInfo.tsv";
+		String motifsFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
 
-		String output = wd + "/MotifPosition/TPPD0.3/StrandSpecificity_corrNet2-400_TPPD_p0.3_3UTR_MotifFamilies_h0.4_v2.tsv";
+		String output = wd + "/MotifPosition/coreTPD0.4/StrandSpecificity_corrNet2-400_coreTPD_p0.4_3UTR_MotifFamilies_h0.7_sept.tsv";
 
 		
 		determineStrandSpecificity(fwdFasta, revCFasta, motifsFile, output);
