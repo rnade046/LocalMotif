@@ -34,7 +34,7 @@ public class DetermineMotifGenomePostions {
 		String positionCoreFilePrefix = wd + "evolutionConservation/coreTPD/corrNet2-400_coreTPD_p0.4_h0.7_genomicPositions_core_motif";
 		String bedCoreFilePrefix = wd + "evolutionConservation/coreTPD/corrNet2-400_coreTPD_p0.4_h0.7_genomicPositions_core_motif";
 
-		//getGenomePositionsForMotif(motifFile, fastaFile, refSeqIdFile, positionFilePrefix, bedFilePrefix);
+		getGenomePositionsForMotif(motifFile, fastaFile, refSeqIdFile, positionFilePrefix, bedFilePrefix);
 		
 		getGenomePositionsForMotifFromCoreProteins(motifFile, fastaFile, refSeqIdFile, coreProteinAnnotations, positionCoreFilePrefix, bedCoreFilePrefix);
 	}
