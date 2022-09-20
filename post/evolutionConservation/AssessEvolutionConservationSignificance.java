@@ -10,16 +10,16 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math3.distribution.NormalDistribution;
+//import org.apache.commons.math3.distribution.NormalDistribution;
 
 public class AssessEvolutionConservationSignificance {
 
 	public static void main(String[] args) {
 
-		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_motifFreq.out";
-		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_phastCons30_motifCons.out";
+		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_randPosition_motifFreq.out";
+		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_randPosition_phastCons30_motifCons.out";
 		
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance_phastCons30_test3.tsv";
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance_randPosition_phastCons30_test3.tsv";
 
 		//double prob = 0.218524153; // phastCons 20
 		double prob = 0.22523417; // phastCons 30
@@ -35,10 +35,10 @@ public class AssessEvolutionConservationSignificance {
 		List<String[]> motifSignificance = new ArrayList<>();
 
 		/* load motif frequency */
-		double[] motifFreqs = loadFeatureBitOutput(motifFreqFile, motifs);
+		int[] motifFreqs = loadFeatureBitOutput(motifFreqFile, motifs);
 		
 		/* load motif conservation */
-		double[] motifCons = loadFeatureBitOutput(motifConservationFile, motifs);
+		int[] motifCons = loadFeatureBitOutput(motifConservationFile, motifs);
 		
 		for(int i=0; i< motifs ; i++) {
 			if(motifFreqs[i] > 0 && motifCons[i] > 0) {
@@ -46,24 +46,24 @@ public class AssessEvolutionConservationSignificance {
 				double mean = motifFreqs[i] * prob;
 				double sdev = mean* (1-prob); 
 
-				NormalDistribution nd = new NormalDistribution(mean, sdev);
+				//NormalDistribution nd = new NormalDistribution(mean, sdev);
 				//double pval = nd.probability(motifCons[i], motifFreqs[i]);
 				double pval = computeNormPvalue(mean, sdev, motifCons[i], motifFreqs[i]);
 				
-				String[] values = new String[] {Double.toString(motifCons[i]), Double.toString(motifFreqs[i]), Double.toString(pval)};
+				String[] values = new String[] {Double.toString(motifCons[i]), Double.toString(motifFreqs[i]), Double.toString(motifCons[i]/(double) motifFreqs[i]), Double.toString(pval)};
 				motifSignificance.add(values);
 				
 			} else {
-				String[] values = new String[] {Double.toString(motifCons[i]), Double.toString(motifFreqs[i]), "0"};
+				String[] values = new String[] {Double.toString(motifCons[i]), Double.toString(motifFreqs[i]), "NA", "0"};
 				motifSignificance.add(values);
 			}
 		}
 		printMotifSignificance(motifSignificance, outputFile);
 	}
 
-	private static double[] loadFeatureBitOutput(String inputFile, int motifs) {
+	private static int[] loadFeatureBitOutput(String inputFile, int motifs) {
 
-		double[] values = new double[motifs];
+		int[] values = new int[motifs];
 		
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(inputFile))));
@@ -73,7 +73,7 @@ public class AssessEvolutionConservationSignificance {
 			while(line!=null) {
 				
 				String terms[] = line.split("\\s+");
-				values[count] = Integer.parseInt(terms[1]) / (double) Long.parseLong(terms[4]);
+				values[count] = Integer.parseInt(terms[1]);
 				
 				line = in.readLine();
 				count++;
@@ -92,7 +92,7 @@ public class AssessEvolutionConservationSignificance {
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 
-			out.write("motif#\tPhastCons\tHumanCons\tp-val\n");
+			out.write("motif#\tConservation\tFrequency\tFold-change\tp-val\n");
 
 			for(int i=0; i<motifSignificance.size(); i++) {
 				out.write((i+1) + "\t");
