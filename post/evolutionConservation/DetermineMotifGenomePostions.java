@@ -27,7 +27,7 @@ public class DetermineMotifGenomePostions {
 		String refSeqIdFile = wd + "corrNetTop2_proteinsInNetwork_info.tsv";
 
 		String positionFilePrefix = wd + "evolutionConservation/coreTPD/corrNet2-400_coreTPD_p0.4_h0.7_genomicPositions_motif";
-		String bedFilePrefix = wd + "evolutionConservation/coreTPD/corrNet2-400_coreTPD_p0.4_h0.7_genomicPositions_randomPosition_motif";
+		String bedFilePrefix = wd + "evolutionConservation/coreTPD/corrNet2-400_coreTPD_p0.4_h0.7_genomicPositions_motif";
 
 		String coreProteinAnnotations = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
 
@@ -35,15 +35,20 @@ public class DetermineMotifGenomePostions {
 		String bedCoreFilePrefix = wd + "evolutionConservation/coreTPD/corrNet2-400_coreTPD_p0.4_h0.7_genomicPositions_core_motif";
 		
 		String utrBedFile = wd + "evolutionConservation/corrNet2-400_genomicPositions_3UTR.bed";
-
+		
+		HashSet<String> refSeqIds = getRefSeqIds(refSeqIdFile);
+		
+		System.out.println("UTR positions");
 		getGenomePositionsOfUTR(refSeqIdFile, fastaFile, utrBedFile);
 		
-		//getGenomePositionsForMotif(motifFile, fastaFile, refSeqIdFile, positionFilePrefix, bedFilePrefix);
-
-		//getGenomePositionsForMotifFromCoreProteins(motifFile, fastaFile, refSeqIdFile, coreProteinAnnotations, positionCoreFilePrefix, bedCoreFilePrefix);
+		System.out.println("motif positions - all proteins in network");
+		getGenomePositionsForMotif(motifFile, fastaFile, refSeqIds, positionFilePrefix, bedFilePrefix);
+		
+		System.out.println("motif positions - core proteins in network");
+		getGenomePositionsForMotifFromCoreProteins(motifFile, fastaFile, refSeqIdFile, refSeqIds, coreProteinAnnotations, positionCoreFilePrefix, bedCoreFilePrefix);
 	}
 
-	private static void getGenomePositionsForMotif(String motifFile, String fastaFile, String refSeqIdFile, String positionFilePrefix, String bedFilePrefix) {
+	private static void getGenomePositionsForMotif(String motifFile, String fastaFile, HashSet<String> refSeqIds, String positionFilePrefix, String bedFilePrefix) {
 
 		/* get motifs to test  */
 		List<String> motifsToAssess = loadMotifsToAssess(motifFile);
@@ -64,17 +69,17 @@ public class DetermineMotifGenomePostions {
 			String motifInfo = motif + "|" + formattedMotif;
 
 			/* search FASTA for motif - get GENOME positions */ 
-			HashSet<String> motifPositions = searchForMotifPostions(formattedMotif, fastaFile, refSeqIdFile);
+			HashSet<String> motifPositions = searchForMotifPostions(formattedMotif, fastaFile, refSeqIds);
 
 			/* print all positions */
 			printGenomePositionsOfMotif(motifInfo, motifNumber, motifPositions, positionFilePrefix + motifNumber + ".txt");
 
 			/* print BED file */
-			printBedFilesRandomPosition(motifInfo, motifNumber, motifPositions, bedFilePrefix + motifNumber + ".bed");
+			printBedFiles(motifInfo, motifNumber, motifPositions, bedFilePrefix + motifNumber + ".bed");
 		}
 	}
 
-	private static void getGenomePositionsForMotifFromCoreProteins(String motifFile, String fastaFile, String refSeqIdFile, String coreProteinAnnotations, String positionFilePrefix, String bedFilePrefix) {
+	private static void getGenomePositionsForMotifFromCoreProteins(String motifFile, String fastaFile, String refSeqIdFile, HashSet<String> refSeqIds, String coreProteinAnnotations, String positionFilePrefix, String bedFilePrefix) {
 
 		/* get motifs to test  */
 		List<String> motifsToAssess = loadMotifsToAssess(motifFile);
@@ -98,7 +103,7 @@ public class DetermineMotifGenomePostions {
 			String motifInfo = motif + "|" + formattedMotif;
 
 			/* search FASTA for motif - get GENOME positions */ 
-			HashSet<String> motifPositions = searchForMotifPostionsFromCore(formattedMotif, fastaFile, refSeqIdFile, coreProteinSet);
+			HashSet<String> motifPositions = searchForMotifPostionsFromCore(formattedMotif, fastaFile, refSeqIdFile, refSeqIds, coreProteinSet);
 
 			/* print all positions */
 			printGenomePositionsOfMotif(motifInfo, motifNumber, motifPositions, positionFilePrefix + motifNumber + ".txt");
@@ -142,7 +147,7 @@ public class DetermineMotifGenomePostions {
 			e.printStackTrace();
 		}
 		
-		printBedFiles("3UTRs", 0, utrPositions, bedFile);
+		printUTRBedFiles("3UTRs", 0, utrPositions, bedFile);
 	}
 
 	/**
@@ -216,12 +221,9 @@ public class DetermineMotifGenomePostions {
 	}
 
 
-	private static HashSet<String> searchForMotifPostions(String formattedMotif, String fastaFile, String refSeqIdFile){
+	private static HashSet<String> searchForMotifPostions(String formattedMotif, String fastaFile, HashSet<String> refSeqIds){
 
 		HashSet<String> motifPositions = new HashSet<>();
-
-		/* for each gene select (1) RefSeqId to test */
-		HashSet<String> refSeqIds = getRefSeqIds(refSeqIdFile);
 
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fastaFile))));			
@@ -392,7 +394,28 @@ public class DetermineMotifGenomePostions {
 			e.printStackTrace();
 		}
 	}
+	
+	private static void printUTRBedFiles(String motif, int number, HashSet<String> motifPositions, String bedFile) {
 
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(bedFile)));
+
+			out.write("Track - Motif " + number + " : " + motif + "\n");
+
+			for(String pos: motifPositions) {
+
+				String[] split = pos.split(":");
+				out.write(split[0] +"\t"+ (Integer.parseInt(split[1].split("-")[0])) +"\t"+(Integer.parseInt(split[1].split("-")[1])) + "\n");
+				out.flush();
+			}
+
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@SuppressWarnings("unused")
 	private static void printBedFilesRandomPosition(String motif, int number, HashSet<String> motifPositions, String bedFile) {
 
 		try {
@@ -444,12 +467,12 @@ public class DetermineMotifGenomePostions {
 		return coreProteins;
 	}
 
-	private static HashSet<String> searchForMotifPostionsFromCore(String formattedMotif, String fastaFile, String refSeqIdFile, HashSet<String> coreProteins){
+	private static HashSet<String> searchForMotifPostionsFromCore(String formattedMotif, String fastaFile, String refSeqIdFile, HashSet<String> refSeqIds, HashSet<String> coreProteins){
 
 		HashSet<String> motifPositions = new HashSet<>();
 
 		/* for each gene select (1) RefSeqId to test */
-		HashSet<String> refSeqIds = getCoreRefSeqIds(refSeqIdFile, coreProteins);
+		HashSet<String> coreRefSeqIds = getCoreRefSeqIds(refSeqIdFile, refSeqIds, coreProteins);
 
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fastaFile))));			
@@ -479,7 +502,7 @@ public class DetermineMotifGenomePostions {
 					//  >hg38_ncbiRefSeq_NM_001276352.2 range=chr1:67092165-67093579 5'pad=0 3'pad=0 strand=- repeatMasking=none					
 					String id = line.split("[\\_\\s++\\.]")[2] + "_"+ line.split("[\\_\\s++\\.]")[3];
 
-					if(refSeqIds.contains(id)) { // do not consider alternate chromosomes
+					if(coreRefSeqIds.contains(id)) { // do not consider alternate chromosomes
 						if(!line.contains("alt") && !line.contains("_fix")) {
 							readSeq = true;
 							header = line;
@@ -499,9 +522,9 @@ public class DetermineMotifGenomePostions {
 		return motifPositions;
 	}
 
-	private static HashSet<String> getCoreRefSeqIds(String refSeqIdFile, HashSet<String> coreProteins){
+	private static HashSet<String> getCoreRefSeqIds(String refSeqIdFile, HashSet<String> refseqIds, HashSet<String> coreProteins){
 
-		HashSet<String> refSeqIds = new HashSet<>();
+		HashSet<String> coreRefSeqIds = new HashSet<>();
 
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(refSeqIdFile))));			
@@ -518,11 +541,12 @@ public class DetermineMotifGenomePostions {
 
 						String[] ids = col[1].split("\\|"); // [0] protein name, [1] list of refSeqIds
 
-						int numMotifs = ids.length;
-						Random rand = new Random();
-
-						int randomIdx = rand.nextInt(numMotifs); // random number between 0 and numMotifs (excluding upper bound)
-						refSeqIds.add(ids[randomIdx]);	
+						for(String id : ids) {
+							if(refseqIds.contains(id)) {
+								coreRefSeqIds.add(id);	
+								break;
+							}
+						}
 					}
 				}
 
@@ -534,6 +558,6 @@ public class DetermineMotifGenomePostions {
 			e.printStackTrace();
 		}
 
-		return refSeqIds;	
+		return coreRefSeqIds;	
 	}
 }
