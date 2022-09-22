@@ -16,13 +16,14 @@ public class AssessEvolutionConservationSignificance {
 
 	public static void main(String[] args) {
 
-		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_randPosition_motifFreq.out";
-		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_randPosition_phastCons30_motifCons.out";
+		String motifFreqFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_core_motifFreq.out";
+		String motifConservationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_FeatureBitsOutput_core_phastCons30_motifCons.out";
 		
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance_randPosition_phastCons30_test3.tsv";
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/evolutionConservation/coreTPD0.4_evolutionConservationSignificance_core_phastCons30_sept21.tsv";
 
 		//double prob = 0.218524153; // phastCons 20
-		double prob = 0.22523417; // phastCons 30
+		//double prob = 0.22523417; // phastCons 30
+		double prob = 0.27063104254; 
 		int motifs = 31;
 
 		assessEvolutionSignificance(motifFreqFile, motifConservationFile, motifs, prob, outputFile);
