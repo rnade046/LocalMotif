@@ -28,12 +28,14 @@ public class AssessMotifOfInterest {
 		String annotationSubset = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
 		
 		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_";
+		String localizationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_localization_";
 		
-		getInformationForMotifsOfInterest(motifsOfInterest, annotationSubset, outputFile);
+		
+		getInformationForMotifsOfInterest(motifsOfInterest, annotationSubset, outputFile, localizationFile);
 		
 	}
 
-	public static void getInformationForMotifsOfInterest(String motifsOfInterestFile, String annotationSubsetFile, String outputPrefixFile) {
+	public static void getInformationForMotifsOfInterest(String motifsOfInterestFile, String annotationSubsetFile, String outputPrefixFile, String localizationFile) {
 
 		/* Get motifs of interest  */
 		HashSet<String> motifsToTest = loadMotifsToTest(motifsOfInterestFile);
@@ -46,6 +48,8 @@ public class AssessMotifOfInterest {
 			System.out.println("testing motif : " + e.getKey());
 			HashSet<String> motifPossibilities = SequenceUtils.getPossibleMotifInstances(e.getKey());
 
+			HashMap<String, Double> localizationCount = new HashMap<>();
+			
 			try {
 				BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputPrefixFile + e.getKey() + ".tsv")));
 
@@ -55,6 +59,7 @@ public class AssessMotifOfInterest {
 				int protCount = 1;
 				System.out.println("proteins to asssess : " + e.getValue().size() );
 				for(String protein: e.getValue()) {
+					
 					System.out.print(protCount + ".");
 					if(protCount%50 ==0) {
 						System.out.println();
@@ -83,6 +88,17 @@ public class AssessMotifOfInterest {
 							}
 
 							out.write("|");
+							
+							String[] localizations = localization.split("\\;");
+							double increment = 1/localizations.length;
+							
+							for(String local : localizations) {
+								if(localizationCount.containsKey(local)) {
+									localizationCount.put(local, localizationCount.get(local)+ increment);
+								} else {
+									localizationCount.put(local, increment);
+								}
+							}
 						}
 
 					}
@@ -95,6 +111,7 @@ public class AssessMotifOfInterest {
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
+			printLocalization(localizationFile + e.getValue() + ".tsv", localizationCount);
 		}
 
 	}
@@ -242,5 +259,24 @@ public class AssessMotifOfInterest {
 			e.printStackTrace();
 		}
 		return localization;
+	}
+	
+	private static void printLocalization(String file, HashMap<String, Double> localizationCount) {
+		
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(file)));
+
+			out.write("Localization\tCount\n");
+			for(Entry<String, Double> e : localizationCount.entrySet()) {
+				
+				out.write(e.getKey() + "\t" + e.getValue() + "\n");
+				out.flush();
+			}
+
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 }
