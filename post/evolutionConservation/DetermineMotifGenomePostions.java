@@ -224,7 +224,7 @@ public class DetermineMotifGenomePostions {
 	private static HashSet<String> searchForMotifPostions(String formattedMotif, String fastaFile, HashSet<String> refSeqIds){
 
 		HashSet<String> motifPositions = new HashSet<>();
-
+		int idCount = 1; 
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fastaFile))));			
 
@@ -254,11 +254,17 @@ public class DetermineMotifGenomePostions {
 					String id = line.split("[\\_\\s++\\.]")[2] + "_"+ line.split("[\\_\\s++\\.]")[3];
 
 					if(refSeqIds.contains(id)) { // do not consider alternate chromosomes
+						
 						if(!line.contains("alt") && !line.contains("_fix")) {
 							readSeq = true;
 							header = line;
 							seq = "";
 						}
+						System.out.print(idCount+ ".");
+						if(idCount%50 ==0) {
+							System.out.println();
+						}
+						idCount++;
 					}
 				}
 
@@ -338,7 +344,7 @@ public class DetermineMotifGenomePostions {
 				genomicPosition = chromosome+motifStart+"-"+motifEnd;
 			}
 
-			positions.add(genomicPosition);
+			positions.add(genomicPosition); 
 		}
 		return positions;
 	}
