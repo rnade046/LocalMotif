@@ -13,7 +13,7 @@ import java.util.HashSet;
 
 public class MapDegenMotifs {
 
-	public static void mapDegenMotifsToProteins(String listDegenMotifsToMotifsTestFile, String motifToProteinFile, String degenMotifAnnotationFile) {
+	public static void mapDegenMotifsToProteins(String listDegenMotifsToMotifsTestFile, String motifToProteinFile, String degenMotifAnnotationFile, String fileNumber) {
 
 		/* Load motifs to proteins */
 		HashMap<String, String[]> motifToProteinMap = loadMotifsToProteinsMap(motifToProteinFile);
@@ -25,7 +25,7 @@ public class MapDegenMotifs {
 		try {
 			in = new FileInputStream(new File(listDegenMotifsToMotifsTestFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-			BufferedWriter out = new BufferedWriter(new FileWriter(new File(degenMotifAnnotationFile)));
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(degenMotifAnnotationFile + fileNumber + ".tsv")));
 			
 			String line = input.readLine(); //no header
 			int countMotifs = 0; 
@@ -120,8 +120,8 @@ public class MapDegenMotifs {
 
 			while(line != null) {
 				String motif = line.split("\t")[0];
-				// String[] proteinList = line.split("\t")[4].split("\\|");
-				String[] proteinList = line.split("\t")[1].split("\\|");
+				String[] proteinList = line.split("\t")[4].split("\\|");
+				//String[] proteinList = line.split("\t")[1].split("\\|");
 
 				motifToProteinMap.put(motif, proteinList);
 

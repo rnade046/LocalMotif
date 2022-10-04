@@ -137,8 +137,10 @@ public class MotifEnumerator {
 			out.write(id + "\t");
 			for(String motif : motifSet) {
 				out.write(motif + "|");
+				out.flush();
 			}
 			out.write("\n");
+			out.flush();
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();

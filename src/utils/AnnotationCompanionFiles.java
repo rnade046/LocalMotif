@@ -40,7 +40,7 @@ public class AnnotationCompanionFiles {
 			if(!f.exists()) { 
 
 				try {
-					InputStream in = new FileInputStream(new File(annotationPrefix + i));
+					InputStream in = new FileInputStream(new File(annotationPrefix + i + ".tsv"));
 					BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 					BufferedWriter out = new BufferedWriter(new FileWriter(new File(companionFilePrefix + i)));

@@ -23,142 +23,60 @@ public class AssessMotifOfInterest {
 	private static String proteinInfoFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2_proteinsInNetwork_info.tsv";
 
 	public static void main(String[] args) {
-		
+
 		String motifsOfInterest = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifsOfInterest.tsv";
 		String annotationSubset = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
-		
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_";
+
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_bins_";
 		String localizationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_localization_";
-		
-		
-		getInformationForMotifsOfInterestWithRegex(motifsOfInterest, annotationSubset, outputFile, localizationFile);
-		
+
+
+		//getInformationForMotifsOfInterestWithRegex(motifsOfInterest, annotationSubset, outputFile, localizationFile);
+		getInformationForMotifsOfInterestWithBins(motifsOfInterest, annotationSubset, outputFile, localizationFile);
+
 	}
-
-//	public static void getInformationForMotifsOfInterest(String motifsOfInterestFile, String annotationSubsetFile, String outputPrefixFile, String localizationFile) {
-//
-//		/* Get motifs of interest  */
-//		HashSet<String> motifsToTest = loadMotifsToTest(motifsOfInterestFile);
-//		System.out.println("Motifs to test : " + motifsToTest.size());
-//		
-//		/* For motif of interest, obtain list of proteins associated */
-//		HashMap<String, HashSet<String>> proteinsToMotifsMap = getProteinsAssociatedToMotif(motifsToTest, annotationSubsetFile);
-//		
-//		/* Iterate for each motif */
-//		for(Entry<String, HashSet<String>> e : proteinsToMotifsMap.entrySet()) {
-//			System.out.println("testing motif : " + e.getKey());
-//			HashSet<String> motifPossibilities = SequenceUtils.getPossibleMotifInstances(e.getKey());
-//
-//			HashMap<String, Double> localizationCount = new HashMap<>();
-//			
-//			try {
-//				BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputPrefixFile + e.getKey() + ".tsv")));
-//
-//				out.write("Motif = " + e.getKey() + " | numberOfProtein = " + e.getValue().size() + "\n");
-//
-//				/*For each protein */
-//				int protCount = 1;
-//				System.out.println("proteins to asssess : " + e.getValue().size() );
-//				for(String protein: e.getValue()) {
-//					
-//					System.out.print(protCount + ".");
-//					if(protCount%50 ==0) {
-//						System.out.println();
-//					}
-//
-//					/* get the list of RefSeqIDs */
-//					HashSet<String> refSeqIds = getListOfRefSeqIds(protein);
-//
-//					/* For each RefSeqId; get FASTA sequence - determine bin position of motif */
-//					HashMap<String, List<String>> motifPositions = determineMotifPositions(refSeqIds, motifPossibilities);
-//
-//					/* determine main localization of protein (from Human Protein Atlas) */	
-//					String localization = determineProteinLocalization(protein);
-//
-//					/* output protein info */
-//					out.write(protein + "\t" + localization + "\t");
-//
-//					for(Entry<String, List<String>> refSeqEntry : motifPositions.entrySet()) {
-//						
-//						if(!refSeqEntry.getValue().isEmpty()){
-//							
-//							out.write(refSeqEntry.getKey() + "=");
-//
-//							for(String bin : refSeqEntry.getValue()) {
-//								out.write(bin + ",");
-//							}
-//
-//							out.write("|");
-//							
-//							String[] localizations = localization.split("\\;");
-//							double increment = 1/localizations.length;
-//							
-//							for(String local : localizations) {
-//								if(localizationCount.containsKey(local)) {
-//									localizationCount.put(local, localizationCount.get(local)+ increment);
-//								} else {
-//									localizationCount.put(local, increment);
-//								}
-//							}
-//						}
-//
-//					}
-//					out.write("\n");
-//					out.flush();
-//					protCount++;
-//				}
-//
-//				out.close();
-//			} catch (IOException e1) {
-//				e1.printStackTrace();
-//			}
-//			printLocalization(localizationFile + e.getKey() + ".tsv", localizationCount);
-//		}
-//
-//	}
-
-	public static void getInformationForMotifsOfInterestWithRegex(String motifsOfInterestFile, String annotationSubsetFile, String outputPrefixFile, String localizationFile) {
+	public static void getInformationForMotifsOfInterestWithBins(String motifsOfInterestFile, String annotationSubsetFile, String outputPrefixFile, String localizationFile) {
 
 		/* Get motifs of interest  */
 		HashSet<String> motifsToTest = loadMotifsToTest(motifsOfInterestFile);
 		System.out.println("Motifs to test : " + motifsToTest.size());
-		
+
 		/* For motif of interest, obtain list of proteins associated */
 
 		/* Iterate for each motif */
 		for(String motif: motifsToTest) {
 			System.out.println("testing motif : " + motif);
-			
+
 			/* For current motif, get list of proteins*/
 			HashSet<String> proteinSet = getProteinsAssociatedToMotif(motif, annotationSubsetFile);
 			System.out.println("load proteins: " + proteinSet.size());	
-			
+
 			/* For list of proteins get their associated refSeqIds*/
 			HashMap<String, HashSet<String>> refSeqdIdsMap = getListOfRefSeqIds(proteinSet);
 			System.out.println("load refSeqIds");
-			
+
 			/* Get protein localizations */
 			HashMap<String, String> proteinLocalizationMap = determineProteinLocalization(proteinSet);
 			System.out.println("got localizations");
-			
+
 			//HashSet<String> motifPossibilities = SequenceUtils.getPossibleMotifInstances(e.getKey());
 
-			String regexMotif = RegexSearch.formatMotifWithRegularExpression(motif, RegexSearch.setCharacterMapForRegularExpression()); 
-			
+			HashSet<String> motifPossibilities = SequenceUtils.getPossibleMotifInstances(motif);
+
 			/* Search for motif positions */
 			HashMap<String, List<String>> motifPositionByIdMap = new HashMap<>();
 			int idCount = 1;
 			for(HashSet<String> refSeqIds: refSeqdIdsMap.values()) { // e.key = protein, e.value = refSeqIDs
-				
+
 				System.out.print(idCount+ ".");
 				if(idCount%50 ==0) {
 					System.out.println();
 				}
-				
-				motifPositionByIdMap.putAll(RegexSearch.searchForMotifPostions(regexMotif, fastaFile, refSeqIds));
-				idCount++;
+
+				motifPositionByIdMap.putAll(determineMotifPositions(refSeqIds, motifPossibilities));
+				idCount++; 
 			}
-			
+
 			/* Print results */
 			try {
 				BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputPrefixFile + motif + ".tsv")));
@@ -169,7 +87,7 @@ public class AssessMotifOfInterest {
 				int protCount = 1;
 				System.out.println("proteins to asssess : " + proteinSet.size());
 				for(String protein: proteinSet) {
-					
+
 					System.out.print(protCount + ".");
 					if(protCount%50 ==0) {
 						System.out.println();
@@ -180,11 +98,11 @@ public class AssessMotifOfInterest {
 
 					HashSet<String> refSeqIdsAssociatedToProtein = refSeqdIdsMap.get(protein);
 					for(String id: refSeqIdsAssociatedToProtein) {
-						
+
 						if(motifPositionByIdMap.containsKey(id)) {
-							
+
 							out.write(id + "=");
-							
+
 							List<String> motifPositions = motifPositionByIdMap.get(id);
 							for(String pos : motifPositions) {
 								out.write(pos + ",");
@@ -201,14 +119,14 @@ public class AssessMotifOfInterest {
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
-			
+
 			HashMap<String, Double> localizationCount = new HashMap<>();
-			
+
 			for(String local : proteinLocalizationMap.values()) {
-				
+
 				String[] localizations = local.split("\\;");
 				double increment = 1/localizations.length;
-				
+
 				for(String l : localizations) {
 					if(localizationCount.containsKey(l)) {
 						localizationCount.put(l, localizationCount.get(l)+ increment);
@@ -217,13 +135,120 @@ public class AssessMotifOfInterest {
 					}
 				}	
 			}
-			
-			
+
+
 			printLocalization(localizationFile + motif + ".tsv", localizationCount);
 		}
 
 	}
-	
+
+	public static void getInformationForMotifsOfInterestWithRegex(String motifsOfInterestFile, String annotationSubsetFile, String outputPrefixFile, String localizationFile) {
+
+		/* Get motifs of interest  */
+		HashSet<String> motifsToTest = loadMotifsToTest(motifsOfInterestFile);
+		System.out.println("Motifs to test : " + motifsToTest.size());
+
+		/* For motif of interest, obtain list of proteins associated */
+
+		/* Iterate for each motif */
+		for(String motif: motifsToTest) {
+			System.out.println("testing motif : " + motif);
+
+			/* For current motif, get list of proteins*/
+			HashSet<String> proteinSet = getProteinsAssociatedToMotif(motif, annotationSubsetFile);
+			System.out.println("load proteins: " + proteinSet.size());	
+
+			/* For list of proteins get their associated refSeqIds*/
+			HashMap<String, HashSet<String>> refSeqdIdsMap = getListOfRefSeqIds(proteinSet);
+			System.out.println("load refSeqIds");
+
+			/* Get protein localizations */
+			HashMap<String, String> proteinLocalizationMap = determineProteinLocalization(proteinSet);
+			System.out.println("got localizations");
+
+			//HashSet<String> motifPossibilities = SequenceUtils.getPossibleMotifInstances(e.getKey());
+
+			String regexMotif = RegexSearch.formatMotifWithRegularExpression(motif, RegexSearch.setCharacterMapForRegularExpression()); 
+
+			/* Search for motif positions */
+			HashMap<String, List<String>> motifPositionByIdMap = new HashMap<>();
+			int idCount = 1;
+			for(HashSet<String> refSeqIds: refSeqdIdsMap.values()) { // e.key = protein, e.value = refSeqIDs
+
+				System.out.print(idCount+ ".");
+				if(idCount%50 ==0) {
+					System.out.println();
+				}
+
+				motifPositionByIdMap.putAll(RegexSearch.searchForMotifPostions(regexMotif, fastaFile, refSeqIds));
+				idCount++;
+			}
+
+			/* Print results */
+			try {
+				BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputPrefixFile + motif + ".tsv")));
+
+				out.write("Motif = " + motif + " | numberOfProtein = " + proteinSet.size() + "\n");
+
+				/*For each protein */
+				int protCount = 1;
+				System.out.println("proteins to asssess : " + proteinSet.size());
+				for(String protein: proteinSet) {
+
+					System.out.print(protCount + ".");
+					if(protCount%50 ==0) {
+						System.out.println();
+					}
+
+					/* output protein info */
+					out.write(protein + "\t" + proteinLocalizationMap.get(protein) + "\t");
+
+					HashSet<String> refSeqIdsAssociatedToProtein = refSeqdIdsMap.get(protein);
+					for(String id: refSeqIdsAssociatedToProtein) {
+
+						if(motifPositionByIdMap.containsKey(id)) {
+
+							out.write(id + "=");
+
+							List<String> motifPositions = motifPositionByIdMap.get(id);
+							for(String pos : motifPositions) {
+								out.write(pos + ",");
+							}
+							out.write("|");
+						}
+					}
+					out.write("\n");
+					out.flush();
+					protCount++;
+				}
+
+				out.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+
+			HashMap<String, Double> localizationCount = new HashMap<>();
+
+			for(String local : proteinLocalizationMap.values()) {
+
+				String[] localizations = local.split("\\;");
+				double increment = 1/localizations.length;
+
+				for(String l : localizations) {
+					if(localizationCount.containsKey(l)) {
+						localizationCount.put(l, localizationCount.get(l)+ increment);
+					} else {
+						localizationCount.put(l, increment);
+					}
+				}	
+			}
+
+
+			printLocalization(localizationFile + motif + ".tsv", localizationCount);
+		}
+
+	}
+
 	private static HashSet<String> loadMotifsToTest(String motifsToTestFile){
 
 		HashSet<String> motifsToTest = new HashSet<>();
@@ -259,7 +284,7 @@ public class AssessMotifOfInterest {
 			while(line!=null) {
 
 				String currentMotif = line.split("\t")[0];
-				
+
 				if(motif.equals(currentMotif)) {
 					proteinsAssociatedToMotif.addAll(Arrays.asList(line.split("\t")[2].split("\\|")));
 					break;
@@ -287,7 +312,7 @@ public class AssessMotifOfInterest {
 
 				String p = line.split("\t")[0]; // [0] protein
 				if(proteinSet.contains(p)) {
-					
+
 					if(line.split("\t").length > 1) {
 						HashSet<String> refSeqIds = new HashSet<>(Arrays.asList(line.split("\t")[1].split("\\|")));
 						refSeqIdMap.put(p, refSeqIds);
@@ -360,7 +385,7 @@ public class AssessMotifOfInterest {
 			while(line!=null && proteinLocalizationMap.size() < proteinSet.size()) {
 
 				String protein = line.split("\t")[1];
-				
+
 				if(proteinSet.contains(protein)) {
 					proteinLocalizationMap.put(protein, line.split("\t")[3]); // [3] = localization
 				}
@@ -373,15 +398,15 @@ public class AssessMotifOfInterest {
 		}
 		return proteinLocalizationMap;
 	}
-	
+
 	private static void printLocalization(String file, HashMap<String, Double> localizationCount) {
-		
+
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(file)));
 
 			out.write("Localization\tCount\n");
 			for(Entry<String, Double> e : localizationCount.entrySet()) {
-				
+
 				out.write(e.getKey() + "\t" + e.getValue() + "\n");
 				out.flush();
 			}
@@ -390,6 +415,6 @@ public class AssessMotifOfInterest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 }

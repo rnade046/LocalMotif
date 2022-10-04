@@ -42,25 +42,30 @@ public class MotifMain {
 		
 		String wd = params.getProperty("working_directory");
 	
+		File dir = new File(wd + "/motif_enumeration/");
+		if(! dir.exists()) {
+			dir.mkdir();
+		}
+		
 		/* Create dependent directories */
-	    File dir1 = new File(wd + "/mapDegenMotifsToMotifs");
+	    File dir1 = new File(wd + "/motif_enumeration/mapDegenMotifsToMotifs");
 	    if (! dir1.exists()){
 	        dir1.mkdir();
 	    }
 	    
-	    File dir2 = new File(wd + "/annotationFiles");
+	    File dir2 = new File(wd + "/motif_enumeration/annotationFiles");
 	    if (! dir2.exists()){
 	        dir2.mkdir();
 	    }
 	    
-	    File dir3 = new File(wd + "/degenMotifSet");
+	    File dir3 = new File(wd + "/motif_enumeration/degenMotifSet");
 	    if (! dir3.exists()){
 	        dir3.mkdir();
 	    }
 		
 		/* Command line arguments */ 
 		String motifsToTestFile = args[1];
-		String jobNumber = args[2];
+		String outputFile = args[2];
 
 		/* Local computer - file paths */
 		String projectName = params.getProperty("network_name");
@@ -70,15 +75,15 @@ public class MotifMain {
 		String mapProteinToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds").replaceAll("\\s+", "");// output from BiomaRt
 		
 		/* Output Files */
-		String mapMotifsToRefSeqIdsFile = wd + projectName + "_enumeratedMotifsPerRefSeqId.tsv"; // output from motif enumeration
-		String listOfUniqueMotifsFile = wd + projectName + "_ListOfUniqueMotifs.txt"; // output from motif enumeration
-		String motifMappedToProteinsFile = wd + projectName + "_nullModel_proteinToMotifs.tsv"; // output from motif enumeration
+		String mapMotifsToRefSeqIdsFile = wd + "/motif_enumeration/"+ projectName + "_enumeratedMotifsPerRefSeqId.tsv"; // output from motif enumeration
+		String listOfUniqueMotifsFile = wd + "/motif_enumeration/" + projectName + "_ListOfUniqueMotifs.txt"; // output from motif enumeration
+		String motifMappedToProteinsFile = wd +"/motif_enumeration/" + projectName + "_nullModel_proteinToMotifs.tsv"; // output from motif enumeration
 		
 		String degenMotifSetPrefix = wd + params.getProperty("degenMotifsToTestPrefix").replace("\\s+", "");
 		String motifSetToTest = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
-		String mapOfDegenMotifs = wd + "mapDegenMotifsToMotifs/" + projectName + "_nullModel_enumerateNonDegenMotifs_" + jobNumber;
+		String mapOfDegenMotifs = wd + "/motif_enumeration/" + outputFile;
 		
-		 String degenMotifAnnotationFile = params.getProperty("degenAnnotationPrefix").replaceAll("\\s+", "") + jobNumber;
+		 String degenMotifAnnotationFile = params.getProperty("degenAnnotationPrefix").replaceAll("\\s+", "");
 		/* Generate mapping of protein HGNC symbols to mRNA RefSeqIds >> To call R */
 		
 		// MOTIF ENUMERATION CAN BE RUN LOCALLY // 
@@ -117,8 +122,9 @@ public class MotifMain {
 		
 		// Update to run with multiple files
 		if(mapMotifs) {
+			motifSetToTest = motifsToTestFile; //
 			System.out.println("**Mapping degen motifs to proteins in network**");
-			MapDegenMotifs.mapDegenMotifsToProteins(mapOfDegenMotifs, motifMappedToProteinsFile, degenMotifAnnotationFile);
+			MapDegenMotifs.mapDegenMotifsToProteins(mapOfDegenMotifs, motifMappedToProteinsFile, degenMotifAnnotationFile, motifSetToTest);
 		}
 		
 	}

@@ -52,7 +52,7 @@ public class ProteinAnnotations {
 			
 			System.out.println("Searching degen motif annotation files: " + i );
 			
-			String degenAnnotationFile = degenMotifAnnotationPrefix + i;
+			String degenAnnotationFile = degenMotifAnnotationPrefix + i + ".tsv";
 			String annotationCompanionFile = annotationCompanionFileString + i;
 
 			HashSet<String> motifsToTest = loadMotifsToTest(annotationCompanionFile);

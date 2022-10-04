@@ -48,7 +48,7 @@ public class MotifEnrichment {
 			 * 1st check: if num of proteins >= 3 or <= 2000
 			 * 2nd check: ensure proteins associated to annotation are in the network 
 			 * 3rd check: confirm 1st check */ 
-			String annotationFile = annotationFilePrefix + i;
+			String annotationFile = annotationFilePrefix + i + ".tsv";
 			String annotationOutputFile = outputPrefix + i;
 						
 			HashSet<String> motifsToTest = loadMotifsToTest(annotationCompanionFilePrefix + i);

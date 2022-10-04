@@ -10,7 +10,7 @@ import java.util.Properties;
 
 import graph.Interaction;
 import graph.Protein;
-import opt.CheckDegreeDistributions;
+//import opt.CheckDegreeDistributions;
 import sampling.ApproximateNormalDistribuiton;
 import sampling.MotifSampling;
 import sampling.ProteinAnnotations;
@@ -60,10 +60,8 @@ public class Main {
 			distanceMatrix2File = wd + networkName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix2.txt";
 		}
 
-		String degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "corrNetTop2_degenMotifMappedToProteinsInNetwork_";
-		if(Boolean.parseBoolean(params.getProperty("nullModel"))){
-			degenAnnotationPrefix = params.getProperty("degenAnnotationPrefix") + "annotation_nullModel_";
-		}
+		String annotationWD = params.getProperty("annotationWD");
+		String degenAnnotationPrefix = annotationWD + params.getProperty("annotationPrefix");
 
 		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
 
@@ -129,7 +127,7 @@ public class Main {
 		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
 		HashSet<String> proteinSet = NetworkProteins.getProteinSet(proteinList2);
 
-		CheckDegreeDistributions.assessDegreeDistribution(proteinList2, interactionList, (wd + projectName + "_degreesInNetwork.tsv"));
+		//CheckDegreeDistributions.assessDegreeDistribution(proteinList2, interactionList, (wd + projectName + "_degreesInNetwork.tsv"));
 
 		
 		if(proteinList.size() != proteinList2.size()) {
@@ -178,9 +176,9 @@ public class Main {
 
 		/* Check annotation files and create companion file */
 
-		File directory3 = new File(params.getProperty("degenAnnotationPrefix") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
+		File directory3 = new File(params.getProperty("annotationWD") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
 
-		String annotationCompanionFilePrefix = params.getProperty("degenAnnotationPrefix") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
+		String annotationCompanionFilePrefix = params.getProperty("annotationWD") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
 				+ projectName + "_n" + lowerBound + "_" + upperBound + "_motifAnnotationsCompanionFile_";
 
 		if (! directory3.exists()){
@@ -196,8 +194,8 @@ public class Main {
 					Integer.parseInt(args[1]), Integer.parseInt(args[2]), lowerBound, upperBound);
 		}
 
-		File directory4 = new File(params.getProperty("degenAnnotationPrefix") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
-		String protFreqFilePrefix = params.getProperty("degenAnnotationPrefix") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
+		File directory4 = new File(params.getProperty("annotationWD") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
+		String protFreqFilePrefix = params.getProperty("annotationWD") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
 				+"/" + projectName + "_n" + lowerBound + "_" + upperBound + "_proteinAnnotationFreq_" ;
 
 		if (! directory4.exists()){

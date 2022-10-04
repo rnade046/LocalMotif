@@ -1,4 +1,5 @@
 package motifs;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -172,6 +173,7 @@ public class MotifDegeneration {
 				out.flush();
 			}
 			out.write("\n");
+			out.flush();
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -218,6 +220,10 @@ public class MotifDegeneration {
 	
 	private void printDegenMotifSet(String outputFile, int fileIdx, HashMap<String, ArrayList<Integer>> degenMotifs) {
 		
+		System.out.print(fileIdx + ".");
+		if(fileIdx%50==0) {
+			System.out.println();
+		}
 		BufferedWriter out;
 		try {
 			out = new BufferedWriter(new FileWriter(new File(outputFile + fileIdx)));
