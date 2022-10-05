@@ -21,14 +21,15 @@ public class AssessMotifOfInterest {
 	private static String proteinAtlasFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/subcellular_location.tsv";
 	private static String fastaFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/input_files/human_3UTRsequences.txt";
 	private static String proteinInfoFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2_proteinsInNetwork_info.tsv";
+	private static String annotatedProteinsFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2_protFreqAnnotation.tsv";
 
 	public static void main(String[] args) {
 
-		String motifsOfInterest = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifsOfInterest.tsv";
+		String motifsOfInterest = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/motifTest.txt";
 		String annotationSubset = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
 
-		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_bins_";
-		String localizationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_localization_";
+		String outputFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_bins2_";
+		String localizationFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/motifsOfInterest/coreTPD_motifOfInterest_localization2_";
 
 
 		//getInformationForMotifsOfInterestWithRegex(motifsOfInterest, annotationSubset, outputFile, localizationFile);
@@ -40,15 +41,16 @@ public class AssessMotifOfInterest {
 		/* Get motifs of interest  */
 		HashSet<String> motifsToTest = loadMotifsToTest(motifsOfInterestFile);
 		System.out.println("Motifs to test : " + motifsToTest.size());
-
+		
+		/* Get proteins in network */
+		HashSet<String> annotatedProteins = loadAnnotatedProteins(annotatedProteinsFile);
+		
 		/* For motif of interest, obtain list of proteins associated */
-
-		/* Iterate for each motif */
 		for(String motif: motifsToTest) {
 			System.out.println("testing motif : " + motif);
 
 			/* For current motif, get list of proteins*/
-			HashSet<String> proteinSet = getProteinsAssociatedToMotif(motif, annotationSubsetFile);
+			HashSet<String> proteinSet = getProteinsAssociatedToMotif(motif, annotationSubsetFile, annotatedProteins);
 			System.out.println("load proteins: " + proteinSet.size());	
 
 			/* For list of proteins get their associated refSeqIds*/
@@ -147,6 +149,9 @@ public class AssessMotifOfInterest {
 		/* Get motifs of interest  */
 		HashSet<String> motifsToTest = loadMotifsToTest(motifsOfInterestFile);
 		System.out.println("Motifs to test : " + motifsToTest.size());
+		
+		/* Get proteins in network */
+		HashSet<String> annotatedProteins = loadAnnotatedProteins(annotatedProteinsFile);
 
 		/* For motif of interest, obtain list of proteins associated */
 
@@ -155,7 +160,7 @@ public class AssessMotifOfInterest {
 			System.out.println("testing motif : " + motif);
 
 			/* For current motif, get list of proteins*/
-			HashSet<String> proteinSet = getProteinsAssociatedToMotif(motif, annotationSubsetFile);
+			HashSet<String> proteinSet = getProteinsAssociatedToMotif(motif, annotationSubsetFile, annotatedProteins);
 			System.out.println("load proteins: " + proteinSet.size());	
 
 			/* For list of proteins get their associated refSeqIds*/
@@ -271,8 +276,30 @@ public class AssessMotifOfInterest {
 
 		return motifsToTest;
 	}
+	
+	private static HashSet<String> loadAnnotatedProteins(String protFile){
+		
+		HashSet<String> annotatedProteins = new HashSet<>();
+		
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(protFile))));
 
-	private static HashSet<String> getProteinsAssociatedToMotif(String motif, String proteinsAssociatedToMotifsFile){
+			String line = in.readLine(); // no-header
+
+			while(line!=null) {
+				
+				annotatedProteins.add(line.split("\t")[0]);
+				line = in.readLine();
+			}
+
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return annotatedProteins;
+	}
+
+	private static HashSet<String> getProteinsAssociatedToMotif(String motif, String proteinsAssociatedToMotifsFile, HashSet<String> annotatedProteins){
 
 		HashSet<String> proteinsAssociatedToMotif = new HashSet<>();
 
@@ -286,7 +313,12 @@ public class AssessMotifOfInterest {
 				String currentMotif = line.split("\t")[0];
 
 				if(motif.equals(currentMotif)) {
-					proteinsAssociatedToMotif.addAll(Arrays.asList(line.split("\t")[2].split("\\|")));
+					
+					for(String prot : line.split("\t")[2].split("\\|")) {
+						if(annotatedProteins.contains(prot)) {
+							proteinsAssociatedToMotif.add(prot);
+						}
+					}
 					break;
 				}
 				line = in.readLine();
