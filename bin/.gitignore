@@ -1,9 +1,8 @@
-/positionConservation/
-/evolutionConservation/
-/MotifInfo/
-/motifInfo/
+/fdr/
+/graph/
 /motifs/
-/utils/
+/opt/
+/randomSeq/
 /sampling/
-/.DS_Store
-/vis/
+/utils/
+/GenerateCorrelationMatrixes.class

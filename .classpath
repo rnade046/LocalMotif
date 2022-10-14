@@ -7,6 +7,7 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="post"/>
+	<classpathentry kind="src" path="vis"/>
 	<classpathentry kind="lib" path="/Users/rnadeau2/Documents/GitHub/LESMoNlocal/commons-math3-3.6.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
