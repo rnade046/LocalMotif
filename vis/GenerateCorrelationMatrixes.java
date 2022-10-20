@@ -20,7 +20,13 @@ public class GenerateCorrelationMatrixes {
 		String formatOutputFile = "/Users/rnadeau2/Documents/LESMoNlocal/figures/network/corrNet2-400_HeatMap.tsv";
 		String protOutFile = "/Users/rnadeau2/Documents/LESMoNlocal/figures/network/corrNet2-400_listOfProts.tsv";
 
-		formatCorrelationNetwork(corrNetFile, proteinInfo, formatOutputFile, protOutFile);
+		String formatOutputFile2 = "/Users/rnadeau2/Documents/LESMoNlocal/figures/network/corrNet2_HeatMap.tsv";
+		String protOutFile2 = "/Users/rnadeau2/Documents/LESMoNlocal/figures/network/corrNet2_listOfProts.tsv";
+
+
+		//formatCorrelationNetwork(corrNetFile, proteinInfo, formatOutputFile, protOutFile);
+
+		formatInitialNetwork(corrNetFile, formatOutputFile2, protOutFile2);
 	}
 
 	public static void formatCorrelationNetwork(String corrNetFile, String proteinFile, String formatOutput, String protOutput) {
@@ -32,6 +38,21 @@ public class GenerateCorrelationMatrixes {
 
 		/* get correlations */ 
 		double[][] corrNet = loadCorrelationNetwork(corrNetFile, proteinList);
+
+		printNetwork(corrNet, formatOutput);
+		printProteinOrder(proteinList, protOutput);
+
+	}
+
+	public static void formatInitialNetwork(String corrNetFile, String formatOutput, String protOutput) {
+
+		/* get list of proteins */
+		HashSet<String> proteinSet = getListOfProteinsFromCorrNet(corrNetFile);
+
+		List<String> proteinList = new ArrayList<>(proteinSet);
+
+		/* get correlations */ 
+		double[][] corrNet = loadInitialCorrelationNetwork(corrNetFile, proteinList);
 
 		printNetwork(corrNet, formatOutput);
 		printProteinOrder(proteinList, protOutput);
@@ -102,6 +123,44 @@ public class GenerateCorrelationMatrixes {
 		return corrNet;
 	}
 
+	private static double[][] loadInitialCorrelationNetwork(String corrNetFile, List<String> proteinList){
+
+		double[][] corrNet = new double[proteinList.size()][proteinList.size()];
+
+		/* index protein list */
+		HashMap<String, Integer> proteinIdxMap = new HashMap<>();
+		for(int i=0; i<proteinList.size(); i++) {
+			proteinIdxMap.put(proteinList.get(i), i);
+		}
+
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(corrNetFile))));
+
+			String line = in.readLine(); // header
+			line = in.readLine();
+			while(line!=null) {
+
+				String[] col = line.split("\t");
+
+				/* store correlations if they were kept in network */
+
+				double corr = Double.parseDouble(col[2]);
+				if(corr >= 0.574171) {
+					corrNet[proteinIdxMap.get(col[0])][proteinIdxMap.get(col[1])] = corr;
+					corrNet[proteinIdxMap.get(col[1])][proteinIdxMap.get(col[0])] = corr;
+				}
+				
+				line = in.readLine();
+			}
+
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return corrNet;
+	}
+
 	private static void printNetwork(double[][] corrNet, String outputFile) {
 
 		try {
@@ -135,5 +194,32 @@ public class GenerateCorrelationMatrixes {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static HashSet<String> getListOfProteinsFromCorrNet(String corrNetFile){
+
+		HashSet<String> proteinSet = new HashSet<>();
+
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(corrNetFile))));
+
+			String line = in.readLine(); // header
+			line = in.readLine();
+
+			while(line!=null) {
+
+				String[] col = line.split("\t");
+				proteinSet.add(col[0]);
+				proteinSet.add(col[1]);
+
+				line = in.readLine();
+			}
+
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return proteinSet;
 	}
 }
