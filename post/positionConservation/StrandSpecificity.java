@@ -8,8 +8,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 
@@ -24,7 +25,7 @@ public class StrandSpecificity {
 
 		String motifsFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
 
-		String output = wd + "/MotifPosition/coreTPD0.4/StrandSpecificity_corrNet2-400_coreTPD_p0.4_3UTR_MotifFamilies_h0.7_sept.tsv";
+		String output = wd + "/MotifPosition/coreTPD0.4/StrandSpecificity_corrNet2-400_coreTPD_p0.4_3UTR_MotifFamilies_h0.7_oct.tsv";
 
 		
 		determineStrandSpecificity(fwdFasta, revCFasta, motifsFile, output);
@@ -97,13 +98,16 @@ public class StrandSpecificity {
 		
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
-			out.write("motif\tFWD-occurrence\tRevC-Occurence\tStrand-Specificity\tProbability\n");
+			out.write("motif\tmotifFamily\tFWD-occurrence\tRevC-Occurence\tStrand-Specificity\tProbability\n");
 			
 			/* load motifs to test */
-			List<String> motifsToTest = SequenceUtils.loadRepresentativeMotifs(motifsFile);
+			HashMap<String, Integer> motifsToTest = getMotifs(motifsFile);
+			
 			System.out.println("Motif to test: " + motifsToTest.size());
 			int motifCount = 0;
-			for(String motif: motifsToTest) {
+			for(Entry<String, Integer> e: motifsToTest.entrySet()) {
+				
+				String motif = e.getKey();
 				
 				motifCount++;
 				System.out.println(motifCount);
@@ -132,7 +136,7 @@ public class StrandSpecificity {
 				double probability = nd.probability(fwdMotifCount-1, trials);
 				
 				/* output info */
-				out.write(motif + "\t" + fwdMotifCount + "\t" + revCMotifCount + "\t" + ss + "\t" + probability + "\n");
+				out.write(motif + "\t" + e.getValue() + "\t" + fwdMotifCount + "\t" + revCMotifCount + "\t" + ss + "\t" + probability + "\n");
 				out.flush();
 				
 				//specificityMap.put(motif, probability);
@@ -184,6 +188,32 @@ public class StrandSpecificity {
 			e.printStackTrace();
 		}
 
+	}
+	
+	private static HashMap<String, Integer> getMotifs(String motifFamilyFile){
+		
+		HashMap<String, Integer> motifsToTestMap = new HashMap<>();
+		
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(motifFamilyFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine(); // header
+			line = input.readLine();
+
+			while(line != null) {
+				motifsToTestMap.put(line.split("\t")[0], Integer.parseInt(line.split("\t")[1]));
+
+				line = input.readLine();
+			}
+
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return motifsToTestMap;
 	}
 	
 	@SuppressWarnings("unused")

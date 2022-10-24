@@ -24,7 +24,7 @@ public class GenerateCorrelationMatrixes {
 		String protOutFile2 = "/Users/rnadeau2/Documents/LESMoNlocal/figures/network/corrNet2_listOfProts.tsv";
 
 
-		//formatCorrelationNetwork(corrNetFile, proteinInfo, formatOutputFile, protOutFile);
+		formatCorrelationNetwork(corrNetFile, proteinInfo, formatOutputFile, protOutFile);
 
 		formatInitialNetwork(corrNetFile, formatOutputFile2, protOutFile2);
 	}
