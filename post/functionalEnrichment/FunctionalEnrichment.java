@@ -9,8 +9,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -83,7 +85,7 @@ public class FunctionalEnrichment {
 
 			/* Load motif family info file to guide further analysis */
 			String motifFamilyInfoFile = wd + networkName + clusteringName + "_h" + params.getProperty("height") + "_motifFamiliesInfo.tsv";
-			
+
 			System.out.println("**Loading representative motifs**");
 			HashSet<String> motifSet = loadRepresentativeMotifs(motifFamilyInfoFile);
 			System.out.println("Loaded motifs: " + motifSet.size());
@@ -133,37 +135,49 @@ public class FunctionalEnrichment {
 		}
 
 		if(Boolean.parseBoolean(params.getProperty("summarizeCellularComponents"))) {
-			
+
 			int numFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups"));
 			String revigoPrefix = wd + "Ontologizer/" + directory2 + allProtDir + networkName + clusteringName + "_revigo_allProteins_";
 			String significantPrefix = wd + "Ontologizer/" + directory2 + allProtDir + networkName + clusteringName + "_significantGOterms_allProteins_";
 			String outputFile = wd + "Ontologizer/" + directory2 + allProtDir + networkName + clusteringName + "_allProteins_cellularComponentSummary_matrix.tsv";
-			
+
 			/* Get significant cellular components */
 			System.out.println("**Obtain significant cellular components - all proteins**");
 			HashMap<String, String> ccInfoMap = getAllCellularComponents(revigoPrefix, numFamilies);
-			
+
 			/* Summarize cellular components & print */
 			System.out.println("**Summarize cellular compartment significance scores - all proteins**");
 			HashMap<String, Double[]> significantCCMap = summarizeCellularComponents(ccInfoMap, significantPrefix, numFamilies);
+
 			printCellularComponentSummary(ccInfoMap, significantCCMap, numFamilies, outputFile);
-			
+
 			if(clusteringMeasure == 1 || clusteringMeasure == 2) {
-		
+
+				String tablePrefix = wd + "Ontologizer/"+ directory2 +coreProtDir+ "table-"+ networkName + clusteringName + "_coreProteinsByMotif_";
+				
 				numFamilies = Integer.parseInt(params.getProperty("coreFamilyGroups"));
 				revigoPrefix = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_revigo_coreProteins_";
 				significantPrefix = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_significantGOterms_coreProteins_";
-				outputFile = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_coreProteins_cellularComponentSummary_matrix.tsv";
 				
+				outputFile = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_coreProteins_cellularComponentSummary_matrix.tsv";
+				String enrichmentOutput = wd + "Ontologizer/" + directory2 + coreProtDir + networkName + clusteringName + "_coreProteins_cellularComponentSummary_enrichmentScores_matrix.tsv";
+
 				/* Get significant cellular components */
 				System.out.println("**Obtain significant cellular components - core proteins**");
 				ccInfoMap = getAllCellularComponents(revigoPrefix, numFamilies);
 				System.out.println("ccMap : " + ccInfoMap.size());
+
 				/* Summarize cellular components & print */
 				System.out.println("**Summarize cellular compartment significance scores - core proteins**");
 				significantCCMap = summarizeCellularComponents(ccInfoMap, significantPrefix, numFamilies);
+
 				System.out.println("summaryMap : " + significantCCMap.size());
 				printCellularComponentSummary(ccInfoMap, significantCCMap, numFamilies, outputFile);
+				
+				List<List<GeneOntology>> significantCC = loadSignificantCellularComponents(tablePrefix, numFamilies, ccInfoMap);
+				HashMap<String, Double[]> enrichmentMap = summarizeCellularComponentsEnrichmentScores(significantCC);
+				printCellularComponentSummary(ccInfoMap, enrichmentMap, numFamilies, enrichmentOutput);
+				
 			}
 		}
 	}
@@ -296,6 +310,26 @@ public class FunctionalEnrichment {
 		}
 	}
 
+	@SuppressWarnings("unused")
+	private static void printSignificantGOterms(String outputPrefix, List<GeneOntology> significantGOList) {
+
+		try {
+
+			if(!significantGOList.isEmpty()) {
+				BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputPrefix)));
+
+				for(GeneOntology go : significantGOList) {
+					out.write(go.getName() + "\t" + go.getPval() + "\n");
+					out.flush();
+				}
+
+				out.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private static HashMap<String, String> getAllCellularComponents(String revigoPrefixFile, int numFamilies) {
 
 		HashMap<String, String> ccInfo = new HashMap<>(); //GO:XX, Name
@@ -332,6 +366,42 @@ public class FunctionalEnrichment {
 		return ccInfo;
 	}		
 
+	private static List<List<GeneOntology>> loadSignificantCellularComponents(String tableInputFilePrefix, int numFamilies, HashMap<String, String> ccInfo) {
+
+		List<List<GeneOntology>> allSigngificantGOs = new ArrayList<>();
+
+		for(int i=1; i<=numFamilies; i++) {
+			List<GeneOntology> significantGOList = new ArrayList<>();
+
+			try {
+
+				InputStream in = new FileInputStream(new File(tableInputFilePrefix + i + "-Parent-Child-Union-Benjamini-Hochberg.txt"));
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+				String line = input.readLine(); // header
+				line = input.readLine(); 
+
+				while(line!=null) {
+					String[] col = line.split("\t"); // [0] = GO-term; [10] = adjusted p-val
+					if(ccInfo.containsKey(col[0]) && Double.parseDouble(col[10]) < 0.05) {
+						significantGOList.add(new GeneOntology(col[0], col[12], Double.parseDouble(col[10]), Integer.parseInt(col[4]), Integer.parseInt(col[3])));
+					}
+
+					line = input.readLine(); // next line 
+				}
+				input.close();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			allSigngificantGOs.add(significantGOList);
+		}
+
+
+		return allSigngificantGOs;
+	}
+
 	private static HashMap<String, Double[]> summarizeCellularComponents(HashMap<String, String> ccInfoMap, String significantGOsPrefixFile, int numberFamily) {
 
 		HashMap<String, Double[]> significantCCMap = new HashMap<>(); //GO:XXD, Double[family1, 2, .., x] (adjusted p-value)
@@ -347,7 +417,7 @@ public class FunctionalEnrichment {
 
 				while(line!=null) {
 					String[] col = line.split("\t"); // [0] = GO-term; [1] = adjusted p-val
-					
+
 					/* store info if significant GO:XX is a CC */
 					if(ccInfoMap.containsKey(col[0])) {
 
@@ -358,7 +428,7 @@ public class FunctionalEnrichment {
 						/* update adjusted p-value at appropriate position */
 						Double[] array = significantCCMap.get(col[0]);
 						array[i-1] = Double.parseDouble(col[1]);
-						
+
 						significantCCMap.put(col[0], array);
 					}
 					line = input.readLine(); // next line 
@@ -372,29 +442,56 @@ public class FunctionalEnrichment {
 		return significantCCMap;
 	}
 
+	private static HashMap<String, Double[]> summarizeCellularComponentsEnrichmentScores(List<List<GeneOntology>> allSignificantCellularComponents) {
+
+		HashMap<String, Double[]> significantCCMap = new HashMap<>(); //GO:XXD, Double[family1, 2, .., x] (adjusted p-value)
+
+		for(int i=0; i<allSignificantCellularComponents.size(); i++) {
+			System.out.print(i + ".");
+
+			List<GeneOntology> currentMotif = allSignificantCellularComponents.get(i);
+
+			for(GeneOntology go: currentMotif) {
+				String goName = go.getName();
+
+				/* create entry if it's the first time this GO:XX is seen */ 
+				if(!significantCCMap.containsKey(goName)) {
+					significantCCMap.put(goName, new Double[allSignificantCellularComponents.size()]);
+				}
+				/* update adjusted p-value at appropriate position */
+				Double[] array = significantCCMap.get(goName);
+				array[i] = go.getScore();
+
+				significantCCMap.put(goName, array);
+			}
+		}
+		System.out.println("Done");
+		return significantCCMap;
+	}
+
 	private static void printCellularComponentSummary(HashMap<String, String> ccInfoMap, HashMap<String, Double[]> significantCCMap, int numFamilies, String outputFile) {
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
-			
+
 			// header 
 			out.write("GO-term\tGO-name\t#Groups\t");
 			for(int i=1; i<= numFamilies; i++) {
 				out.write(i + "\t");
 			}
 			out.write("\n");
-			
+
 			for(Entry<String, Double[]> goEntry: significantCCMap.entrySet()) {
 				String go = goEntry.getKey();
 				Double[] scores = goEntry.getValue();
-				
+
 				int count = 0;
 				for(int i=0; i<scores.length; i++) {
 					if(scores[i] != null) {
 						count++;
 					}
 				}
-				
+
 				out.write(go + "\t" + ccInfoMap.get(go) + "\t" + count + "\t");
 				for(int i=0; i<scores.length; i++) {
 					out.write(scores[i] + "\t");
