@@ -384,7 +384,7 @@ public class FunctionalEnrichment {
 				while(line!=null) {
 					String[] col = line.split("\t"); // [0] = GO-term; [10] = adjusted p-val
 					if(ccInfo.containsKey(col[0]) && Double.parseDouble(col[10]) < 0.05) {
-						significantGOList.add(new GeneOntology(col[0], col[12], Double.parseDouble(col[10]), Integer.parseInt(col[4]), Integer.parseInt(col[3])));
+						significantGOList.add(new GeneOntology(col));
 					}
 
 					line = input.readLine(); // next line 
