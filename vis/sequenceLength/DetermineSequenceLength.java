@@ -35,10 +35,11 @@ public class DetermineSequenceLength {
 		
 		String annotationFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
 		String outputFamilyPrefix = wd + "nucleotide-composition/families/sequenceLenght_allSeqs_coreProteins_motifFamily";
+		String outputAll = wd + "nucleotide-composition/families/sequenceLenght_motifFamilies.tsv";
 		String motifFamily = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
 		
 		System.out.println("* Assess - sequence lengths of motif families *");
-		determineSequenceLengthsForMotifFamilies(motifFamily, annotationFile, refSeqIdFile, fastaFile, outputFamilyPrefix);
+		determineSequenceLengthsForMotifFamilies(motifFamily, annotationFile, refSeqIdFile, fastaFile, outputFamilyPrefix, outputAll);
 	}
 
 	private static void determine3UTRsequenceLength(String refSeqIdsFile, String fastaFile, String outputFile) {
@@ -54,7 +55,7 @@ public class DetermineSequenceLength {
 		
 	}
 	
-	private static void determineSequenceLengthsForMotifFamilies(String motifFamilies, String annotationFile, String refSeqIdsFile, String fastaFile, String outputFilePrefix) {
+	private static void determineSequenceLengthsForMotifFamilies(String motifFamilies, String annotationFile, String refSeqIdsFile, String fastaFile, String outputFilePrefix, String outputAll) {
 		
 		/* Load motif families */
 		List<Motif> motifList = loadMotifFamilies(motifFamilies);
@@ -77,7 +78,7 @@ public class DetermineSequenceLength {
 			
 			printCounts(m.getLengths(), outputFilePrefix + m.getMotifOrder() + ".tsv");
 		}		
-		
+		combineCount(motifList, outputAll);
 	}
 
 	private static HashSet<String> loadRefSeqIds(String refSeqIdFile){
@@ -242,5 +243,44 @@ public class DetermineSequenceLength {
 		}
 		
 		return proteinSet;
+	}
+	
+	private static void combineCount(List<Motif> motifList, String outputFile) {
+		
+		/* determine max count */
+		int max = 0;
+		for(Motif m: motifList) {
+			if(m.getLengths().size() > max) {
+				max = m.getLengths().size();
+			}
+		}
+		
+		/* print combined data */
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
+			
+			/* header */
+			for(int i=0; i<motifList.size(); i++) {
+				out.write("F" + (i+1) + "\t");
+			}
+			out.write("\n");
+			
+			/* body */
+			for(int j=0; j<max; j++) {
+				for(int i=0; i<motifList.size(); i++) {
+					
+					if(motifList.get(i).getLengths().size() > j) {
+						out.write(motifList.get(i).getLengths().get(j) + "\t");
+					} else { 
+						out.write("NA\t");
+					}
+				}
+				out.write("\n");
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 }
