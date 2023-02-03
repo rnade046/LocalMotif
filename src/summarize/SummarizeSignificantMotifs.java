@@ -193,7 +193,7 @@ public class SummarizeSignificantMotifs {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 
 			/* header */
-			out.write("Motif\tFamily#\t#Proteins\tClusteringMeasure\tp-value\tFDR\tStrandSpecificity\tStrandSpecificity(adj.pval)\tProteinList\n");
+			out.write("Motif\tFamilyNumber\tNumberOfCoreProteins\tClusteringMeasure\tp-value\tFDR\tStrandSpecificity\tStrandSpecificity(adj.pval)\tProteinList\n");
 
 			/* table */
 			for(Motif m: significantMotifs) {
