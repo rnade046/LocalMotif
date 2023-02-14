@@ -87,7 +87,11 @@ public class MotifMain {
 		/* Generate mapping of protein HGNC symbols to mRNA RefSeqIds >> To call R */
 		
 		// MOTIF ENUMERATION CAN BE RUN LOCALLY // 
-		if(enumerateMotifs) {
+		 
+		/**
+		 * TODO change from function boolean to check if file already exists
+		 */
+		if(enumerateMotifs) {	
 			System.out.println("**Enumerating motifs**");
 			
 			/* Load list of RefSeq IDs in network */ 
