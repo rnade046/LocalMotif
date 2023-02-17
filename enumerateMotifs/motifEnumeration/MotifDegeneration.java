@@ -186,7 +186,7 @@ public class MotifDegeneration {
 		List<Character> nucleotides = Arrays.asList('A', 'T', 'C', 'G', 'R', 'Y', 'B', 'D', 'H', 'V', '*'); 
 		String accum = "";
 		HashMap<String, ArrayList<Integer>> container = new HashMap<String, ArrayList<Integer>>();
-		int breaks = (int) Math.round(Math.pow(nucleotides.size(), this.motifLength))/1000 ;
+		int breaks = (int) Math.round(Math.pow(nucleotides.size(), this.motifLength))/999 ;
 		Integer fileIdx = 0;
 		
 		fileIdx = permutation(nucleotides, this.motifLength, accum, container, breaks, fileIdx, outputFilePrefix);

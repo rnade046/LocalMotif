@@ -1,5 +1,3 @@
-package fdr;
-
 public class FalseDiscoveryRate {
     private double FalseDiscoveryRate;
     private double Pvalue;
