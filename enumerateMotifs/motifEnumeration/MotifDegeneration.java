@@ -3,6 +3,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.zip.DeflaterOutputStream;
 
 public class MotifDegeneration {
 
@@ -32,37 +34,43 @@ public class MotifDegeneration {
 		this.degenCharacterSet = new HashSet<>(Arrays.asList('R', 'D', 'H', 'V', 'B', '*')); // Define set of characters that are degenerate characters
 	}
 
-	public void enumerateNonDegenerateMotifs(String inputFile, String outputFile) {
-		FileInputStream in;
-		try {
-			in = new FileInputStream(new File(inputFile));
-			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-			
-			String degenMotif = input.readLine();
-			System.out.println("Degenerating motifs: ");
-			int motifCount=1;
-			while(degenMotif != null) {
-				if(motifCount%1000 == 0){
-					System.out.print(motifCount + ".");
+	public void enumerateNonDegenerateMotifs(String inputFilePrefix, int i, String outputFilePrefix) {
+
+//		int fileCount = dir.list().length;
+//
+//		for(int i=0; i<fileCount; i++) {
+
+			FileInputStream in;
+			try {
+				in = new FileInputStream(new File(inputFilePrefix + i));
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+				String degenMotif = input.readLine();
+				System.out.println("Degenerating motifs: ");
+				int motifCount=1;
+				while(degenMotif != null) {
+					if(motifCount%1000 == 0){
+						System.out.print(motifCount + ".");
+					}
+
+					int solutions = calculateSolutions(degenMotif);
+					HashSet<String> nonDegenMotifSet = getAllMotifs(degenMotif, solutions);
+					printMotifs(outputFilePrefix + i, degenMotif, nonDegenMotifSet);
+
+					degenMotif = input.readLine();
+					motifCount++;
+
+					if(motifCount%10000 == 0) {
+						System.out.println();
+					}
 				}
-				
-				int solutions = calculateSolutions(degenMotif);
-				HashSet<String> nonDegenMotifSet = getAllMotifs(degenMotif, solutions);
-				printMotifs(outputFile, degenMotif, nonDegenMotifSet);
-				
-				degenMotif = input.readLine();
-				motifCount++;
-				
-				if(motifCount%10000 == 0) {
-					System.out.println();
-				}
+				System.out.print("Done" +"\n");
+				input.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			System.out.print("Done" +"\n");
-			input.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
+//		}
+
 	}
 	/**
 	 * Define the RNA nucleotide mapping to their possible substitutions (ie. degenerate characters)
@@ -144,12 +152,12 @@ public class MotifDegeneration {
 				j *= set.length;
 			}
 
-				motifs.add(seq);
+			motifs.add(seq);
 
 		}	
 		return motifs;
 	}
-	
+
 	/**
 	 * Print degenerate motifs associated to the real motif. Lines are appended to existing file
 	 * No header. Example line: 
@@ -160,27 +168,47 @@ public class MotifDegeneration {
 	 * @param degenMotifs	HashSet<String> - Set of degenerated motifs 
 	 */
 	private static void printMotifs(String outputFile, String motif, HashSet<String> degenMotifs) {
+
+//		BufferedWriter out;
+//		try {
+//			out = new BufferedWriter(new FileWriter(new File(outputFile), true));
+//
+//			out.write(motif + "\t");
+//
+//			for(String degenMotif: degenMotifs) {
+//				out.write(degenMotif + "|");
+//				out.flush();
+//			}
+//			out.write("\n");
+//			out.flush();
+//			out.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+
 		
-		BufferedWriter out;
 		try {
-			out = new BufferedWriter(new FileWriter(new File(outputFile), true));
-			
-			out.write(motif + "\t");
+			DeflaterOutputStream out = new DeflaterOutputStream(new FileOutputStream(new File(outputFile), true));
+
+			String line = motif + "\t";
+			out.write(line.getBytes());
 			
 			for(String degenMotif: degenMotifs) {
-				out.write(degenMotif + "|");
+				
+				line = degenMotif + "|";
+				out.write(line.getBytes());
 				out.flush();
 			}
-			out.write("\n");
+			line = "\n";
+			out.write(line.getBytes());
 			out.flush();
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
+
 	}
-	
+
 	public void generateAllPossibleMotifs(String outputFilePrefix) {
 		System.out.println("Generating set of degenerate motifs");
 		List<Character> nucleotides = Arrays.asList('A', 'T', 'C', 'G', 'R', 'Y', 'B', 'D', 'H', 'V', '*'); 
@@ -188,48 +216,49 @@ public class MotifDegeneration {
 		HashMap<String, ArrayList<Integer>> container = new HashMap<String, ArrayList<Integer>>();
 		int breaks = (int) Math.round(Math.pow(nucleotides.size(), this.motifLength))/999 ;
 		Integer fileIdx = 0;
-		
+
 		fileIdx = permutation(nucleotides, this.motifLength, accum, container, breaks, fileIdx, outputFilePrefix);
-	//	System.out.println("\nPrinting motifs");
+		//	System.out.println("\nPrinting motifs");
 		printDegenMotifSet(outputFilePrefix, fileIdx, container);
 	}
-	
+
 	private Integer permutation(List<Character> NA, int k, String accumulated, HashMap<String, ArrayList<Integer>> container, int breaks, Integer fileIndex, String outputFilePrefix){
-		
+
 		if(k == 0)
 		{
 			//System.out.println(accumulated);
-	
+
 			ArrayList<Integer> value = new ArrayList<Integer>();
 			container.put(accumulated, value);
-			
+
 			if(container.size()%breaks == 0) {
 				printDegenMotifSet(outputFilePrefix, fileIndex, container);
 				fileIndex++;
 			}
-			
+
 			return fileIndex;
 		}
 		for(Character na:NA)
 			fileIndex = permutation(NA, k - 1, accumulated + na, container, breaks, fileIndex, outputFilePrefix);
-		
+
 		return fileIndex;
-		
+
 	}
-	
+
 	private void printDegenMotifSet(String outputFile, int fileIdx, HashMap<String, ArrayList<Integer>> degenMotifs) {
-		
+
 		System.out.print(fileIdx + ".");
-		if(fileIdx%50==0) {
+		if(fileIdx%50==0 && fileIdx !=0) {
 			System.out.println();
 		}
+		
 		BufferedWriter out;
 		try {
 			out = new BufferedWriter(new FileWriter(new File(outputFile + fileIdx)));
-			
-			
+
+
 			for(String motif: degenMotifs.keySet()) {
-				
+
 				int degenCount = 0;
 				/* generate a given motif */
 				for(int k=0; k < motif.length() ; k++) {
@@ -245,14 +274,15 @@ public class MotifDegeneration {
 					out.write(motif + "\n");
 					out.flush();
 				}
-				
+
 			}
 			degenMotifs.clear();
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+	
+
 	}
 	/**
 	 * For a given RefSeq ID obtain 3'UTR sequence and generate all possible motifs (including degenerate motifs)
@@ -264,7 +294,7 @@ public class MotifDegeneration {
 	 * @throws ExecutionException 
 	 * @throws InterruptedException 
 	 */
-/*	private HashMap<String, HashSet<String>> generateMotifsForGivenProteinInParallel(String refSeqID, int maxDegenThreshold) throws InterruptedException, ExecutionException{
+	/*	private HashMap<String, HashSet<String>> generateMotifsForGivenProteinInParallel(String refSeqID, int maxDegenThreshold) throws InterruptedException, ExecutionException{
 		HashMap<String, HashSet<String>> seqMap = new HashMap<>();
 		HashSet<String> seqMotifSet = new HashSet<>();
 
@@ -336,7 +366,7 @@ public class MotifDegeneration {
 		    futureList.add(future);
 		}
 		 produce all degenerate motifs and add to hashSet  
-		
+
 		try {
 			long start = System.currentTimeMillis();
 
@@ -354,8 +384,8 @@ public class MotifDegeneration {
 		seqMap.put(refSeqID, seqMotifSet);
 		return seqMap;
 	}*/
-	
-/*	private HashMap<String, HashSet<String>> generateMotifsForGivenProtein(String refSeqID, int maxDegenThreshold){
+
+	/*	private HashMap<String, HashSet<String>> generateMotifsForGivenProtein(String refSeqID, int maxDegenThreshold){
 		HashMap<String, HashSet<String>> seqMap = new HashMap<>();
 		HashSet<String> seqMotifSet = new HashSet<>();
 
@@ -380,7 +410,7 @@ public class MotifDegeneration {
 		return seqMap;
 	}*/
 
-	
+
 	/**
 	 * Enumerate motifs for all 3'UTR sequences associated to a protein within the BioID network
 	 * 
@@ -390,7 +420,7 @@ public class MotifDegeneration {
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-/*	public HashMap<String, HashSet<String>> enumerateMotifsInParallel (int maxDegenThreshold) throws InterruptedException, ExecutionException {
+	/*	public HashMap<String, HashSet<String>> enumerateMotifsInParallel (int maxDegenThreshold) throws InterruptedException, ExecutionException {
 
 		HashMap<String, HashSet<String>> generatedMotifs = new HashMap<>();
 		List<Callable<HashMap<String, HashSet<String>>>> tasks = new ArrayList<Callable<HashMap<String, HashSet<String>>>>();
