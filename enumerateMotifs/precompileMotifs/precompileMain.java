@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import motifEnumeration.MotifDegeneration;
-
-
 public class precompileMain {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
