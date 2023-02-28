@@ -120,7 +120,7 @@ public class MotifMain {
 		if(enumerateDegenMotifs) {
 			System.out.println("**Enumerating motifs from degenerate motifs**");
 			MotifDegeneration d = new MotifDegeneration(motifLength, maxDegenThreshold);
-			d.enumerateNonDegenerateMotifs(motifSetToTest, Integer.parseInt(arg[1]), mapOfDegenMotifs);
+			d.enumerateNonDegenerateMotifs(motifSetToTest, Integer.parseInt(args[1]), mapOfDegenMotifs);
 		}
 		
 		// Update to run with multiple files
