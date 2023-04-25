@@ -44,7 +44,7 @@ public class FormatHCMlocalizationForEnrichment {
 		System.out.println("** load motifs to test **");
 		HashMap<String, Integer> motifs = getMotifsToTest(motifsInterestFile);
 		
-		/* for each motif get list of proteins */
+		/* for each motif get list of proteins */ 
 		System.out.println("** get motif info **");
 		proteinList = determineMotifsAssociatedToProteins(annotationFile, motifs, proteinList);
 		
