@@ -1,3 +1,4 @@
+package formatHCM;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -17,16 +18,16 @@ public class FormatHumanCellMap {
 	public static void main(String[] args) {
 
 		String inputNetworkFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/input_files/correlation_v2.tsv";
-		double percentThreshold = 0.02; 
-		int maxInteractors = 400; 
+		double percentThreshold = 0.02;
+		int maxInteractors = 400;
 
 		String outputNetwork = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/hcm/corrNet2-400_formattedNetwork.tsv";
 		String removedInteractors = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/hcm/corrNet2-400_removedInteractors.tsv";
-		
+
 		/* load full HCM network */
 		List<Interaction> hcm = loadHCM(inputNetworkFile);
 		System.out.println("Original network - interactions: " + hcm.size() + "\n");
-		
+
 		/* filter interactions for top percent interactions */
 		hcm = assessPercentageScore(hcm, percentThreshold);
 		System.out.println("Top 2% network - interactions: " + hcm.size());
@@ -43,18 +44,18 @@ public class FormatHumanCellMap {
 		printUpdatedNetwork(hcm, outputNetwork);
 	}
 
-
-	public static ArrayList<Interaction> loadHCM(String inputNetworkFile){
+	public static ArrayList<Interaction> loadHCM(String inputNetworkFile) {
 
 		ArrayList<Interaction> hcmInteractions = new ArrayList<>();
 
 		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(inputNetworkFile))));
+			BufferedReader in = new BufferedReader(
+					new InputStreamReader(new FileInputStream(new File(inputNetworkFile))));
 
 			String line = in.readLine(); // header
 			line = in.readLine();
 
-			while(line!=null) {
+			while (line != null) {
 
 				String[] elements = line.split("\t");
 				hcmInteractions.add(new Interaction(elements[0], elements[1], Double.parseDouble(elements[2])));
@@ -77,7 +78,7 @@ public class FormatHumanCellMap {
 
 		/* make list of correlation score and sort */
 		List<Double> scores = new ArrayList<>();
-		for(Interaction inter : hcm) {
+		for (Interaction inter : hcm) {
 			scores.add(inter.getWeight());
 		}
 
@@ -86,8 +87,8 @@ public class FormatHumanCellMap {
 
 		double minimumScore = scores.get(numInteractions);
 
-		for(Interaction inter: hcm) {
-			if(inter.getWeight() >= minimumScore) {
+		for (Interaction inter : hcm) {
+			if (inter.getWeight() >= minimumScore) {
 				updatedHCM.add(inter);
 			}
 		}
@@ -99,15 +100,15 @@ public class FormatHumanCellMap {
 		/* count number of interactions */
 		HashMap<String, Integer> proteinInteractionCount = new HashMap<>();
 
-		for(Interaction inter: hcm) {
-			if(proteinInteractionCount.containsKey(inter.getProtein1())) {
-				proteinInteractionCount.put(inter.getProtein1(), proteinInteractionCount.get(inter.getProtein1()) +1);
+		for (Interaction inter : hcm) {
+			if (proteinInteractionCount.containsKey(inter.getProtein1())) {
+				proteinInteractionCount.put(inter.getProtein1(), proteinInteractionCount.get(inter.getProtein1()) + 1);
 			} else {
 				proteinInteractionCount.put(inter.getProtein1(), 1);
 			}
 
-			if(proteinInteractionCount.containsKey(inter.getProtein2())) {
-				proteinInteractionCount.put(inter.getProtein2(), proteinInteractionCount.get(inter.getProtein2()) +1);
+			if (proteinInteractionCount.containsKey(inter.getProtein2())) {
+				proteinInteractionCount.put(inter.getProtein2(), proteinInteractionCount.get(inter.getProtein2()) + 1);
 			} else {
 				proteinInteractionCount.put(inter.getProtein2(), 1);
 			}
@@ -115,21 +116,23 @@ public class FormatHumanCellMap {
 
 		/* determine interactors with more than required count */
 		HashSet<String> interactorsToRemove = new HashSet<>();
-		for(Entry<String, Integer> entry: proteinInteractionCount.entrySet()) {
+		for (Entry<String, Integer> entry : proteinInteractionCount.entrySet()) {
 
-			if(entry.getValue() >= threshold) { // number interactions
+			if (entry.getValue() >= threshold) { // number interactions
 				interactorsToRemove.add(entry.getKey());
 			}
 		}
 		return interactorsToRemove;
 	}
 
-	public static List<Interaction> removeOverConnectedInteractors(List<Interaction> hcm, HashSet<String> interactorsToRemove){
+	public static List<Interaction> removeOverConnectedInteractors(List<Interaction> hcm,
+			HashSet<String> interactorsToRemove) {
 
 		List<Interaction> updatedHCM = new ArrayList<>();
 
-		for(Interaction inter : hcm) {
-			if(!interactorsToRemove.contains(inter.getProtein1()) || !interactorsToRemove.contains(inter.getProtein2())) {
+		for (Interaction inter : hcm) {
+			if (!interactorsToRemove.contains(inter.getProtein1())
+					|| !interactorsToRemove.contains(inter.getProtein2())) {
 				updatedHCM.add(inter);
 			}
 		}
@@ -141,28 +144,28 @@ public class FormatHumanCellMap {
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
-			
+
 			out.write("Protein1\tProtein2\tScore\n");
-			for(Interaction inter : hcm) {
+			for (Interaction inter : hcm) {
 				out.write(inter.getProtein1() + "\t" + inter.getProtein2() + "\t" + inter.getWeight() + "\n");
 				out.flush();
 			}
-			
+
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void printRemovedInteractions(HashSet<String> interactorsToRemove, String outputFile) {
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
-			
-			for(String prot: interactorsToRemove) {
-				out.write(prot+ "\n");
+
+			for (String prot : interactorsToRemove) {
+				out.write(prot + "\n");
 				out.flush();
 			}
-			
+
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
