@@ -18,11 +18,13 @@ public class GetSequencesInNetworkForMEME {
 
 	public static void main(String[] args) {
 
-		String wd = "C://Users//Rachel//Documents//LESMoNlocal//analysis//";
+		String wd = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/";
 		String proteinInfoFile = wd + "corrNetTop2-400_proteinsInNetwork_info.tsv";
-		String fastaFile = wd + "input_files//human_3UTRsequences.txt";
+		String fastaFile = wd + "input_files/human_3UTRsequences.txt";
 
-		String mclOutputFile = wd + "benchmark//mclOutput_i2.txt";
+		String mclOutputFile = wd + "benchmark/mclOutput_corrCoef_i2.txt";
+		
+		String outputFilePrefix = wd + "benchmark/fasta/corrNet2-400_sequences_fasta_MEME_mclCluster_";
 
 		/* Load MCL output file, line-by-line (one line = one cluster) */ 
 		System.out.println("**Get sequences for MEME analysis**");
@@ -47,7 +49,7 @@ public class GetSequencesInNetworkForMEME {
 
 					if(idsToPrintMap.size() >= 3) {
 						// Iterate through FASTA file, printing lines if corresponds to refSeqId in network
-						String outputFile = wd + "benchmark//fasta//corrNet2-400_sequences_fasta_MEME_mclCluster_"+ lineCount+".txt";
+						String outputFile = outputFilePrefix + lineCount+".txt";
 						
 						System.out.println("Printing sequences: " + idsToPrintMap.size());
 						printSequencesInNetwork(fastaFile, idsToPrintMap, outputFile);

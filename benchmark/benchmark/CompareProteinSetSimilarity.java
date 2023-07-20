@@ -21,7 +21,7 @@ public class CompareProteinSetSimilarity {
 		
 		String wd = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/";
 
-		String mclClustersFile = wd + "benchmark/mclOutput_i2.txt";
+		String mclClustersFile = wd + "benchmark/mclOutput_corrCoef_i2.txt";
 		String proteinInfoFile = wd + "corrNetTop2-400_proteinsInNetwork_info.tsv";
 
 		String motifFamilySummaryFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
