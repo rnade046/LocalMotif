@@ -14,12 +14,12 @@ public class FilterMemeOutput {
 
 	public static void main(String[] args) {
 
-		String memeInputFilePrefix = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\meme-zoops-results-2\\meme_cluster_";
-		String memeFilteredFilePrefix = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\meme-zoops-results-2\\memeFiltered_cluster_";
+		String memeInputFilePrefix = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/benchmark/MEME_de/meme_";
+		String memeFilteredFilePrefix = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/benchmark/MEME_de/memeFiltered_0.1_";
 
-		String summaryFile = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\meme-zoops-summaryFile.tsv";
-		int numOfFilesToFilter = 104;
-		double threshold = 0.05;
+		String summaryFile = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/benchmark/MEME_de/meme_anr_summary_0.1.txt";
+		int numOfFilesToFilter = 118;
+		double threshold = 0.1;
 
 		HashMap<Integer, Integer> significantMotifsMap = new HashMap<>();
 
@@ -125,7 +125,10 @@ public class FilterMemeOutput {
 			out.write("Cluster\tSignificantMotifs\n"); 
 
 			for(Entry<Integer, Integer> e : significantMotifMap.entrySet()) {
-				out.write(e.getKey() + "\t" + e.getValue() + "\n");
+				if(e.getValue() != 0) {
+					out.write(e.getKey() + "\t" + e.getValue() + "\n");
+				}
+			
 			}
 
 			out.close();

@@ -38,6 +38,7 @@ public class GetMotifFamiliesSequenceForBenchmarkComparison {
 				
 				/* Identify motif families with similarity >= threshold */
 				String[] col = line.split("\t"); // lines to ignore [0] = mcl-cluster, [n-1] = max-motifFamily, [n] = max-value
+				int cluster = Integer.parseInt(col[0]);
 				
 				List<Integer> motifsOfInterest = new ArrayList<>();
 				
@@ -49,7 +50,7 @@ public class GetMotifFamiliesSequenceForBenchmarkComparison {
 				
 				/* If at least 1 family identified - print it's corresponding sequences to file */
 				if(motifsOfInterest.size() >= 1) {
-					printFormattedQueryMotifsForTomTom(motifFamiliesPPMprefix, motifsOfInterest, outputPrefix + clusterCount);
+					printFormattedQueryMotifsForTomTom(motifFamiliesPPMprefix, motifsOfInterest, outputPrefix + cluster);
 				}
 				line = in.readLine();
 				clusterCount++;
