@@ -1,4 +1,4 @@
-package benchmark;
+
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -27,7 +27,7 @@ public class CompareProteinSetSimilarity {
 		String motifFamilySummaryFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_motifFamiliesInfo.tsv";
 		String annotationSubsetFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
 
-		String outputFile = wd + "benchmark/corrNetTop2-400_coreTPD_p0.4_MCL_i2_similarity_coreProts.tsv";
+		String outputFile = wd + "benchmark/corrNetTop2-400_coreTPD_p0.4_MCL_i2_similarity_coreProts_dec2024.tsv";
 		//String protDistribution = "C:\\Users\\Rachel\\Documents\\LESMoNlocal\\analysis\\benchmark\\corrNetTop2-400_coreTPD_p0.4_MCL_i2_proteinDistribution_coreProts.tsv";
 
 		/* Load MCL clusters (protein sets) as list<Set<Proteins>> */ 

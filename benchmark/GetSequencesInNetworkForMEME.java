@@ -1,4 +1,4 @@
-package benchmark;
+
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,9 +22,9 @@ public class GetSequencesInNetworkForMEME {
 		String proteinInfoFile = wd + "corrNetTop2-400_proteinsInNetwork_info.tsv";
 		String fastaFile = wd + "input_files/human_3UTRsequences.txt";
 
-		String mclOutputFile = wd + "benchmark/mclOutput_corrCoef_i2.txt";
+		String mclOutputFile = wd + "benchmark/";
 		
-		String outputFilePrefix = wd + "benchmark/fasta/corrNet2-400_sequences_fasta_MEME_mclCluster_";
+		String outputFilePrefix = wd + "benchmark/fasta-mcli2-dec2024/corrNet2-400_sequences_fasta_MEME_mclCluster_";
 
 		/* Load MCL output file, line-by-line (one line = one cluster) */ 
 		System.out.println("**Get sequences for MEME analysis**");

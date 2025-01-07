@@ -1,4 +1,4 @@
-package benchmark;
+
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,11 +16,11 @@ public class GetMotifFamiliesSequenceForBenchmarkComparison {
 	public static void main(String[] args) {
 
 		String wd = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/";
-		String similarityMatrix = wd + "benchmark/corrNetTop2-400_coreTPD_p0.4_MCL_i2_similarity_coreProts.tsv";
+		String similarityMatrix = wd + "benchmark/corrNetTop2-400_coreTPD_p0.4_MCL_i2_similarity_coreProts_dec2024.tsv";
 		double threshold = 0.5;
 		
 		String motifFamiliesPPMprefix = wd + "motifFamilies/corrNetTop2-400_coreTPD_p0.4_p6.94181641095822E-7/Groups_CoreProteins_h0.7/corrNetTop2-400_coreTPD_p0.4_coreProteins_h0.7_ppm_motifFamilyGroup";
-		String outputPrefix = wd + "benchmark/fasta-coreTPD/corrNetTop2-400_coreTPD_p0.4_coreProts_TomTomFormatted_mclCluster";
+		String outputPrefix = wd + "benchmark/fasta-mcli2-dec2024/corrNetTop2-400_coreTPD_p0.4_coreProts_TomTomFormatted_mclCluster";
 	
 		
 		/* Iterate through similarity matrix - assess mcl clusters individually */
