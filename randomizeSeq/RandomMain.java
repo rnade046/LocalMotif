@@ -2,15 +2,14 @@ public class RandomMain {
 	
 	public static void main(String[] args) {
 		
-		String wd = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/";
+		/* .fasta containing sequences to randomize */
+		String fastaFile = args[0];
 		
-//		String fastaFile = wd + "input_files\\human_3UTRsequences.txt";
-//		String rnaIdListFile = wd + "motif_enumeration\\BiomaRt_MappingRefSeqIdsToGeneSymbol_corrNet.tsv";
-//		String randomFastaFile = wd + "input_files\\random_humanCellMap_3UTRsequences.txt";
+		/* mapping file {proteinName = refSeqId1|refSeqId2|...|} */
+		String rnaIdListFile = args[1];
 		
-		String fastaFile = wd + "MotifPosition/coding-sequences-human.txt";
-		String rnaIdListFile = wd + "MotifPosition/corrNetTop2_longestSequence.tsv";
-		String randomFastaFile = wd + "MotifPosition/LocalRandom_CodingSequences.txt";
+		/* output file */
+		String randomFastaFile = args[0] + "_winShuffled.fasta";
 		
 		System.out.println("**Generating randomized fasta sequences**");
 		RandomizeSequences.generateRandomizedFasta(rnaIdListFile, fastaFile, randomFastaFile);
