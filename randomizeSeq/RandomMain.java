@@ -9,7 +9,7 @@ public class RandomMain {
 		String rnaIdListFile = args[1];
 		
 		/* output file */
-		String randomFastaFile = args[0] + "_winShuffled.fasta";
+		String randomFastaFile = args[0].substring(0, args[0].lastIndexOf('.')) + "_winShuffled.fasta";
 		
 		System.out.println("**Generating randomized fasta sequences**");
 		RandomizeSequences.generateRandomizedFasta(rnaIdListFile, fastaFile, randomFastaFile);
