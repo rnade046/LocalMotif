@@ -21,24 +21,23 @@ public class FormatHumanCellMap {
 		double percentThreshold = 0.02;
 		int maxInteractors = 400;
 
-		String outputNetwork = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/hcm/corrNet2-400_formattedNetwork.tsv";
-		String removedInteractors = "/Users/rnadeau2/Documents/LESMoNlocal/analysis/hcm/corrNet2-400_removedInteractors.tsv";
-
+		String outputNetwork = "/Users/rnadeau2/Documents/Structures/hcm/corrNet2-400_formattedNetwork_test.tsv";
+		String removedInteractors = "/Users/rnadeau2/Documents/Structures/hcm/corrNet2-400_removedInteractors_test.tsv";
 		/* load full HCM network */
 		List<Interaction> hcm = loadHCM(inputNetworkFile);
 		System.out.println("Original network - interactions: " + hcm.size() + "\n");
 
 		/* filter interactions for top percent interactions */
 		hcm = assessPercentageScore(hcm, percentThreshold);
-		System.out.println("Top 2% network - interactions: " + hcm.size());
-		System.out.println("Top 2% - predicted interactions: " + Math.round(hcm.size() * percentThreshold) + "\n");
+		System.out.println("Top X% network - interactions: " + hcm.size());
+		System.out.println("Top X% - predicted interactions: " + Math.round(hcm.size() * percentThreshold) + "\n");
 
 		/* determine overly connected interactors */
 		HashSet<String> interactorsToRemove = determineOverConnectedInteractors(hcm, maxInteractors);
 		System.out.println("Removed interactors: " + interactorsToRemove.size() + "\n");
 		/* remove over connected interactors */
 		hcm = removeOverConnectedInteractors(hcm, interactorsToRemove);
-		System.out.println("Top2 - 400 network - interactions: " + hcm.size());
+		System.out.println("TopX - max interactions network - interactions: " + hcm.size());
 		/* print updated network */
 		printRemovedInteractions(interactorsToRemove, removedInteractors);
 		printUpdatedNetwork(hcm, outputNetwork);
