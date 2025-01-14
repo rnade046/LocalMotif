@@ -2,6 +2,7 @@
 dict
 .settings
 .DS_store
+.classpath
 .gitattributes
 .project
 .ipynb_checkpoints
