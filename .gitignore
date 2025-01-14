@@ -1,7 +1,9 @@
 /bin/
 dict
+.classpath
 .settings
 .DS_store
+.classpath
 .gitattributes
 .project
 .ipynb_checkpoints
