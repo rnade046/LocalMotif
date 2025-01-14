@@ -144,14 +144,6 @@ public class Main {
 			distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrix2File, proteinList2);
 		} 
 		
-		/* Print network for MCL algorithm */
-		if(Boolean.parseBoolean(params.getProperty("mcl"))) {
-			String networkOutputFile = wd + networkName + "_mclNetwork.txt";
-			
-			System.out.println("**Formatting network for MCL analysis**");
-			benchmark.FormatNetworkForMCL.formatMCLnetwork(proteinList2, interactionList, networkOutputFile);
-		}
-		
 		if(Boolean.parseBoolean(params.getProperty("generateNullModel"))) {
 			/* Output protein list and 3'UTRs */ 
 			String nullMapFile = wd + projectName + "_nullModel_ProteinToRefseqIds2.tsv";
