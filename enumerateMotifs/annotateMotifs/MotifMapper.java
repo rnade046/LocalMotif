@@ -152,7 +152,7 @@ public class MotifMapper {
 			out = new BufferedWriter(new FileWriter(new File(annotationFile), true));
 
 			for(Motif m: motifs) {
-				out.write(m + "\t" + m.getProteins().size() + "\t");
+				out.write(m.getMotifIUPAC() + "\t" + m.getProteins().size() + "\t");
 
 				for(String p : m.getProteins()) {
 					out.write(p + "|");
