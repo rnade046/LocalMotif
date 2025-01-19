@@ -7,8 +7,8 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,10 +23,10 @@ public class MotifMapper {
 	private String motifFilePrefix;
 
 	public MotifMapper(String ids, String a, String fasta, String dir, String motifs) {
-		
+
 		this.characterMap = setCharacterMapForRegularExpression();
 		this.idToProteinMap = loadProteinRefSeqIdMap(ids);
-		
+
 		this.annotationFilePrefix = a;
 		this.motifDirectory = new File(dir);
 		this.seqFasta = fasta;
@@ -39,111 +39,105 @@ public class MotifMapper {
 		int fileCount = this.motifDirectory.list().length;
 
 		for(int i=0; i<fileCount; i++) {
-			
-			try {
-				FileInputStream in = new FileInputStream(new File(this.motifFilePrefix + i));
-				BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
-				String motif = input.readLine();
-				int motifCount=1;
-				System.out.println("searching for motifs in file: " + i);
-				
-				
-				while(motif !=null) {
-				
-					/* output counter */
-					if(motifCount%10 == 0) {
-						System.out.print(motifCount + ".");
+			System.out.println("searching for motifs in file: " + i);
+
+			/* load motifs to assess and determine their regular expression */
+			ArrayList<Motif> motifs = initializeMotifs(motifFilePrefix + i);
+
+			Set<String> refSeqIds = this.idToProteinMap.keySet();
+
+			try {
+				BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(this.seqFasta))));			
+
+				String line = in.readLine();
+
+				boolean readSeq = false; 
+				String seq = "";
+				String id = "";
+				int seqCount = 1;
+
+				while(line!=null) {
+
+					if(readSeq) {
+						seq += line;
 					}
-					
-					/* determine possible instances of motif */
-					String regexMotif = formatMotifWithRegularExpression(motif);
-					
-					/* search all sequences for motif and identify associated proteins */
-					HashSet<String> proteinsAssociatedToMotif = mapProteinsToMotif(regexMotif, this.seqFasta);
-					
-					/* print motif annotation file {motif = protein1|protein2|..|} */
-					printAnnotationFile(this.annotationFilePrefix + i, motif, proteinsAssociatedToMotif);
-					
-					/* read next motif in file */
-					motif = input.readLine();
-					motifCount++;
-					
-					if(motifCount%100 == 0) {
-						System.out.println();
+
+					/* check if sequence is associated to a protein in network */
+					if(line.startsWith(">")) {
+						readSeq = false;
+						
+						/* if sequence has been loaded - check for motif in the sequence  */
+						if(!seq.isEmpty() && refSeqIds.contains(id)) {
+							
+							//System.out.println("sequence : " + id);
+
+							if(seqCount%10 == 0) {
+								System.out.print(seqCount + ".");
+							}
+							
+							if(seqCount%100 == 0) {
+								System.out.println();
+							}
+							
+							for(Motif m : motifs) {
+								
+								boolean motifFound = searchSeqForMotif(m.getRegexMotif(), seq);
+
+								if(motifFound) {
+									m.addProtein(this.idToProteinMap.get(id));
+								}
+							}
+						}
+						//  >hg38_ncbiRefSeq_NM_001276352.2 range=chr1:67092165-67093579 5'pad=0 3'pad=0 strand=- repeatMasking=none					
+						id = line.split("[\\_\\s++\\.]")[2] + "_"+ line.split("[\\_\\s++\\.]")[3];
+
+						/* reinitialize parameters for next sequence */
+						if(refSeqIds.contains(id)) { 
+
+							if(!line.contains("alt") && !line.contains("_fix")) { // do not consider alternate chromosomes
+								readSeq = true;
+								seq = "";
+								seqCount++;
+							}
+						}
 					}
-					
+					line = in.readLine();
 				}
-				input.close();
+				in.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+
+			printAnnotationFile(this.annotationFilePrefix + i, motifs);
 		}
 	}
 
-	/**
-	 *  UPDATE THIS FUNCTION - not searching for position of motif.
-	 * @param formattedMotif
-	 * @param fastaFile
-	 * @param refSeqIds
-	 * @return
-	 */
-	private HashSet<String> mapProteinsToMotif(String formattedMotif, String fastaFile){
+	private ArrayList<Motif> initializeMotifs(String motifFile){
 
-		HashSet<String> proteinSet = new HashSet<>();
-		Set<String> refSeqIds = this.idToProteinMap.keySet();
-		
+		ArrayList<Motif> motifList = new ArrayList<>();
+
 		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(fastaFile))));			
+			FileInputStream in = new FileInputStream(new File(motifFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
-			String line = in.readLine();
+			String motif = input.readLine();
+			while(motif !=null) {
 
-			boolean readSeq = false; 
-			String seq = "";
-			String id = "";
+				/* determine possible instances of motif */
+				String regexMotif = formatMotifWithRegularExpression(motif);
+				motifList.add(new Motif(motif, regexMotif));
 
-			while(line!=null) {
-
-				if(readSeq) {
-					seq += line;
-				}
-
-				/* check if sequence is associated to a protein in network */
-				if(line.startsWith(">")) {
-					readSeq = false;
-
-					/* if sequence has been loaded - check for motif in the sequence  */
-					if(!seq.isEmpty()) {
-						
-						boolean motifFound = searchSeqForMotif(formattedMotif, seq);
-						
-						if(motifFound && refSeqIds.contains(id)) {
-							proteinSet.add(this.idToProteinMap.get(id));
-						}
-					}
-
-					//  >hg38_ncbiRefSeq_NM_001276352.2 range=chr1:67092165-67093579 5'pad=0 3'pad=0 strand=- repeatMasking=none					
-					id = line.split("[\\_\\s++\\.]")[2] + "_"+ line.split("[\\_\\s++\\.]")[3];
-
-					/* reinitialize parameters for next sequence */
-					if(refSeqIds.contains(id)) { 
-						
-						if(!line.contains("alt") && !line.contains("_fix")) { // do not consider alternate chromosomes
-							readSeq = true;
-							seq = "";
-						}
-					}
-				}
-
-				line = in.readLine();
+				/* read next motif in file */
+				motif = input.readLine();
 			}
-			in.close();
+			input.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return proteinSet;
+		return motifList;
 	}
-	
+
 	/**
 	 * Print annotation file { motif -- #proteins -- protein1|protein2|..| } 
 	 * 
@@ -151,26 +145,28 @@ public class MotifMapper {
 	 * @param motif				String - UPAC motif	
 	 * @param proteins			HashSet<String> - proteins associated to motif
 	 */
-	private void printAnnotationFile(String annotationFile, String motif, HashSet<String> proteins) {
-		
-			BufferedWriter out;
-			try {
-				out = new BufferedWriter(new FileWriter(new File(annotationFile), true));
-				
-				out.write(motif + "\t" + proteins.size() + "\t");
-				
-				for(String p :proteins) {
+	private void printAnnotationFile(String annotationFile, ArrayList<Motif> motifs) {
+
+		BufferedWriter out;
+		try {
+			out = new BufferedWriter(new FileWriter(new File(annotationFile), true));
+
+			for(Motif m: motifs) {
+				out.write(m + "\t" + m.getProteins().size() + "\t");
+
+				for(String p : m.getProteins()) {
 					out.write(p + "|");
 					out.flush();
 				}
 				out.write("\n");
 				out.flush();
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
-	
+
 	/**
 	 * Take input motif and translate to corresponding regular expression. 
 	 * 
@@ -188,7 +184,7 @@ public class MotifMapper {
 
 		return formattedMotif;
 	}
-	
+
 	/**
 	 * Search for regex motif in the provided sequence 
 	 * 
@@ -199,10 +195,10 @@ public class MotifMapper {
 	private static boolean searchSeqForMotif(String motif, String sequence) {
 
 		boolean motifFound = false; 
-		
+
 		Pattern pattern = Pattern.compile(motif);		// compile motif as REGEX
 		Matcher matcher = pattern.matcher(sequence);	// match pattern to sequence 
-		
+
 		/* check if motif is contained in the sequence */
 		if(matcher.find()) {
 			motifFound = true;
