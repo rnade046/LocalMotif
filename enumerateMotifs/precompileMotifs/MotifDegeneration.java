@@ -35,42 +35,49 @@ public class MotifDegeneration {
 		this.degenCharacterSet = new HashSet<>(Arrays.asList('R', 'D', 'H', 'V', 'B', '*')); // Define set of characters that are degenerate characters
 	}
 
-	public void enumerateNonDegenerateMotifs(String inputFilePrefix, int i, String outputFilePrefix) {
+	public void enumerateNonDegenerateMotifs(String inputFilePrefix, File dir, String outputFilePrefix) {
 
-//		int fileCount = dir.list().length;
-//
-//		for(int i=0; i<fileCount; i++) {
+		int fileCount = dir.list().length;
 
-			FileInputStream in;
-			try {
-				in = new FileInputStream(new File(inputFilePrefix + i));
-				BufferedReader input = new BufferedReader(new InputStreamReader(in));
+		for(int i=0; i<fileCount; i++) {
 
-				String degenMotif = input.readLine();
-				System.out.println("Degenerating motifs: ");
-				int motifCount=1;
-				while(degenMotif != null) {
-					if(motifCount%1000 == 0){
-						System.out.print(motifCount + ".");
+			File f = new File(outputFilePrefix + i);
+			if (! f.exists()){
+
+				FileInputStream in;
+				try {
+					in = new FileInputStream(new File(inputFilePrefix + i));
+					BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+					String degenMotif = input.readLine();
+					System.out.println("Degenerating motifs for file " +i + ":");
+					
+					int motifCount=1;
+					while(degenMotif != null) {
+						if(motifCount%10000 == 0){
+							System.out.print(motifCount + ".");
+						}
+
+						int solutions = calculateSolutions(degenMotif);
+						HashSet<String> nonDegenMotifSet = getAllMotifs(degenMotif, solutions);
+						printMotifs(outputFilePrefix + i, degenMotif, nonDegenMotifSet);
+
+						degenMotif = input.readLine();
+						motifCount++;
+
+						if(motifCount%100000 == 0) {
+							System.out.println();
+						}
 					}
-
-					int solutions = calculateSolutions(degenMotif);
-					HashSet<String> nonDegenMotifSet = getAllMotifs(degenMotif, solutions);
-					printMotifs(outputFilePrefix + i, degenMotif, nonDegenMotifSet);
-
-					degenMotif = input.readLine();
-					motifCount++;
-
-					if(motifCount%10000 == 0) {
-						System.out.println();
-					}
+					System.out.print("Done" +"\n");
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-				System.out.print("Done" +"\n");
-				input.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+			} else {
+				System.out.println("Motif file " + i + " already exists - did not generate");
 			}
-//		}
+		}
 
 	}
 	/**
@@ -170,43 +177,43 @@ public class MotifDegeneration {
 	 */
 	private static void printMotifs(String outputFile, String motif, HashSet<String> degenMotifs) {
 
-//		BufferedWriter out;
-//		try {
-//			out = new BufferedWriter(new FileWriter(new File(outputFile), true));
-//
-//			out.write(motif + "\t");
-//
-//			for(String degenMotif: degenMotifs) {
-//				out.write(degenMotif + "|");
-//				out.flush();
-//			}
-//			out.write("\n");
-//			out.flush();
-//			out.close();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-
-		
+		BufferedWriter out;
 		try {
-			DeflaterOutputStream out = new DeflaterOutputStream(new FileOutputStream(new File(outputFile), true));
+			out = new BufferedWriter(new FileWriter(new File(outputFile), true));
 
-			String line = motif + "\t";
-			out.write(line.getBytes());
-			
+			out.write(motif + "\t");
+
 			for(String degenMotif: degenMotifs) {
-				
-				line = degenMotif + "|";
-				out.write(line.getBytes());
+				out.write(degenMotif + "|");
 				out.flush();
 			}
-			line = "\n";
-			out.write(line.getBytes());
+			out.write("\n");
 			out.flush();
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+
+		//		try {
+		//			DeflaterOutputStream out = new DeflaterOutputStream(new FileOutputStream(new File(outputFile), true));
+		//
+		//			String line = motif + "\t";
+		//			out.write(line.getBytes());
+		//			
+		//			for(String degenMotif: degenMotifs) {
+		//				
+		//				line = degenMotif + "|";
+		//				out.write(line.getBytes());
+		//				out.flush();
+		//			}
+		//			line = "\n";
+		//			out.write(line.getBytes());
+		//			out.flush();
+		//			out.close();
+		//		} catch (IOException e) {
+		//			e.printStackTrace();
+		//		}
 
 	}
 
@@ -252,7 +259,7 @@ public class MotifDegeneration {
 		if(fileIdx%50==0 && fileIdx !=0) {
 			System.out.println();
 		}
-		
+
 		BufferedWriter out;
 		try {
 			out = new BufferedWriter(new FileWriter(new File(outputFile + fileIdx)));
@@ -282,7 +289,7 @@ public class MotifDegeneration {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	
+
 
 	}
 	/**

@@ -54,6 +54,8 @@ public class precompileMain {
 			System.out.println("**Generating all possible degen motifs**");
 			MotifDegeneration d1 = new MotifDegeneration(motifLength, maxDegenThreshold);
 			d1.generateAllPossibleMotifs(degenMotifSetPrefix);
+		} else { 
+			System.out.println("step completed: enumerate motifs");
 		}
 		
 		//}
@@ -62,7 +64,7 @@ public class precompileMain {
 		//		if(enumerateDegenMotifs) { 
 		System.out.println("**Enumerating motifs from degenerate motifs**");
 		MotifDegeneration d = new MotifDegeneration(motifLength, maxDegenThreshold);
-		d.enumerateNonDegenerateMotifs(degenMotifSetPrefix, Integer.parseInt(args[1]), mapOfDegenMotifs);
+		d.enumerateNonDegenerateMotifs(degenMotifSetPrefix, dir3, mapOfDegenMotifs);
 		//		}
 
 	}
