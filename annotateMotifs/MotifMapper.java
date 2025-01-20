@@ -16,7 +16,7 @@ public class MotifMapper {
 	private HashMap<Character, String> characterMap;
 	private HashMap<String, String> idToProteinMap;
 	private String annotationFilePrefix;
-	private File motifDirectory;
+//	private File motifDirectory;
 	private String seqFasta;
 	private String motifFilePrefix;
 
@@ -26,92 +26,92 @@ public class MotifMapper {
 		this.idToProteinMap = loadProteinRefSeqIdMap(ids);
 
 		this.annotationFilePrefix = a;
-		this.motifDirectory = new File(dir);
+//		this.motifDirectory = new File(dir);
 		this.seqFasta = fasta;
 		this.motifFilePrefix = motifs;
 	}
 
-	public void mapMotifsToTheirAssociatedProteins() {
+	public void mapMotifsToTheirAssociatedProteins(int file) {
 
 		/* iterate over list of motifs */
-		int fileCount = this.motifDirectory.list().length;
+		//		int fileCount = this.motifDirectory.list().length;
 
-		for (int i = 0; i < fileCount; i++) {
+		//		for (int i = 0; i < fileCount; i++) {
+		int i = file;
+		System.out.println("searching for motifs in file: " + i);
 
-			System.out.println("searching for motifs in file: " + i);
+		/* load motifs to assess and determine their regular expression */
+		ArrayList<Motif> motifs = initializeMotifs(motifFilePrefix + i);
 
-			/* load motifs to assess and determine their regular expression */
-			ArrayList<Motif> motifs = initializeMotifs(motifFilePrefix + i);
+		Set<String> refSeqIds = this.idToProteinMap.keySet();
 
-			Set<String> refSeqIds = this.idToProteinMap.keySet();
+		try {
+			BufferedReader in = new BufferedReader(
+					new InputStreamReader(new FileInputStream(new File(this.seqFasta))));
 
-			try {
-				BufferedReader in = new BufferedReader(
-						new InputStreamReader(new FileInputStream(new File(this.seqFasta))));
+			String line = in.readLine();
 
-				String line = in.readLine();
+			boolean readSeq = false;
+			String seq = "";
+			String id = "";
+			int seqCount = 1;
 
-				boolean readSeq = false;
-				String seq = "";
-				String id = "";
-				int seqCount = 1;
+			while (line != null) {
 
-				while (line != null) {
-
-					if (readSeq) {
-						seq += line;
-					}
-
-					/* check if sequence is associated to a protein in network */
-					if (line.startsWith(">")) {
-						readSeq = false;
-
-						/* if sequence has been loaded - check for motif in the sequence */
-						if (!seq.isEmpty() && refSeqIds.contains(id)) {
-
-							// System.out.println("sequence : " + id);
-
-							if (seqCount % 10 == 0) {
-								System.out.print(seqCount + ".");
-							}
-
-							if (seqCount % 100 == 0) {
-								System.out.println();
-							}
-
-							for (Motif m : motifs) {
-
-								boolean motifFound = searchSeqForMotif(m.getRegexMotif(), seq);
-
-								if (motifFound) {
-									m.addProtein(this.idToProteinMap.get(id));
-								}
-							}
-						}
-						// >hg38_ncbiRefSeq_NM_001276352.2 range=chr1:67092165-67093579 5'pad=0 3'pad=0
-						// strand=- repeatMasking=none
-						id = line.split("[\\_\\s++\\.]")[2] + "_" + line.split("[\\_\\s++\\.]")[3];
-
-						/* reinitialize parameters for next sequence */
-						if (refSeqIds.contains(id)) {
-
-							if (!line.contains("alt") && !line.contains("_fix")) { // do not consider alternate
-																					// chromosomes
-								readSeq = true;
-								seq = "";
-								seqCount++;
-							}
-						}
-					}
-					line = in.readLine();
+				if (readSeq) {
+					seq += line;
 				}
-				in.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 
-			printAnnotationFile(this.annotationFilePrefix + i, motifs);
+				/* check if sequence is associated to a protein in network */
+				if (line.startsWith(">")) {
+					readSeq = false;
+
+					/* if sequence has been loaded - check for motif in the sequence */
+					if (!seq.isEmpty() && refSeqIds.contains(id)) {
+
+						// System.out.println("sequence : " + id);
+
+						if (seqCount % 10 == 0) {
+							System.out.print(seqCount + ".");
+						}
+
+						if (seqCount % 100 == 0) {
+							System.out.println();
+						}
+
+						for (Motif m : motifs) {
+
+							boolean motifFound = searchSeqForMotif(m.getRegexMotif(), seq);
+
+							if (motifFound) {
+								m.addProtein(this.idToProteinMap.get(id));
+							}
+						}
+					}
+					// >hg38_ncbiRefSeq_NM_001276352.2 range=chr1:67092165-67093579 5'pad=0 3'pad=0
+					// strand=- repeatMasking=none
+					id = line.split("[\\_\\s++\\.]")[2] + "_" + line.split("[\\_\\s++\\.]")[3];
+
+					/* reinitialize parameters for next sequence */
+					if (refSeqIds.contains(id)) {
+
+						if (!line.contains("alt") && !line.contains("_fix")) { // do not consider alternate
+							// chromosomes
+							readSeq = true;
+							seq = "";
+							seqCount++;
+						}
+					}
+				}
+				line = in.readLine();
+			}
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
+		printAnnotationFile(this.annotationFilePrefix + i, motifs);
+		//		}
 	}
 
 	private ArrayList<Motif> initializeMotifs(String motifFile) {
