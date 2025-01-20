@@ -32,21 +32,13 @@ public class precompileMain {
 			dir.mkdir();
 		}
 
-		File dir2 = new File(wd + "/motif_enumeration/mapDegendMotifs");
-		if (! dir2.exists()){
-			dir2.mkdir();
-		}
-
 		File dir3 = new File(wd + "/motif_enumeration/degenMotifSet");
 		if (! dir3.exists()){
 			dir3.mkdir();
 		}
 
-		//		String degenMotifSetPrefix = wd + params.getProperty("degenMotifsToTestPrefix").replace("\\s+", "");
 		String degenMotifSetPrefix = wd + "/motif_enumeration/degenMotifSet/degenMotifs_";
-		//		String motifSetToTest = wd + motifsToTestFile; // if enumerating degen motifs = list of non degen motifs, if mapping degen motifs = list of possible degen motifs
-		String mapOfDegenMotifs = wd + "/motif_enumeration/mapDegendMotifs/mapDegenMotifs_";
-
+	
 		// Enumerating possible degen motifs only needs to be run once; output all possibilities for motifs of length l, with an alphabet of x characters. 
 		//if(enumeratePossibleDegenMotifs) {
 		
@@ -56,14 +48,6 @@ public class precompileMain {
 			d1.generateAllPossibleMotifs(degenMotifSetPrefix);
 		}
 		
-		//}
-
-		// MOTIF DEGENERATION SHOULD BE RUN REMOTELY //
-		//		if(enumerateDegenMotifs) { 
-		System.out.println("**Enumerating motifs from degenerate motifs**");
-		MotifDegeneration d = new MotifDegeneration(motifLength, maxDegenThreshold);
-		d.enumerateNonDegenerateMotifs(degenMotifSetPrefix, Integer.parseInt(args[1]), mapOfDegenMotifs);
-		//		}
 
 	}
 
