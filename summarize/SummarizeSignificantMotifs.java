@@ -1,5 +1,3 @@
-
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -44,7 +42,7 @@ public class SummarizeSignificantMotifs {
 
 		/* load significant motifs - store as Motif element - combine info */
 		System.out.println("** load significant motifs **");
-		List<Motif> significantMotifs = loadSignificantMotifs(significantMotifFile, motifMap, fdrInfo, strandSpecificityMap, proteinMap);
+		List<ClusteredMotif> significantMotifs = loadSignificantMotifs(significantMotifFile, motifMap, fdrInfo, strandSpecificityMap, proteinMap);
 
 		/* print list */
 		System.out.println("** print motif summary **");
@@ -151,10 +149,10 @@ public class SummarizeSignificantMotifs {
 		return proteinMap;	
 	}
 
-	private static List<Motif> loadSignificantMotifs(String significantMotifsFile, HashMap<String, Integer> motifFamily, List<Double[]> fdrInfo, HashMap<String, Double[]> ssMap,
+	private static List<ClusteredMotif> loadSignificantMotifs(String significantMotifsFile, HashMap<String, Integer> motifFamily, List<Double[]> fdrInfo, HashMap<String, Double[]> ssMap,
 			HashMap<String, String> proteinMap){
 
-		List<Motif> significantMotifs = new ArrayList<>();
+		List<ClusteredMotif> significantMotifs = new ArrayList<>();
 
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(significantMotifsFile))));
@@ -173,7 +171,7 @@ public class SummarizeSignificantMotifs {
 				}
 
 				String[] col = line.split("\t");
-				significantMotifs.add(new Motif(col, motifFamily, fdrInfo, ssMap, proteinMap));
+				significantMotifs.add(new ClusteredMotif(col, motifFamily, fdrInfo, ssMap, proteinMap));
 
 				line = in.readLine();
 				motifCount++;
@@ -187,7 +185,7 @@ public class SummarizeSignificantMotifs {
 		return significantMotifs;
 	} 
 
-	private static void printMotifSummary(List<Motif> significantMotifs, String outputFile) {
+	private static void printMotifSummary(List<ClusteredMotif> significantMotifs, String outputFile) {
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
@@ -196,7 +194,7 @@ public class SummarizeSignificantMotifs {
 			out.write("Motif\tFamilyNumber\tNumberOfCoreProteins\tClusteringMeasure\tp-value\tFDR\tStrandSpecificity\tStrandSpecificity(adj.pval)\tProteinList\n");
 
 			/* table */
-			for(Motif m: significantMotifs) {
+			for(ClusteredMotif m: significantMotifs) {
 				out.write(m.getMotif() + "\t" + m.getFamily() + "\t" + m.getNumberOfProteins()+ "\t" + m.getClusteringMeasure() + "\t" 
 						+ m.getPval() + "\t" + m.getFDR() + "\t" + m.getStrandSpecificity() + "\t" + m.getStrandSpecificitySignificance()+ "\t" + m.getProteinList() +"\n");
 				out.flush();

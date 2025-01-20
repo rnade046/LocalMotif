@@ -1,9 +1,7 @@
-
-
 import java.util.HashMap;
 import java.util.List;
 
-public class Motif {
+public class ClusteredMotif {
 
 	private String motif;
 	private double clustering;
@@ -16,8 +14,7 @@ public class Motif {
 	private double strandSpecificity;
 	private double ssSignificance;
 
-
-	public Motif(String[] info, HashMap<String, Integer> motifFamily, List<Double[]> fdrInfo, HashMap<String, Double[]> ssMap,
+	public ClusteredMotif(String[] info, HashMap<String, Integer> motifFamily, List<Double[]> fdrInfo, HashMap<String, Double[]> ssMap,
 			HashMap<String, String> proteinMap) {
 		motif = info[0];
 		numProts = (int) Math.ceil(0.4*Integer.parseInt(info[1]));
