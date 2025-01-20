@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-public class MotifDegeneration {
+public class EnumerateMotifs {
 
 	private int motifLength;
 	private int maxDegenThreshold;
@@ -22,7 +22,7 @@ public class MotifDegeneration {
 	 *                               network
 	 * @param motifLength_           Int - motif length of interst
 	 */
-	public MotifDegeneration(int motifLength_, int maxDegenThreshold_) {
+	public EnumerateMotifs(int motifLength_, int maxDegenThreshold_) {
 		this.motifLength = motifLength_;
 		this.maxDegenThreshold = maxDegenThreshold_;
 		this.degenCharacterSet = new HashSet<>(Arrays.asList('R', 'D', 'H', 'V', 'B', '*')); // Define set of characters
