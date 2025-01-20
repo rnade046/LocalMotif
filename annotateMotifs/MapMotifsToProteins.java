@@ -1,5 +1,3 @@
-package annotateMotifs;
-
 import java.io.File;
 
 public class MapMotifsToProteins {

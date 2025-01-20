@@ -1,5 +1,3 @@
-package annotateMotifs;
-
 import java.util.HashSet;
 
 public class Motif {
