@@ -11,56 +11,7 @@ public class Modifier {
 
 
 	
-	/***
-	 * @deprecated
-	 * Method removes the proteins for the list of proteins in the network that have
-	 * over 1000 interactions. 
-	 ***/
-	public static ArrayList<Protein> removeExcessivelyConnectedProteins(ArrayList<Protein> proteinsInNetworkList, int numberOfInteractionsDeemedExcessive) {
 
-		ArrayList<Protein> updatedProteinsInNetworkList = new ArrayList<Protein>();
-		
-		for (int i=0; i<proteinsInNetworkList.size(); i++) {
-			if(proteinsInNetworkList.get(i).getNumberOfInteractions() < numberOfInteractionsDeemedExcessive) {
-				updatedProteinsInNetworkList.add(proteinsInNetworkList.get(i));
-			}
-		}
-		
-//		System.out.println("numberOfProteins removed = " + (proteinsInNetworkList.size() - updatedProteinsInNetworkList.size()));
-		
-		return updatedProteinsInNetworkList;
-	}
-	
-	/***
-	 * @deprecated
-	 * Method removes the interactions for the list of interactions in the network that have over 1000 interactions. 
-	 * Based off the number of interactions calculated for each proteins in the network 
-	 ***/
-	public static ArrayList<Interaction> removeInteractionsOfExcessivelyConnectedProteins(ArrayList<Protein> proteinsInNetworkList, ArrayList<Interaction> networkInteractionList, int numberOfInteractionsDeemedExcessive){
-		
-		ArrayList<Interaction> updatedInteractionList = new ArrayList<Interaction>();
-		
-		/* search ALL interactions */
-		for(int i=0; i<networkInteractionList.size(); i++) {
-			
-			/* find the indexes of interacting proteins in the protein list */
-			int[] indexesOfInteractors = Calculator.findInteractingProteinsIdxsInProteinNetworkList(networkInteractionList.get(i), proteinsInNetworkList);
-			
-			/* store number of interactions each interactor (protein) is involved in */
-			int nInteractionsProt1 = proteinsInNetworkList.get(indexesOfInteractors[0]).getNumberOfInteractions();
-			int nInteractionsProt2 = proteinsInNetworkList.get(indexesOfInteractors[1]).getNumberOfInteractions();
-			
-			/* only keep interaction if both interactors are involved in less than the number of excess interactions (here 1000) */
-			if(nInteractionsProt1 < numberOfInteractionsDeemedExcessive && nInteractionsProt2 < numberOfInteractionsDeemedExcessive) {
-				updatedInteractionList.add(networkInteractionList.get(i));
-			}
-			
-		}
-		
-//		System.out.println("numberOfInteractions removed = " + (networkInteractionList.size() - updatedInteractionList.size()));
-		
-		return updatedInteractionList;
-	}
 	
 	public static void modifyInteractionWeight(ArrayList<Protein> networkProteins, ArrayList<Interaction> networkInteractions) {
 
