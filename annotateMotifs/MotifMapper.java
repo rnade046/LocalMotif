@@ -41,7 +41,7 @@ public class MotifMapper {
 		System.out.println("searching for motifs in file: " + i);
 
 		/* load motifs to assess and determine their regular expression */
-		ArrayList<Motif> motifs = initializeMotifs(motifFilePrefix + i);
+		ArrayList<Motif> motifs = initializeMotifs(motifFilePrefix + i + ".tsv");
 
 		Set<String> refSeqIds = this.idToProteinMap.keySet();
 
