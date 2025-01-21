@@ -159,10 +159,11 @@ public class ProteinAnnotations {
 		return motifSet;
 	}
 
-	public void combineProteinFrequencyData(String protFreqFilePrefix, int numFiles, String outputFile) {
+	public void combineProteinFrequencyData(String protFreqFilePrefix, File dir, String outputFile) {
 		
 		HashMap<String, Integer> proteinToOccurrenceMap = new HashMap<>();
 		
+		int numFiles = dir.list().length;
 		for(int i=0; i<numFiles; i++) {
 			
 			/* Load individual file protein frequencies and update proteinToOccurenceMap */

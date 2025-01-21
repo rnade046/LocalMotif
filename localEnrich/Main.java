@@ -8,6 +8,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Properties;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.MissingOptionException;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import graph.Interaction;
 import graph.Protein;
 import sampling.ApproximateNormalDistribuiton;
@@ -23,221 +31,271 @@ import utils.NetworkProteins;
 
 public class Main {
 
-	public static void main(String[] args) throws FileNotFoundException, IOException {
-		
-		/* ----------------------------------------------------------- 
-		 * Import parameters
-		 * ----------------------------------------------------------- */
-		System.out.println("** Loading parameters file ** \n");
-		Properties params = new Properties();
-		params.load(new FileInputStream(args[0]));	
-		
-		/* ----------------------------------------------------------- 
-		 * List file paths
-		 * ----------------------------------------------------------- */
+	public static void main(String[] args) throws FileNotFoundException, IOException {		
 
-		String wd = params.getProperty("working_directory");
-		String networkName = params.getProperty("network_name");
+		/* ------- Command line options --------*/
+		System.out.println("Parsing commandline arguments");
 
-		String projectName = "";
+		Options options = initializeOptions();
 
-		if(Boolean.parseBoolean(params.getProperty("nullModel"))){
-			projectName = networkName + "_nullModel";
-		} else {
-			projectName = networkName;
-		}
+		CommandLineParser parser = new DefaultParser();
+		HelpFormatter formatter = new HelpFormatter();
 
-		boolean removeOverlyConnectedProteins = Boolean.parseBoolean(params.getProperty("removeOverlyConnectedProteins"));
-		int maxInteractions = Integer.parseInt(params.getProperty("maxInteractions"));
+		try {
+			CommandLine cmd = parser.parse(options, args);
 
-		String fastaFile = wd + params.getProperty("fastaFile");
-		String mapProtToRefSeqFile = wd + params.getProperty("mapGeneSymbolsToRefSeqIds");
-
-		String correlationRepository = wd + params.getProperty("networkRepositoryFile");
-		String proteinsInNetworkOutputFile = wd + networkName +"_listOfProteinNames.tsv";
-		String protInfoFile = wd + networkName + "_proteinsInNetwork_info.tsv";
-
-		String distanceMatrixFile = wd + networkName + "_distanceMatrix.txt"; 
-		String distanceMatrix2File = wd +  networkName + "_distanceMatrix2.txt";
-
-		if(removeOverlyConnectedProteins) {
-			distanceMatrixFile = wd + networkName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix.txt";
-			distanceMatrix2File = wd + networkName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix2.txt";
-		}
-
-		String annotationWD = params.getProperty("annotationWD");
-		String degenAnnotationPrefix = annotationWD + params.getProperty("annotationPrefix");
-
-		String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
-
-		int clusteringMeasure = Integer.parseInt(params.getProperty("clusteringMeasure", "0"));
-		double percentThreshold = Double.parseDouble(params.getProperty("percentThreshold", "0.2"));
-
-		String clusteringName = "";
-
-		switch(clusteringMeasure) {
-		case 0: clusteringName = "_TPD";
-		break;
-		case 1: clusteringName = "_TPPD_p" + percentThreshold;
-		break;
-		case 2: clusteringName = "_coreTPD_p" + percentThreshold;
-		break;
-		}
-
-		String mcSamplingPrefix = wd + "mcDistributions/" + projectName + clusteringName + "_mcSamplingDistribution_";
-		String normalDistributionParamsFile = wd + projectName + clusteringName +"_normalDistributionParams.tsv";
-
-		String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + clusteringName + "_testedDegenMotifClustering_";
-		String significanceScoresFile = wd + projectName + clusteringName + "_listOfCalculatedSignificanceScores.tsv";
-
-		/* ----------------------------------------------------------------------------------------------------------- 
-		 * Part 1 - Formatting the network 
-		 * 
-		 * + The correlation network is loaded, establishing proteins in the network and their corresponding interaction/relationships
-		 * + The shortest paths are calculated and output as a distance matrix. Only the biggest connected component is kept
-		 * 
-		 * ----------------------------------------------------------------------------------------------------------- */
-		
-		System.out.println("**Loading interaction repository**");
-		ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, 
-				mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold", "0.0")), 
-				removeOverlyConnectedProteins, maxInteractions);
-		System.out.println("Number of interactions:" + interactionList.size() + "\n");
-
-		System.out.println("**Getting list of proteins in network**");
-		ArrayList<Protein> proteinList = NetworkProteins.getProteinsInNetwork(interactionList);
-		System.out.println("Number of Proteins: " + proteinList.size() + "\n");
-
-
-		File f = new File(distanceMatrixFile);
-		if(!f.exists() && !f.isDirectory()) {
-			System.out.println("**Generating distance matrix**");
-			DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
-		}
-
-		/* Perform motif enumeration around here */
-		System.out.println("**Loading distance matrix**");
-		double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
-
-		/* Determine which proteins are disconnected*/ 
-		boolean[] proteinsToKeep = Calculator.determineConnectedProteins(distanceMatrix);
-		/* Update proteins to keep in the network (ie. those that contribute to the most connected component) */
-		ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
-		HashSet<String> proteinSet = NetworkProteins.getProteinSet(proteinList2);
-		
-		if(proteinList.size() != proteinList2.size()) {
-			System.out.println("**Checking for disconnected components**");
-			File f1 = new File(distanceMatrix2File);
-			if(!f1.exists() && !f1.isDirectory()) {
-				/* Update distance matrix to only include proteins that contribute to the most connected component of the graph */
-				System.out.println("**Updating distance matrix**");
-				DistanceMatrix.updateDistanceMatrix(proteinsToKeep, distanceMatrix, distanceMatrix2File);
+			/* ----- help flag ----- */
+			if (cmd.hasOption("h")) {
+				formatter.printHelp("localEnrich.main", options);
 			}
 
-			/* Load distance matrix representing fully connected component */
-			System.out.println("**Loading updated distance matrix**\n");
-			distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrix2File, proteinList2);
-		}
+			/* ------ Import parameters ---------- */
+			System.out.println("Loading properties file");
+			Properties params = new Properties();
+			params.load(new FileInputStream(cmd.getOptionValue("p")));	
 
-		int lowerBound = Integer.parseInt(params.getProperty("lowerBoundToSample", "3"));
-		int upperBound = Integer.parseInt(params.getProperty("upperBoundToSample", "2000"));
-		int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings"));
+			String wd = params.getProperty("working_directory");
 
-		/* ----------------------------------------------------------------------------------------------------------- 
-		 * Part 2 - Create companion files for Monte Carlo Sampling and assessing the clustering of motifs
-		 *
-		 * This section aims to identify any discrepancies between the annotation file and the final network. 
-		 * It serves to confirm the size of annotations for reference during the motif clustering step. 
-		 * ----------------------------------------------------------------------------------------------------------- */
-		
-		File directory3 = new File(params.getProperty("annotationWD") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
-		String annotationCompanionFilePrefix = params.getProperty("annotationWD") + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
-				+ projectName + "_n" + lowerBound + "_" + upperBound + "_motifAnnotationsCompanionFile_";
+			String networkName = params.getProperty("project_name");
 
-		if (! directory3.exists()){
-			System.out.println("creating directory: /CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound);
-			directory3.mkdir();
-		}
+			String projectName = "";
 
-		if(Boolean.parseBoolean(params.getProperty("generateCompanionFiles"))) {
-
-			System.out.println("Creating companion files");
-			AnnotationCompanionFiles.assessAnnotationFile(degenAnnotationPrefix, annotationCompanionFilePrefix, proteinSet, 
-					Integer.parseInt(args[1]), Integer.parseInt(args[2]), lowerBound, upperBound);
-		}
-
-		File directory4 = new File(params.getProperty("annotationWD") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
-		String protFreqFilePrefix = params.getProperty("annotationWD") + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
-				+"/" + projectName + "_n" + lowerBound + "_" + upperBound + "_proteinAnnotationFreq_" ;
-
-		if (! directory4.exists()){
-			System.out.println("creating directory: /ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound);
-			directory4.mkdir();
-		}
-
-		if(Boolean.parseBoolean(params.getProperty("calculateProteinAnnotationFreq"))) {	
-			// For MC sampling 
-			// 1 - Make list: protein = #motifs (degen + non degen) from full annotation list	>> Do this once
-
-			System.out.println("**Enumerating protein annotation frequency files**");
-			ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound, proteinSet);
-			freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, annotationCompanionFilePrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]), protFreqFilePrefix);
-
-			if(directory4.list().length == Integer.parseInt(params.getProperty("numDegenMotifFiles"))) {
-				System.out.println("Combining protein annotation frequency data /n");
-				freq.combineProteinFrequencyData(protFreqFilePrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), proteinAnnotationFrequencyFile);
-			}
-		}
-
-		/* ----------------------------------------------------------------------------------------------------------- 
-		 * Part 3 - Perform Monte Carlo Sampling 
-		 * ----------------------------------------------------------------------------------------------------------- */
-		if(Boolean.parseBoolean(params.getProperty("performMCprocedure"))) {
-			
-			File directory = new File(wd + "/mcDistributions"); 
-			if (! directory.exists()){
-				System.out.println("creating directory: mcDistributions/");
-				directory.mkdir();
+			if(Boolean.parseBoolean(params.getProperty("nullModel"))){
+				projectName = networkName + "_nullModel";
+			} else {
+				projectName = networkName;
 			}
 
-			System.out.println("**Performing Monte Carlo Sampling Procedure**");
-			MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList2, distanceMatrix, clusteringMeasure, percentThreshold); // 2 - Initialize sampling
-			sampling.computeMultipleDistributions(Integer.parseInt(args[1]), Integer.parseInt(args[2]), numOfSamplings, mcSamplingPrefix); // 3 - Perform sampling for n proteins
-		}
+			boolean removeOverlyConnectedProteins = Boolean.parseBoolean(params.getProperty("removeOverlyConnectedProteins"));
+			int maxInteractions = Integer.parseInt(params.getProperty("maxInteractions"));
 
-		/* ----------------------------------------------------------------------------------------------------------- 
-		 * Part 4 - Calculate the mean and standard deviation for each cluster size
-		 * ----------------------------------------------------------------------------------------------------------- */
-		
-		if(Boolean.parseBoolean(params.getProperty("calculateNormalDistributionParams"))) {
-			ApproximateNormalDistribuiton.getNormalDistributionParams(mcSamplingPrefix, lowerBound, upperBound, numOfSamplings, normalDistributionParamsFile);
-		}
-		
-		/* ----------------------------------------------------------------------------------------------------------- 
-		 * Part 5 - Calculate the clustering and clustering significance of each motif
-		 * ----------------------------------------------------------------------------------------------------------- */
-		
-		/* Load and test significance annotations */
-		if(Boolean.parseBoolean(params.getProperty("testMotifs"))) {
-			
-			File directory2 = new File(wd + "/motifClustering");
-			if (! directory2.exists()){
-				System.out.println("creating directory: motifClustering/ \n");
-				directory2.mkdir();
+			String fastaFile = wd + params.getProperty("fastaFile");
+			String mapProtToRefSeqFile = wd + params.getProperty("geneIdsFile");
+
+			String correlationRepository = wd + params.getProperty("networkRepositoryFile");
+			String proteinsInNetworkOutputFile = wd + networkName +"_listOfProteinNames.tsv";
+			String protInfoFile = wd + networkName + "_proteinsInNetwork_info.tsv";
+
+			String distanceMatrixFile = wd + networkName + "_distanceMatrix.txt"; 
+			String distanceMatrix2File = wd +  networkName + "_distanceMatrix2.txt";
+
+			if(removeOverlyConnectedProteins) {
+				distanceMatrixFile = wd + networkName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix.txt";
+				distanceMatrix2File = wd + networkName + "_removedOverConnectedProteins_" + maxInteractions + "_distanceMatrix2.txt";
 			}
-			
-			System.out.println("**Assessing motif clustering**");
-			MotifEnrichment m = new MotifEnrichment(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound,clusteringMeasure, percentThreshold);
-			m.testMotifClustering(degenAnnotationPrefix, annotationCompanionFilePrefix, testedDegenMotifsOutputPrefix, Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-		}
 
-		/* ----------------------------------------------------------------------------------------------------------- 
-		 * Part 6 - Print all significance scores for FDR estimation
-		 * ----------------------------------------------------------------------------------------------------------- */
+			String annotationWD = params.getProperty("annotation_directory");
+			String degenAnnotationPrefix = annotationWD + "/motif_enumeration/annotations/annotation_";
 
-		if(Boolean.parseBoolean(params.getProperty("assessSignificanceScores"))) {
-			System.out.println("**Assessing significance scores**");
-			AssessEnrichment.assessSignificanceScores(testedDegenMotifsOutputPrefix, Integer.parseInt(params.getProperty("numDegenMotifFiles")), significanceScoresFile);
+			String proteinAnnotationFrequencyFile = wd + projectName + "_protFreqAnnotation.tsv";
+
+			int clusteringMeasure = Integer.parseInt(params.getProperty("clusteringMeasure", "0"));
+			double percentThreshold = Double.parseDouble(params.getProperty("percentThreshold", "0.2"));
+
+			String clusteringName = "";
+
+			switch(clusteringMeasure) {
+			case 0: clusteringName = "_TPD";
+			break;
+			case 1: clusteringName = "_TPPD_p" + percentThreshold;
+			break;
+			case 2: clusteringName = "_coreTPD_p" + percentThreshold;
+			break;
+			}
+
+			String mcSamplingPrefix = wd + "mcDistributions/" + projectName + clusteringName + "_mcSamplingDistribution_";
+			String normalDistributionParamsFile = wd + projectName + clusteringName +"_normalDistributionParams.tsv";
+
+			String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + clusteringName + "_testedDegenMotifClustering_";
+			String significanceScoresFile = wd + projectName + clusteringName + "_listOfCalculatedSignificanceScores.tsv";
+
+			/* ----------------------------------------------------------------------------------------------------------- 
+			 * Part 0 - Formatting the network - must be run every time -
+			 * 
+			 * + The correlation network is loaded, establishing proteins in the network and their corresponding interaction/relationships
+			 * + The shortest paths are calculated and output as a distance matrix. Only the biggest connected component is kept
+			 * 
+			 * ----------------------------------------------------------------------------------------------------------- */
+			System.out.println("\nRunning step 0 - initializing network");
+			System.out.println("+ Loading interaction repository");
+			ArrayList<Interaction> interactionList = CorrelationGraphLoader.loadGraphFromCorrelationNetwork(correlationRepository, fastaFile, 
+					mapProtToRefSeqFile, proteinsInNetworkOutputFile, Double.parseDouble(params.getProperty("corrThreshold", "0.0")), 
+					removeOverlyConnectedProteins, maxInteractions);
+			System.out.println("Number of interactions:" + interactionList.size() + "\n");
+
+			System.out.println("+ Getting list of proteins in network");
+			ArrayList<Protein> proteinList = NetworkProteins.getProteinsInNetwork(interactionList);
+			System.out.println("Number of Proteins: " + proteinList.size() + "\n");
+
+			File f = new File(distanceMatrixFile);
+			if(!f.exists() && !f.isDirectory()) {
+				System.out.println("+Generating distance matrix");
+				DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
+			}
+
+			System.out.println("+ Loading distance matrix");
+			double[][] distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrixFile, proteinList); 
+
+			/* Determine which proteins are disconnected*/ 
+			boolean[] proteinsToKeep = Calculator.determineConnectedProteins(distanceMatrix);
+			/* Update proteins to keep in the network (ie. those that contribute to the most connected component) */
+			ArrayList<Protein> proteinList2 = NetworkProteins.modifyNetworkProteinsList(proteinList, proteinsToKeep, protInfoFile);
+			HashSet<String> proteinSet = NetworkProteins.getProteinSet(proteinList2);
+
+			if(proteinList.size() != proteinList2.size()) {
+				//System.out.println("+ Checking for disconnected components");
+				File f1 = new File(distanceMatrix2File);
+				if(!f1.exists() && !f1.isDirectory()) {
+					/* Update distance matrix to only include proteins that contribute to the most connected component of the graph */
+					System.out.println("+ Updating distance matrix without disconnected components");
+					DistanceMatrix.updateDistanceMatrix(proteinsToKeep, distanceMatrix, distanceMatrix2File);
+				}
+
+				/* Load distance matrix representing fully connected component */
+				System.out.println("+ Loading updated distance matrix");
+				distanceMatrix = DistanceMatrix.loadDistanceMatrix(distanceMatrix2File, proteinList2);
+			}
+			System.out.println("--- Completed step 0 ---");
+
+			int lowerBound = Integer.parseInt(params.getProperty("lowerBoundToSample", "3"));
+			int upperBound = Integer.parseInt(params.getProperty("upperBoundToSample", "2000"));
+			int numOfSamplings = Integer.parseInt(params.getProperty("numberOfSamplings", "100000"));
+
+			String protFreqFilePrefix = annotationWD + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
+					+"/" + projectName + "_n" + lowerBound + "_" + upperBound + "_proteinAnnotationFreq_" ;
+			String annotationCompanionFilePrefix = annotationWD + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/" 
+					+ projectName + "_n" + lowerBound + "_" + upperBound + "_motifAnnotationsCompanionFile_";
+
+			/* ------- Get the step number  ---------------*/
+			int step = 0;
+			int fileNumber = 0;
+
+			if(cmd.hasOption("step")) {
+				step = Integer.parseInt(cmd.getOptionValue("step"));
+			}
+			System.out.println("Next step: " + step + "\n");
+			switch(step) {
+			case 1: 
+				/* ----------------------------------------------------------------------------------------------------------- 
+				 * Part 1 - Create companion files for Monte Carlo Sampling and assessing the clustering of motifs
+				 *
+				 * This section aims to identify any discrepancies between the annotation file and the final network. 
+				 * It serves to confirm the size of annotations for reference during the motif clustering step. 
+				 * ----------------------------------------------------------------------------------------------------------- */
+				System.out.println("\n\nRunning step 1 - creating accessory files");
+
+				/* required ARG */
+				if (!cmd.hasOption("a")) {
+					throw new MissingOptionException("The '-a' annotation file number is required for this step");
+				}
+
+				/* file number to test */
+				fileNumber = Integer.parseInt(cmd.getOptionValue("a"));
+
+				/* required directories */
+				String f3 = annotationWD + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/";
+				String f4 = annotationWD + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"; 
+				createDir(f3);
+				createDir(f4);
+
+				System.out.println("+ creating companion file: " + fileNumber);
+				System.out.println("Companion files are stored under : " + annotationWD + "/CompanionFiles_" + projectName + "_n" + lowerBound + "_" + upperBound + "/");
+
+				AnnotationCompanionFiles.assessAnnotationFile(degenAnnotationPrefix, annotationCompanionFilePrefix, proteinSet, 
+						fileNumber, fileNumber, lowerBound, upperBound);
+
+				System.out.println("+ enumerating protein annotation frequency file: " + fileNumber);
+				System.out.println("Annotation frequency files are stored under : " + annotationWD + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/");
+
+				ProteinAnnotations freq = new ProteinAnnotations(lowerBound, upperBound, proteinSet);
+				freq.calculateProteinAnnotationFrequency(degenAnnotationPrefix, annotationCompanionFilePrefix, fileNumber, fileNumber, protFreqFilePrefix);
+
+				System.out.println("--- Completed step 1 ---");
+
+				break;
+			case 2:
+				/* ----------------------------------------------------------------------------------------------------------- 
+				 * Part 2 - Combine protein annotation frequency 
+				 * ----------------------------------------------------------------------------------------------------------- */
+				System.out.println("\nRunning step 2 - combining annotation frequencies");
+				freq = new ProteinAnnotations(lowerBound, upperBound, proteinSet);
+				File directory4 = new File(annotationWD + "/ProtAnnotationFreq_" + projectName + "_n" + lowerBound + "_" + upperBound + "/"); 
+
+				System.out.println("+ Combining protein annotation frequency data");
+				System.out.println("Creating annotation frequency file :" +  proteinAnnotationFrequencyFile);
+
+				freq.combineProteinFrequencyData(protFreqFilePrefix, directory4, proteinAnnotationFrequencyFile);
+
+				System.out.println("--- Completed step 2 ---");
+				break;
+			case 3:
+				/* ----------------------------------------------------------------------------------------------------------- 
+				 * Part 3 - Perform Monte Carlo Sampling 
+				 * ----------------------------------------------------------------------------------------------------------- */
+				System.out.println("\nRunning step 3 - Monte Carlo Sampling procedure");
+				createDir(wd + "/mcDistributions");
+
+				/* required ARG */
+				if (!cmd.hasOption("d")) {
+					throw new MissingOptionException("The '-d' distribution sample size is required for this step");
+				}
+				int sampleSize = Integer.parseInt(cmd.getOptionValue("d"));
+
+				System.out.println("+ Performing Monte Carlo Sampling Procedure : " + sampleSize);
+				System.out.println("Monte Carlo Sampling distributions are stored under : " + wd + "/mcDistributions/");
+
+				MotifSampling sampling = new MotifSampling(proteinAnnotationFrequencyFile, proteinList2, distanceMatrix, clusteringMeasure, percentThreshold); // 2 - Initialize sampling
+				sampling.computeMultipleDistributions(sampleSize, sampleSize, numOfSamplings, mcSamplingPrefix); // 3 - Perform sampling for n proteins
+
+				System.out.println("--- Completed step 3 ---");
+				break;
+			case 4:
+				/* ----------------------------------------------------------------------------------------------------------- 
+				 * Part 4 - Calculate the mean and standard deviation for each cluster size
+				 * ----------------------------------------------------------------------------------------------------------- */
+				System.out.println("\nRunning step 4 - Calculate normal distribution parameters");
+				System.out.println("Creating normal distribution parameters file : "+ normalDistributionParamsFile);
+
+				ApproximateNormalDistribuiton.getNormalDistributionParams(mcSamplingPrefix, lowerBound, upperBound, numOfSamplings, normalDistributionParamsFile);
+				System.out.println("--- Completed step 4 ---");
+				break;
+			case 5:
+				/* ----------------------------------------------------------------------------------------------------------- 
+				 * Part 5 - Calculate the clustering and clustering significance of each motif
+				 * ----------------------------------------------------------------------------------------------------------- */
+
+				System.out.println("\nRunning step 5 - Assess motif clustering and signifcance");
+				createDir(wd + "/motifClustering");
+
+				/* required ARG */
+				if (!cmd.hasOption("a")) {
+					throw new MissingOptionException("The '-a' annotation file number is required for this step");
+				}
+
+				/* file number to test */
+				fileNumber = Integer.parseInt(cmd.getOptionValue("a"));
+
+				System.out.println(" + perform motif clustering: " + fileNumber);
+				System.out.println("Clustering details are stored under: " + wd + "/motifClustering");
+
+				MotifEnrichment m = new MotifEnrichment(distanceMatrix, proteinList2, normalDistributionParamsFile, lowerBound, upperBound,clusteringMeasure, percentThreshold);
+				m.testMotifClustering(degenAnnotationPrefix, annotationCompanionFilePrefix, testedDegenMotifsOutputPrefix, fileNumber, fileNumber);
+
+				System.out.println("--- Completed step 5 ---");
+				break;
+			case 6: 
+				/* ----------------------------------------------------------------------------------------------------------- 
+				 * Part 6 - Print all significance scores for FDR estimation
+				 * ----------------------------------------------------------------------------------------------------------- */
+				System.out.println("\nRunning step 6 - combine significance scores for FDR estimation");
+				File dir = new File(wd + "motifClustering/");
+				AssessEnrichment.assessSignificanceScores(testedDegenMotifsOutputPrefix, dir, significanceScoresFile);
+				System.out.println("--- Completed step 6 ---");
+				break;
+			}
+		} catch (ParseException e) {
+			System.out.println("Error parsing arguments: " + e.getMessage());
+			formatter.printHelp("MapMotifsToProteins", options);
 		}
 
 	}
@@ -290,4 +348,27 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
+
+	private static void createDir(String path) {
+		File dir = new File(path);
+		if (!dir.exists()) {
+			System.out.println("+ creating directory: " + path);
+			dir.mkdir();
+		}
+	}
+
+	private static Options initializeOptions() {
+
+		Options options = new Options();
+
+		options.addOption("p", "properties", true, "properties file");
+		options.addOption("s", "step", true, "step to execute");
+		options.addOption("a", "annotation", true, "annotation file number - required for steps 2, 3, 6");
+		options.addOption("d", "distribution", true, "sample size for Monte Carlo distribution - required for step 4");
+		options.addOption("h", "help", false, "show help");
+
+		return options;
+	}
+
+
 }
