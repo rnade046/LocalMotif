@@ -1,4 +1,4 @@
-public class RandomMain {
+public class RandomSeqMain {
 	
 	public static void main(String[] args) {
 		
