@@ -1,5 +1,3 @@
-package ClusteredMotifs;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -19,7 +17,7 @@ import java.util.Map.Entry;
 public class MotifFamily {
 
 
-	public static void assessMotifFamilies(String motifFamilyFilePrefix, int numberOfFamilies,
+	public static void assessMotifFamilies(String motifFamilyFilePrefix, File motifsDir,
 			String significantMotifFile, String refSeqToMotifFile, String proteinToRefSeqIDsFile, 
 			String motifInstancesPrefix, String outputFilePrefix, String motifsInfoFile, String annotatedProteinsFile) {
 
@@ -29,6 +27,7 @@ public class MotifFamily {
 		/* Load refSeqID : motif list */
 		HashMap<String, HashSet<String>> refSeqIdToMotifsMap = loadRefSeqIDToMotifsMap(refSeqToMotifFile);
 
+		int numberOfFamilies = motifsDir.list().length;
 		for(int i=1; i<=numberOfFamilies; i++) {
 			System.out.println("Motif family : " + i);
 			String motifFamilyFile = motifFamilyFilePrefix + i + ".tsv";

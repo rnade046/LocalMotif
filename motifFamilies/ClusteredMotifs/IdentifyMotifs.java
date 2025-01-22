@@ -1,5 +1,3 @@
-package ClusteredMotifs;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,14 +27,15 @@ public class IdentifyMotifs {
 	 * 
 	 * @return	motifsMapFileIdx		Map<String, Integer> - list of significant motifs and the file index that contains them
 	 */
-	public static void getSignificantMotifs(String motifClusteringPrefix, int numOfFiles, double pvalThreshold, String outputFile) {
-
+	public static void getSignificantMotifs(String motifClusteringPrefix, File dir, double pvalThreshold, String outputFile) {
+		
 		try {
 
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 			out.write("motif\tnProts\tTPD\tPval\t#File\n"); //header
 
 			/* search all files for significant motifs */
+			int numOfFiles = dir.list().length;
 			for(int i=0; i<numOfFiles; i++) {
 
 				if(i%10 == 0) {
@@ -60,6 +59,7 @@ public class IdentifyMotifs {
 					double pval = Double.parseDouble(line.split("\t")[3]);
 					if(pval <= pvalThreshold) {
 						out.write(line + "\t" + i + "\n");
+						out.flush();
 					}
 					line = input.readLine();
 				}
@@ -110,12 +110,13 @@ public class IdentifyMotifs {
 	 * 
 	 * @return motifMapOfannotatedProteins	Map<String, String[]> - map of motif and it's list of annotated proteins
 	 */
-	public static void getAnnotatedProteinInfo(HashMap<String, Integer> motifMapOfFileIdxs, String proteinAnnotationFreqFile, String annotationFilePrefix, String outputFile, int numberOfFiles){
+	public static void getAnnotatedProteinInfo(HashMap<String, Integer> motifMapOfFileIdxs, String proteinAnnotationFreqFile, String annotationFilePrefix, String outputFile, File dir){
 
 		HashSet<String> proteinsInNetwork = getProteinsInNetwork(proteinAnnotationFreqFile);
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File (outputFile)));
 
+			int numberOfFiles = dir.list().length;
 			for(int i=0; i<numberOfFiles; i++) {
 
 				/* Check if significant motif in file - store in set*/
@@ -129,7 +130,7 @@ public class IdentifyMotifs {
 				/* Find corresponding info and print */ 
 				if(!motifSet.isEmpty()) {
 					int motifCount = 0;
-					String annotationFile = annotationFilePrefix + i;
+					String annotationFile = annotationFilePrefix + i + ".tsv";
 
 					InputStream in = new FileInputStream(new File(annotationFile));
 					BufferedReader input = new BufferedReader(new InputStreamReader(in));
