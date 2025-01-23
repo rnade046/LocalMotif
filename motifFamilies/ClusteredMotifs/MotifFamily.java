@@ -3,6 +3,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,22 +18,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MotifFamily {
-	
-	
 
-	public static void assessMotifFamilies(String motifFamilyFilePrefix, File motifsDir,
-			String significantMotifFile,  String proteinToRefSeqIDsFile, 
-			String motifInstancesPrefix, String outputFilePrefix, String motifsInfoFile, String annotatedProteinsFile, String fastaFile) {
+	public static void setMotifFamilyRepresentative(String motifFamilyFilePrefix, String significantMotifFile, File motifsDir, String motifsInfoFile, String height) {
 
-		/* Load protein : refseqId list */
-		HashMap<String, HashSet<String>> proteinToRefSeqIDsMap = loadProteinsToRefSeqIdsMap(proteinToRefSeqIDsFile);
+		int familyCount = getMotifFamilyFiles(motifsDir, height);
+ 		for(int i=1; i<=familyCount; i++) {
 
-		/* map of regular expression characters */
-		HashMap<Character, String> characterMap = setCharacterMapForRegularExpression();
-		
-		int numberOfFamilies = motifsDir.list().length;
-		for(int i=1; i<=numberOfFamilies; i++) {
-			System.out.println("Motif family : " + i);
 			String motifFamilyFile = motifFamilyFilePrefix + i + ".tsv";
 
 			/* Load motifs in motif family identified during hierarchical clustering step */ 
@@ -44,22 +35,38 @@ public class MotifFamily {
 			/* Identify representative motif from list */
 			String representativeMotif = getRepresentativeMotif(motifSignificantMap);
 
-			/* regular expression motif */
-			String regexMotif = formatMotifWithRegularExpression(representativeMotif, characterMap);
-			
-			/* Load list of proteins annotated by representative motif */
-			HashSet<String> annotatedProteinSet = loadProteinsAnnotatedByRepresentativeMotif(representativeMotif, annotatedProteinsFile);
-			
-			ArrayList<String> motifInstances = searchSeqsForMotifInstances(fastaFile, regexMotif, proteinToRefSeqIDsMap, annotatedProteinSet);
-			double[][] ppm = calculatePPM(motifInstances, motifInstances.get(0).length());
+			printMotifInfo(motifsInfoFile, i, representativeMotif);
 
-			String outputFile = outputFilePrefix + i + ".tsv";
-			String motifInstancesFile = motifInstancesPrefix + i;
-			printMotifs(motifInstances, motifInstancesFile);
-			printPPM(ppm, outputFile);
-			printMotifInfo(motifsInfoFile, i, representativeMotif, motifInstances.size());
 		}
 	}
+
+	public static void assessMotifFamilies(String motifsInfoFile, int familyNumber, String proteinToRefSeqIDsFile, 
+			String motifInstancesPrefix, String outputFilePrefix, String annotatedProteinsFile, String fastaFile) {
+
+		/* Load protein : refseqId list */
+		HashMap<String, HashSet<String>> proteinToRefSeqIDsMap = loadProteinsToRefSeqIdsMap(proteinToRefSeqIDsFile);
+
+		/* map of regular expression characters */
+		HashMap<Character, String> characterMap = setCharacterMapForRegularExpression();
+
+		System.out.println("Motif family : " + familyNumber);
+		String motif = getMotifCorrespondingToFamilyNumber(motifsInfoFile, familyNumber);
+
+		/* regular expression motif */
+		String regexMotif = formatMotifWithRegularExpression(motif, characterMap);
+
+		/* Load list of proteins annotated by representative motif */
+		HashSet<String> annotatedProteinSet = loadProteinsAnnotatedByRepresentativeMotif(motif, annotatedProteinsFile);
+
+		ArrayList<String> motifInstances = obtainMotifInstancesForRegexMotif(fastaFile, regexMotif, proteinToRefSeqIDsMap, annotatedProteinSet);
+		double[][] ppm = calculatePPM(motifInstances, motifInstances.get(0).length());
+
+		String outputFile = outputFilePrefix + familyNumber + ".tsv";
+		String motifInstancesFile = motifInstancesPrefix + familyNumber;
+		printMotifs(motifInstances, motifInstancesFile);
+		printPPM(ppm, outputFile);
+	}
+
 
 	/**
 	 * Load the list of proteins in the network and their contributing refSeq Ids. 
@@ -239,8 +246,8 @@ public class MotifFamily {
 		return proteinSet;
 	}
 
-	private static ArrayList<String> searchSeqsForMotifInstances(String fastaFile, String regexMotif, HashMap<String, HashSet<String>> proteinToRefSeqIdsMap, HashSet<String> annotatedProteinSet) {
-		
+	private static ArrayList<String> obtainMotifInstancesForRegexMotif(String fastaFile, String regexMotif, HashMap<String, HashSet<String>> proteinToRefSeqIdsMap, HashSet<String> annotatedProteinSet) {
+
 		/* Search fasta sequence; find instance of motif (ie. convert degen motif to non degen) ; print PWM to file */
 		ArrayList<String> instanceOfMotifList = new ArrayList<>();
 
@@ -248,29 +255,22 @@ public class MotifFamily {
 		 * multiple times in sequence or in different refseqIds (variants) > this is accomplished by 
 		 * making a hash set for every protein (therefore only one instance of any possible motif will
 		 * be kept per protein (from all 3'UTR variants) */ 
-		
+
 		int count = 0;
 		for(String protein : annotatedProteinSet) {
 			count++;
-			HashSet<String> currentInstancesOfMotif = new HashSet<>();
-			
+
 			if(count%10 == 0) {
 				System.out.print(count+".");
 			}
-			
+
 			if(count%100 == 0) {
 				System.out.println();
 			}
-						
-			for(String id : proteinToRefSeqIdsMap.get(protein)) {
-				
-				/* load fasta sequence */
-				String sequence = loadSequence(fastaFile, id);
-				
-				/* find instances of motifs */
-				HashSet<String> instances = searchSeqForMotif(regexMotif, sequence);
-				currentInstancesOfMotif.addAll(instances);
-			}
+
+			/* find instances of motifs in fasta sequences */
+			HashSet<String> currentInstancesOfMotif = searchSequencesForRegexMotifForOneProtein(fastaFile, regexMotif, proteinToRefSeqIdsMap.get(protein));
+
 			/* merge instances with those found */
 			instanceOfMotifList.addAll(currentInstancesOfMotif);
 		}
@@ -348,16 +348,16 @@ public class MotifFamily {
 
 	}
 
-	private static void printMotifInfo(String outputFile, int family, String repMotif, int numInstances) {
+	private static void printMotifInfo(String outputFile, int family, String repMotif) {
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile), true));
 
 			if(new File(outputFile).length() == 0) {
-				out.write("RepMotif\tFamilyNumber\t#Instances\n");
+				out.write("RepMotif\tFamilyNumber\n");
 			}
 
-			out.write(repMotif+ "\t" + family  +"\t" + numInstances + "\n");
+			out.write(repMotif+ "\t" + family + "\n");
 			out.flush();
 			out.close();
 
@@ -366,7 +366,7 @@ public class MotifFamily {
 		}
 
 	}
-	
+
 	/**
 	 * Take input motif and translate to corresponding regular expression.
 	 * 
@@ -385,7 +385,7 @@ public class MotifFamily {
 
 		return formattedMotif;
 	}
-	
+
 	/**
 	 * Search for regex motif in the provided sequence
 	 * 
@@ -402,8 +402,8 @@ public class MotifFamily {
 
 		/* check if motif is contained in the sequence */
 		while (matcher.find()) {
-			  // Get the matched substring
-            motifInstances.add(matcher.group());
+			// Get the matched substring
+			motifInstances.add(matcher.group());
 		}
 		return motifInstances;
 	}
@@ -432,10 +432,10 @@ public class MotifFamily {
 		characterMap.put('*', ".");
 		return characterMap;
 	}
-	
-	private static String loadSequence(String fastaFile, String refSeqId) {
-		
-		String seq = "";
+
+	private static HashSet<String> searchSequencesForRegexMotifForOneProtein(String fastaFile, String motif, HashSet<String> refSeqIds) {
+
+		HashSet<String> instances = new HashSet<>();
 		try {
 			BufferedReader in = new BufferedReader(
 					new InputStreamReader(new FileInputStream(new File(fastaFile))));
@@ -443,6 +443,7 @@ public class MotifFamily {
 			String line = in.readLine();
 
 			boolean readSeq = false;
+			String seq = "";
 			String id = "";
 
 			while (line != null) {
@@ -456,17 +457,18 @@ public class MotifFamily {
 
 					/* if sequence has been loaded - check for motif in the sequence */
 					if (!seq.isEmpty()) {
-						break;
+
+						instances.addAll(searchSeqForMotif(motif, seq));
 					}
 					// >hg38_ncbiRefSeq_NM_001276352.2 range=chr1:67092165-67093579 5'pad=0 3'pad=0
 					// strand=- repeatMasking=none
 					id = line.split("[\\_\\s++\\.]")[2] + "_" + line.split("[\\_\\s++\\.]")[3];
 
 					/* reinitialize parameters for next sequence */
-					if (id.equals(refSeqId) ) {
-							// chromosomes
-							readSeq = true;
-							seq = "";
+					if (refSeqIds.contains(id)) {
+						// chromosomes
+						readSeq = true;
+						seq = "";
 					}
 				}
 				line = in.readLine();
@@ -475,7 +477,53 @@ public class MotifFamily {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return seq;
+		return instances;
+	}
+
+
+	private static String getMotifCorrespondingToFamilyNumber(String motifFamilyFile, int familyNumber){
+
+		String motif = "";
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(motifFamilyFile))));
+
+			String line = in.readLine(); // header
+			line = in.readLine();
+
+			while(line != null) {
+
+				String[] col = line.split("\t"); // [0] = IUPAC motif, [1] = family number
+				if(Integer.parseInt(col[1]) == familyNumber) {
+					motif = col[0];
+				}
+				line = in.readLine();
+			}
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return motif;
+	}
+
+	private static int getMotifFamilyFiles(File dir, String height) {
+		
+		File[] files = null;
+		int fileCount = 0;
+		if (dir.isDirectory()) {
+
+			FilenameFilter filter = new FilenameFilter() {
+				public boolean accept(File f, String name) 
+				{ 
+					return name.startsWith("MotifFamily_h" + height); 
+				} 
+			};
+			
+			files = dir.listFiles(filter);
+			fileCount = files.length;
+		}
+
+		return fileCount;
 	}
 
 }
