@@ -13,20 +13,23 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MotifFamily {
-
+	
+	
 
 	public static void assessMotifFamilies(String motifFamilyFilePrefix, File motifsDir,
-			String significantMotifFile, String refSeqToMotifFile, String proteinToRefSeqIDsFile, 
-			String motifInstancesPrefix, String outputFilePrefix, String motifsInfoFile, String annotatedProteinsFile) {
+			String significantMotifFile,  String proteinToRefSeqIDsFile, 
+			String motifInstancesPrefix, String outputFilePrefix, String motifsInfoFile, String annotatedProteinsFile, String fastaFile) {
 
 		/* Load protein : refseqId list */
 		HashMap<String, HashSet<String>> proteinToRefSeqIDsMap = loadProteinsToRefSeqIdsMap(proteinToRefSeqIDsFile);
 
-		/* Load refSeqID : motif list */
-		HashMap<String, HashSet<String>> refSeqIdToMotifsMap = loadRefSeqIDToMotifsMap(refSeqToMotifFile);
-
+		/* map of regular expression characters */
+		HashMap<Character, String> characterMap = setCharacterMapForRegularExpression();
+		
 		int numberOfFamilies = motifsDir.list().length;
 		for(int i=1; i<=numberOfFamilies; i++) {
 			System.out.println("Motif family : " + i);
@@ -41,13 +44,13 @@ public class MotifFamily {
 			/* Identify representative motif from list */
 			String representativeMotif = getRepresentativeMotif(motifSignificantMap);
 
-			/* Generate list of non degenerate motifs from representative motif */
-			HashSet<String> possibleMotifSet = getPossibleInstancesOfMotif(representativeMotif);
-
+			/* regular expression motif */
+			String regexMotif = formatMotifWithRegularExpression(representativeMotif, characterMap);
+			
 			/* Load list of proteins annotated by representative motif */
 			HashSet<String> annotatedProteinSet = loadProteinsAnnotatedByRepresentativeMotif(representativeMotif, annotatedProteinsFile);
-
-			ArrayList<String> motifInstances = getInstancesOfMotifs(possibleMotifSet, proteinToRefSeqIDsMap, refSeqIdToMotifsMap, annotatedProteinSet);
+			
+			ArrayList<String> motifInstances = searchSeqsForMotifInstances(fastaFile, regexMotif, proteinToRefSeqIDsMap, annotatedProteinSet);
 			double[][] ppm = calculatePPM(motifInstances, motifInstances.get(0).length());
 
 			String outputFile = outputFilePrefix + i + ".tsv";
@@ -88,40 +91,6 @@ public class MotifFamily {
 		}
 
 		return proteinToRefSeqIdsMap;
-	}
-
-
-	/**
-	 * Load list of RefSeqIDs and their contributing motifs. 
-	 * 
-	 * @param refSeqIDToMotifsFile
-	 * @return
-	 */
-	private static HashMap<String, HashSet<String>> loadRefSeqIDToMotifsMap(String refSeqIDToMotifsFile){
-
-		HashMap<String, HashSet<String>> refSeqIdToMotifsMap = new HashMap<>();
-
-		try {
-			InputStream in = new FileInputStream(new File(refSeqIDToMotifsFile));
-			BufferedReader input = new BufferedReader(new InputStreamReader(in));
-
-			String line = input.readLine();
-
-			while(line != null) {
-				String[] col = line.split("\t");
-				if(col.length == 2) {
-					refSeqIdToMotifsMap.put(col[0], new HashSet<String>(Arrays.asList(col[1].split("\\|")))); // col[0] = refSeqId, col[1] = motif1|motif2|motif3
-				}
-				line = input.readLine();
-			}
-
-			input.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return refSeqIdToMotifsMap;
-
 	}
 
 	/**
@@ -242,104 +211,6 @@ public class MotifFamily {
 		return repMotif;
 	}
 
-	private static HashSet<String> getPossibleInstancesOfMotif(String repMotif){
-
-		HashMap<Character, Character[]> charMap = defineDegenCharacterMap();
-		int solutions = calculateSolutions(repMotif, charMap);
-
-		HashSet<String> possibleMotifSet = getAllMotifs(repMotif, solutions, charMap);
-
-
-		return possibleMotifSet;
-	}
-
-	/**
-	 * Define the RNA nucleotide mapping to their possible substitutions (ie. degenerate characters)
-	 * Note: for now this is fix - this could be passed as an input parameter in the future to enable 
-	 * flexible motif representation for users
-	 * Maps RNA nucleotides {A, U, C, G} to possible substitutions (themselves + degenerate characters) 
-	 * 
-	 * @return charMap	 HashMap<Character, Character[]> - map {nucleotide : list of possible characters}
-	 */
-	private static HashMap<Character, Character[]> defineDegenCharacterMap(){
-		HashMap<Character, Character[]> charMap = new HashMap<>();
-
-		Character[] a = {'A'};
-		Character[] t = {'T'};
-		Character[] g = {'G'};
-		Character[] c = {'C'};
-		Character[] r = {'A', 'G'};
-		Character[] y = {'T', 'C'};
-		Character[] d = {'A', 'T', 'G'};
-		Character[] b = {'T', 'G', 'C'};
-		Character[] h = {'A', 'T', 'C'};
-		Character[] v = {'A', 'G', 'C'};
-		Character[] x = {'A', 'T', 'G', 'C'};
-
-		charMap.put('A', a);
-		charMap.put('T', t);
-		charMap.put('G', g);
-		charMap.put('C', c);
-		charMap.put('R', r);
-		charMap.put('Y', y);
-		charMap.put('D', d);
-		charMap.put('B', b);
-		charMap.put('H', h);
-		charMap.put('V', v);
-		charMap.put('*', x);
-
-		return charMap;
-	}
-
-	/**
-	 * Determine the number of possible solutions that will be generated for the given motif length
-	 * This function works simply because there's the same amount of possible letters for each nucleotide
-	 * Therefore the number of solutions will be the same. 
-	 * 
-	 * @param motifLength	int - number of nucleotides considered for a motif (motif size)
-	 * @param charMap		HashMap<Character, Character[]> - map of {nucleotides : list of substitutions}
-	 * 
-	 * @return solutions	int - number of solutions for a given motif of length 8
-	 */
-	private static int calculateSolutions(String motif, HashMap<Character, Character[]> charMap) {
-		int solutions = 1;
-		for(int i = 0; i < motif.length(); i++) {
-			solutions *= charMap.get(motif.charAt(i)).length;
-		}
-		return solutions;
-	} 
-
-
-	/**
-	 * For a given motif produce all possible motifs (ie. degenerate motifs) with given criteria.
-	 * Current criteria includes motifs with a max of 7 degenerate characters. 
-	 * Inspired by Cartesian Products: https://stackoverflow.com/questions/9591561/java-cartesian-product-of-a-list-of-lists  
-	 * 
-	 * @param motif				String - sequence motifs 
-	 * @return degenerateMotifs ArrayList<String> - all possible degenerate sequence motifs 
-	 */
-	private static HashSet<String> getAllMotifs(String motif, int solutions, HashMap<Character, Character[]> charMap) {
-		HashSet<String> motifs = new HashSet<>();
-
-		/* generate all solutions */ 
-		for(int i = 0; i < solutions; i++) {
-			int j = 1;
-			String seq = "";
-			/* generate a given motif */
-			for(int k=0; k < motif.length() ; k++) {
-				Character[] set = charMap.get(motif.charAt(k));
-
-				char charToAppend = set[(i/j)%set.length]; // magic 
-				seq += charToAppend;
-				j *= set.length;
-			}
-
-			motifs.add(seq);
-
-		}	
-		return motifs;
-	}
-
 	private static HashSet<String> loadProteinsAnnotatedByRepresentativeMotif(String representativeMotif, String annotatedProteinsFile){
 
 		HashSet<String> proteinSet = new HashSet<>();
@@ -368,9 +239,8 @@ public class MotifFamily {
 		return proteinSet;
 	}
 
-	private static ArrayList<String> getInstancesOfMotifs(HashSet<String> possibleMotifs, HashMap<String, HashSet<String>> proteinToRefSeqIdsMap,
-			HashMap<String, HashSet<String>> refSeqIdToMotifsMap, HashSet<String> annotatedProteinSet) {
-
+	private static ArrayList<String> searchSeqsForMotifInstances(String fastaFile, String regexMotif, HashMap<String, HashSet<String>> proteinToRefSeqIdsMap, HashSet<String> annotatedProteinSet) {
+		
 		/* Search fasta sequence; find instance of motif (ie. convert degen motif to non degen) ; print PWM to file */
 		ArrayList<String> instanceOfMotifList = new ArrayList<>();
 
@@ -378,28 +248,31 @@ public class MotifFamily {
 		 * multiple times in sequence or in different refseqIds (variants) > this is accomplished by 
 		 * making a hash set for every protein (therefore only one instance of any possible motif will
 		 * be kept per protein (from all 3'UTR variants) */ 
-
-		for(Entry<String, HashSet<String>> proteinEntry : proteinToRefSeqIdsMap.entrySet()) { // Entry<Protein, List of RefSeqIDs>
-
-			/* check if protein is associated to representative motif */
-			if(annotatedProteinSet.contains(proteinEntry.getKey())) {
-				HashSet<String> currentInstancesOfMotif = new HashSet<>();
-
-				for(String id: proteinEntry.getValue()) { // iterating over every RefSeq Id associated to protein
-
-					if(refSeqIdToMotifsMap.containsKey(id)) {  // Map: RefSeqID = list of Motifs
-
-						/* Iterate through motifs associated to refseq Id, store motif if corresponds to a possible motif instance */
-						for(String motif: refSeqIdToMotifsMap.get(id)) {
-							if(possibleMotifs.contains(motif)) {
-								currentInstancesOfMotif.add(motif);
-							}
-						}
-					}
-				}
-				instanceOfMotifList.addAll(currentInstancesOfMotif);
-
+		
+		int count = 0;
+		for(String protein : annotatedProteinSet) {
+			count++;
+			HashSet<String> currentInstancesOfMotif = new HashSet<>();
+			
+			if(count%10 == 0) {
+				System.out.print(count+".");
 			}
+			
+			if(count%100 == 0) {
+				System.out.println();
+			}
+						
+			for(String id : proteinToRefSeqIdsMap.get(protein)) {
+				
+				/* load fasta sequence */
+				String sequence = loadSequence(fastaFile, id);
+				
+				/* find instances of motifs */
+				HashSet<String> instances = searchSeqForMotif(regexMotif, sequence);
+				currentInstancesOfMotif.addAll(instances);
+			}
+			/* merge instances with those found */
+			instanceOfMotifList.addAll(currentInstancesOfMotif);
 		}
 		return instanceOfMotifList;
 	}
@@ -493,6 +366,116 @@ public class MotifFamily {
 		}
 
 	}
+	
+	/**
+	 * Take input motif and translate to corresponding regular expression.
+	 * 
+	 * @param motif        String - initial motif
+	 * @param characterMap HashMap<Character, String> - conversion map with regular
+	 *                     expressions
+	 * @return formattedMotif String - motif formatted with regular expression
+	 */
+	private static String formatMotifWithRegularExpression(String motif, HashMap<Character, String> characterMap) {
 
+		String formattedMotif = "";
+
+		for (int i = 0; i < motif.length(); i++) {
+			formattedMotif += characterMap.get(motif.charAt(i));
+		}
+
+		return formattedMotif;
+	}
+	
+	/**
+	 * Search for regex motif in the provided sequence
+	 * 
+	 * @param motif    String - motif formatted with regular expression
+	 * @param sequence String - RNA sequence to search
+	 * @return motifFound Boolean - true if motif is found in sequence
+	 */
+	private static HashSet<String> searchSeqForMotif(String motif, String sequence) {
+
+		HashSet<String> motifInstances = new HashSet<>();
+
+		Pattern pattern = Pattern.compile(motif); // compile motif as REGEX
+		Matcher matcher = pattern.matcher(sequence); // match pattern to sequence
+
+		/* check if motif is contained in the sequence */
+		while (matcher.find()) {
+			  // Get the matched substring
+            motifInstances.add(matcher.group());
+		}
+		return motifInstances;
+	}
+
+	/**
+	 * Set character map - hard coded with alphabet used throughout analysis
+	 * 
+	 * Values follow known IUPAC regular expression e.g. R = "[AG]"
+	 * 
+	 * @return characterMap HashMap<Character, String>
+	 */
+	private static HashMap<Character, String> setCharacterMapForRegularExpression() {
+
+		HashMap<Character, String> characterMap = new HashMap<>();
+
+		characterMap.put('A', "A");
+		characterMap.put('C', "C");
+		characterMap.put('G', "G");
+		characterMap.put('T', "T");
+		characterMap.put('R', "[AG]");
+		characterMap.put('Y', "[CT]");
+		characterMap.put('D', "[ATG]");
+		characterMap.put('B', "[TGC]");
+		characterMap.put('H', "[AUC]");
+		characterMap.put('V', "[AGC]");
+		characterMap.put('*', ".");
+		return characterMap;
+	}
+	
+	private static String loadSequence(String fastaFile, String refSeqId) {
+		
+		String seq = "";
+		try {
+			BufferedReader in = new BufferedReader(
+					new InputStreamReader(new FileInputStream(new File(fastaFile))));
+
+			String line = in.readLine();
+
+			boolean readSeq = false;
+			String id = "";
+
+			while (line != null) {
+
+				if (readSeq) {
+					seq += line;
+				}
+				/* check if sequence is associated to a protein in network */
+				if (line.startsWith(">")) {
+					readSeq = false;
+
+					/* if sequence has been loaded - check for motif in the sequence */
+					if (!seq.isEmpty()) {
+						break;
+					}
+					// >hg38_ncbiRefSeq_NM_001276352.2 range=chr1:67092165-67093579 5'pad=0 3'pad=0
+					// strand=- repeatMasking=none
+					id = line.split("[\\_\\s++\\.]")[2] + "_" + line.split("[\\_\\s++\\.]")[3];
+
+					/* reinitialize parameters for next sequence */
+					if (id.equals(refSeqId) ) {
+							// chromosomes
+							readSeq = true;
+							seq = "";
+					}
+				}
+				line = in.readLine();
+			}
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return seq;
+	}
 
 }

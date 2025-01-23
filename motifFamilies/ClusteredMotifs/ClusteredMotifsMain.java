@@ -63,6 +63,7 @@ public class ClusteredMotifsMain {
 			break;
 			}
 
+			String fastaFile = wd + params.getProperty("fastaFile");
 			String motifClusteringPrefix = wd + "motifClustering/" + networkName + clusteringName + "_MotifClustering_";
 
 			String significantMotifsFile = wd +  networkName + clusteringName +"_signficantMotifs_p" + pvalThreshold +".tsv";
@@ -74,9 +75,6 @@ public class ClusteredMotifsMain {
 			String corePorteinsFile = wd + networkName + clusteringName +"_coreProteinsByMotif_p" + pvalThreshold + ".tsv";
 
 			String proteinToRefSeqIdFile = wd +  networkName + "_proteinsInNetwork_info.tsv";
-			String enumeratedMotifs = wd +  "motifFamilies/" + networkName + "_enumeratedMotifsPerRefSeqId.tsv";
-
-			String familyFolder = networkName + clusteringName + "_p" + pvalThreshold + "/";
 
 			/* directories */
 			File motifClusteringDir =  new File(wd + "motifClustering/");
@@ -125,12 +123,6 @@ public class ClusteredMotifsMain {
 					directory2.mkdir();
 				}
 
-				File dir3 = new File(wd + "/motifFamilies/" + familyFolder);
-				if (! dir3.exists()){
-					System.out.println("creating directory: " + familyFolder + "\n");
-					dir3.mkdir();
-				}
-
 				String motifsInMatrixFile = wd +  "motifFamilies/" + networkName + clusteringName + "_p" + pvalThreshold + "_MotifsInMatrix.tsv";
 				String similarityMatrix = wd + "motifFamilies/"+ networkName + clusteringName + "_p" + pvalThreshold + "_DistanceMatrix.tsv" ;
 				System.out.println("**Loading annotation info**");
@@ -174,13 +166,12 @@ public class ClusteredMotifsMain {
 				String motifPPMPrefix = wd +  "motifFamilies/" +  condition + networkName + clusteringName+ "_h" + height + "_ppm_motifFamilyGroup";
 				String motifInfoFile = wd +  "motifFamilies/" + condition + networkName + clusteringName + "_h" + height+ "_motifFamiliesInfo.tsv";
 
-				String motifFamilyFilePrefix = wd +  "motifFamilies/" + condition + networkName + clusteringName + "_h" + height +"_group";
+				String motifFamilyFilePrefix = wd +  "motifFamilies/" + condition + "MotifFamily_h" + height +"_group";
 
-				int numberOfFamilies = Integer.parseInt(params.getProperty("motifFamilyGroups", "10"));
 				File motifsDir = new File(wd + "motifFamilies/" + condition);
 				System.out.println("**Assessing motif families**");
-				MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, motifsDir, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, extractedAnnotationsFile);
-
+				MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, motifsDir, significantMotifsFile, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, extractedAnnotationsFile, fastaFile);
+				
 				String wd4r = wd + "motifFamilies/" + condition;
 				String projectName = networkName + clusteringName;
 
@@ -189,7 +180,7 @@ public class ClusteredMotifsMain {
 				argsR[1] = "seqLogo.R";
 				argsR[2] = wd4r;
 				argsR[3] = projectName;
-				argsR[4] = String.valueOf(numberOfFamilies);
+				argsR[4] = String.valueOf(motifsDir.list().length);
 				argsR[5] = String.valueOf(height);
 
 				Runtime.getRuntime().exec(argsR);
@@ -199,25 +190,25 @@ public class ClusteredMotifsMain {
 					double height2 = Double.parseDouble(params.getProperty("coreHeight", "0"));
 					condition = "Groups_CoreProteins_h" + height + "/";
 
-					motifInstancesPrefix = wd + "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_motifInstances_motifFamily";
-					motifPPMPrefix = wd +  "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_ppm_motifFamilyGroup";
-					motifInfoFile = wd +  "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_motifFamiliesInfo.tsv";
+					motifInstancesPrefix = wd + "motifFamilies/" + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_motifInstances_motifFamily";
+					motifPPMPrefix = wd +  "motifFamilies/" + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_ppm_motifFamilyGroup";
+					motifInfoFile = wd +  "motifFamilies/" + condition + networkName + clusteringName + "_coreProteins_h" + height2 + "_motifFamiliesInfo.tsv";
 
-					motifFamilyFilePrefix = wd +  "motifFamilies/" + familyFolder + condition + networkName + clusteringName + "_CoreProteins_p" + pvalThreshold + "_ward.D2_h"+ height2 +"_group";
+					motifFamilyFilePrefix = wd +  "motifFamilies/" + condition + networkName + clusteringName + "_CoreProteins_p" + pvalThreshold + "_ward.D2_h"+ height2 +"_group";
 					
 					motifsDir = new File(wd + "motifFamilies/" + condition);
 					System.out.println("**Assessing motif instances for Core Proteins**");
-					MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, motifsDir, significantMotifsFile, enumeratedMotifs, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, corePorteinsFile);
+					MotifFamily.assessMotifFamilies(motifFamilyFilePrefix, motifsDir, significantMotifsFile, proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, motifInfoFile, extractedAnnotationsFile, fastaFile);
 
 					/* Generate */ 
-					wd4r = wd + "motifFamilies/" + familyFolder + condition;
+					wd4r = wd + "motifFamilies/" + condition;
 					projectName = networkName + clusteringName + "_CoreProteins";
 
 					argsR[0] = "/usr/local/bin/Rscript";
 					argsR[1] = "seqLogo.R";
 					argsR[2] = wd4r;
 					argsR[3] = projectName;
-					argsR[4] = String.valueOf(numberOfFamilies);
+					argsR[4] = String.valueOf(motifsDir.list().length);
 					argsR[5] = String.valueOf(height);
 
 					Runtime.getRuntime().exec(argsR);
