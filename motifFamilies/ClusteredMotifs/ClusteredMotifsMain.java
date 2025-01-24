@@ -196,7 +196,9 @@ public class ClusteredMotifsMain {
 				System.out.println("+ Assessing motif families");
 				MotifFamily.setMotifFamilyRepresentative(motifFamilyFilePrefix, significantMotifsFile, motifsDir, motifInfoFile, height);
 				System.out.println("\nRepresentative motifs are found under : " + motifInfoFile);
-
+				
+				
+				
 				System.out.println("--- Completed step 2 ---");
 				break;
 
@@ -260,8 +262,8 @@ public class ClusteredMotifsMain {
 		Options options = new Options();
 
 		options.addOption("p", "properties", true, "properties file");
-		options.addOption("s", "step", true, "step to execute, options [1-3]");
 		options.addOption("t", "threshold", true, "p-value threshold, range [0.0-1.0] "); 
+		options.addOption("s", "step", true, "step to execute, options [1-3]");
 		options.addOption("m", "mode", true, "values are 'all' or 'core', required for step 2 and 3");
 		options.addOption("c", "cutree", true, "cutree height, required for step 3");
 		options.addOption("n", "motifNumber", true, "number corresponding to motif family to evaluate, required for step 3");
