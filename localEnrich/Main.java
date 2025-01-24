@@ -106,8 +106,8 @@ public class Main {
 			String mcSamplingPrefix = wd + "mcDistributions/" + projectName + clusteringName + "_mcSamplingDistribution_";
 			String normalDistributionParamsFile = wd + projectName + clusteringName +"_normalDistributionParams.tsv";
 
-			String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + clusteringName + "_testedDegenMotifClustering_";
-			String significanceScoresFile = wd + projectName + clusteringName + "_listOfCalculatedSignificanceScores.tsv";
+			String testedDegenMotifsOutputPrefix = wd + "motifClustering/" + projectName + clusteringName + "_MotifClustering_";
+			String significanceScoresFile = wd + projectName + clusteringName + "_SignificanceScores.tsv";
 
 			/* ----------------------------------------------------------------------------------------------------------- 
 			 * Part 0 - Formatting the network - must be run every time -
@@ -129,7 +129,7 @@ public class Main {
 
 			File f = new File(distanceMatrixFile);
 			if(!f.exists() && !f.isDirectory()) {
-				System.out.println("+Generating distance matrix");
+				System.out.println("+ Generating distance matrix");
 				DistanceMatrix.computeDistanceMatrix(interactionList, proteinList, distanceMatrixFile);
 			}
 
@@ -362,9 +362,9 @@ public class Main {
 		Options options = new Options();
 
 		options.addOption("p", "properties", true, "properties file");
-		options.addOption("s", "step", true, "step to execute");
-		options.addOption("a", "annotation", true, "annotation file number - required for steps 2, 3, 6");
-		options.addOption("d", "distribution", true, "sample size for Monte Carlo distribution - required for step 4");
+		options.addOption("s", "step", true, "step to execute, range [1-6]");
+		options.addOption("a", "annotation", true, "annotation file number, required for steps [2,3,6], range [0-999]");
+		options.addOption("d", "distribution", true, "sample size for Monte Carlo distribution, required for step 4, recommended range [20-2000]");
 		options.addOption("h", "help", false, "show help");
 
 		return options;

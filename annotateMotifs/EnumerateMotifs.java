@@ -26,8 +26,6 @@ public class EnumerateMotifs {
 		this.motifLength = motifLength_;
 		this.maxDegenThreshold = maxDegenThreshold_;
 		this.degenCharacterSet = new HashSet<>(Arrays.asList('R', 'D', 'H', 'V', 'B', '*')); // Define set of characters
-																								// that are degenerate
-																								// characters
 	}
 
 	public void generateAllPossibleMotifs(String outputFilePrefix) {

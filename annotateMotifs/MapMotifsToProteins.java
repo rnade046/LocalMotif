@@ -95,8 +95,8 @@ public class MapMotifsToProteins {
 		Options options = new Options();
 
 		options.addOption("p", "properties", true, "properties file");
-		options.addOption("s", "step", true, "step to execute");
-		options.addOption("n", "file_number", true, "number of file to map");
+		options.addOption("s", "step", true, "step to execute [1, 2]");
+		options.addOption("n", "file_number", true, "number of file to map, range [0-999]");
 		options.addOption("h", "help", false, "show help");
 
 		return options;
