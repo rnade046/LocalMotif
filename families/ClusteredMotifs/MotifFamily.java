@@ -21,9 +21,11 @@ import java.util.regex.Pattern;
 
 public class MotifFamily {
 
-	public static void setMotifFamilyRepresentative(String motifFamilyFilePrefix, String significantMotifFile, File motifsDir, String motifsInfoFile, String height) {
-
-		int familyCount = getMotifFamilyFiles(motifsDir, height);
+	public static ArrayList<Family> setMotifFamilyRepresentative(String motifFamilyFilePrefix, String significantMotifFile, File motifsDir, String motifsInfoFile, String height) {
+		
+		ArrayList<Family> motifs = new ArrayList<>();
+				
+ 		int familyCount = getMotifFamilyFiles(motifsDir, height);
 		
  		for(int i=1; i<=familyCount; i++) {
 
@@ -39,8 +41,9 @@ public class MotifFamily {
 			String representativeMotif = getRepresentativeMotif(motifSignificantMap);
 
 			printMotifInfo(motifsInfoFile, i, representativeMotif);
-
+			motifs.add(new Family(representativeMotif, i, motifSet));
 		}
+ 		return motifs;
 	}
 
 	public static void assessMotifFamilies(String motifsInfoFile, int familyNumber, String proteinToRefSeqIDsFile, 
@@ -357,7 +360,7 @@ public class MotifFamily {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile), true));
 
 			if(new File(outputFile).length() == 0) {
-				out.write("RepMotif\tFamilyNumber\n");
+				out.write("RepMotif\tFamilyNumber\tAllMotifs\n");
 			}
 
 			out.write(repMotif+ "\t" + family + "\n");

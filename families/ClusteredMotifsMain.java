@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -14,6 +15,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import ClusteredMotifs.*;
+import summarizeMotifs.SummarizeSignificantMotifs;
 
 public class ClusteredMotifsMain {
 
@@ -151,7 +153,6 @@ public class ClusteredMotifsMain {
 				HashMap<String, String[]> motifMapOfAnnotatedProteins = IdentifyMotifs.loadAnnotatedProteinInfo(extractedAnnotationsFile);
 				System.out.println("Found motif info: " + motifMapOfAnnotatedProteins.size() + "\n");
 
-
 				System.out.println("+ Computing similarity");
 				Similarity.computeMotifSimilary(motifMapOfAnnotatedProteins, motifsInMatrixFile, similarityMatrix);
 				System.out.println("\nCreated similarity matrix for all proteins: " + similarityMatrix);
@@ -186,9 +187,21 @@ public class ClusteredMotifsMain {
 				if (!cmd.hasOption("c")) {
 					throw new MissingOptionException("The '-c' cutree height is required");
 				}
+				
+				/* required ARG */
+				if (!cmd.hasOption("c")) {
+					throw new MissingOptionException("The '-f' path to FDRdetails.tsv is required");
+				}
+				
 				/* Assess motif families */ 
 				String height = cmd.getOptionValue("c");
-
+				
+				String currentAnnotationFile = "";
+				if(mode == "all") {
+					currentAnnotationFile = extractedAnnotationsFile;
+				} else {
+					currentAnnotationFile = corePorteinsFile;
+				}
 				createDir(wd + "/motifFamilies/" + condition + "pwm/");
 
 				String motifFamilyFilePrefix = wd +  "motifFamilies/" + condition + "MotifFamily_h" + height +"_group";
@@ -196,10 +209,12 @@ public class ClusteredMotifsMain {
 
 				File motifsDir = new File(wd + "motifFamilies/" + condition);
 				System.out.println("+ Assessing motif families");
-				MotifFamily.setMotifFamilyRepresentative(motifFamilyFilePrefix, significantMotifsFile, motifsDir, motifInfoFile, height);
+				ArrayList<Family> motifs = MotifFamily.setMotifFamilyRepresentative(motifFamilyFilePrefix, significantMotifsFile, motifsDir, motifInfoFile, height);
 				System.out.println("\nRepresentative motifs are found under : " + motifInfoFile);
 				
-				
+				System.out.println("+ Summarizing significant motifs");
+				String summaryOutputFile = wd + "motifFamilies/" + networkName + clusteringName + "_p" + pvalThreshold + "_" + mode + "_h" + height + "_motifSummary.tsv";
+				SummarizeSignificantMotifs.summarizeMotifs(motifs, cmd.getOptionValue('f'), currentAnnotationFile, significantMotifsFile, summaryOutputFile);
 				
 				System.out.println("--- Completed step 2 ---");
 				break;
@@ -268,6 +283,7 @@ public class ClusteredMotifsMain {
 		options.addOption("s", "step", true, "step to execute, options [1-3]");
 		options.addOption("m", "mode", true, "values are 'all' or 'core', required for step 2 and 3");
 		options.addOption("c", "cutree", true, "cutree height, required for step 3");
+		options.addOption("f", "FDR", true, "file path to FDRdetails.tsv, required fro step 3");
 		options.addOption("n", "motifNumber", true, "number corresponding to motif family to evaluate, required for step 3");
 		options.addOption("h", "help", false, "show help");
 
