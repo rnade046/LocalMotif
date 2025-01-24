@@ -11,11 +11,8 @@ public class ClusteredMotif {
 	private String[] protList;
 	private boolean family;
 	private int familyNumber;
-	private double strandSpecificity;
-	private double ssSignificance;
 
-	public ClusteredMotif(String[] info, HashMap<String, Integer> motifFamily, List<Double[]> fdrInfo, HashMap<String, Double[]> ssMap,
-			HashMap<String, String> proteinMap) {
+	public ClusteredMotif(String[] info, HashMap<String, Integer> motifFamily, List<Double[]> fdrInfo, HashMap<String, String> proteinMap) {
 		motif = info[0];
 		numProts = (int) Math.ceil(0.4*Integer.parseInt(info[1]));
 		clustering = Double.parseDouble(info[2]);
@@ -24,7 +21,6 @@ public class ClusteredMotif {
 		setFamily(motifFamily);
 		setFDR(fdrInfo);
 
-		setStrandSpecificity(ssMap);
 		setProteinList(proteinMap);
 	}
 
@@ -65,14 +61,6 @@ public class ClusteredMotif {
 			num = this.familyNumber;
 		} 
 		return num;
-	}
-
-	public double getStrandSpecificity() {
-		return this.strandSpecificity;
-	}
-
-	public double getStrandSpecificitySignificance() {
-		return this.ssSignificance;
 	}
 
 	private void setFamily(HashMap<String, Integer> motifFamily) {
@@ -118,15 +106,6 @@ public class ClusteredMotif {
 			}
 		}
 		return fdr;
-	}
-
-	private void setStrandSpecificity(HashMap<String, Double[]> ssMap) {
-
-		if(ssMap.containsKey(this.motif)) {
-			Double[] ssInfo = ssMap.get(this.motif);
-			this.strandSpecificity = ssInfo[0];
-			this.ssSignificance = ssInfo[1];
-		}
 	}
 	
 	private void setProteinList(HashMap<String, String> proteinMap) {

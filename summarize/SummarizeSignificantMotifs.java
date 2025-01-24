@@ -20,8 +20,6 @@ public class SummarizeSignificantMotifs {
 		String proteinAnnotationFile = wd + "corrNetTop2-400_coreTPD_p0.4_coreProteinsByMotif.tsv";
 
 		String fdrInfoFile = wd + "/fdr/corrNet2-400/coreTPD/2022.03.08.11.22.43_corrNetTop2-400_coreTPD_p0.4_FDRatThresholds_monotonicTransformation_s100.000.tsv";
-		String strandSpecificityFile = wd + "/MotifPosition/coreTPD0.4/StrandSpecificity_corrNet2-400_coreTPD_p0.4_3UTR_allMotifs.tsv";
-
 		String outputFile = wd + "/fdr/corrNet2-400_coreTPD_0.4_s100.000_motifSummary.tsv";
 
 		/* load motif family info map {motif = number} */
@@ -32,17 +30,13 @@ public class SummarizeSignificantMotifs {
 		System.out.println("** load FDR info **");
 		List<Double[]> fdrInfo = loadFDRinfo(fdrInfoFile);
 
-		/* load strand specificity */
-		System.out.println("** load strand specificity **");
-		HashMap<String, Double[]> strandSpecificityMap = loadStrandSpecificity(strandSpecificityFile);
-
 		/* load protein list */
 		System.out.println("** load proteins **");
 		HashMap<String, String> proteinMap = loadProteinList(proteinAnnotationFile);
 
 		/* load significant motifs - store as Motif element - combine info */
 		System.out.println("** load significant motifs **");
-		List<ClusteredMotif> significantMotifs = loadSignificantMotifs(significantMotifFile, motifMap, fdrInfo, strandSpecificityMap, proteinMap);
+		List<ClusteredMotif> significantMotifs = loadSignificantMotifs(significantMotifFile, motifMap, fdrInfo, proteinMap);
 
 		/* print list */
 		System.out.println("** print motif summary **");
@@ -100,31 +94,6 @@ public class SummarizeSignificantMotifs {
 		return fdrInfo;
 	}
 
-	private static HashMap<String, Double[]> loadStrandSpecificity(String ssFile){
-
-		HashMap<String, Double[]> ssMap = new HashMap<>();
-
-		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(ssFile))));
-
-			String line = in.readLine(); // header
-			line = in.readLine();
-
-			while(line != null) {
-
-				String[] col = line.split("\t");
-				ssMap.put(col[0], new Double[] {Double.parseDouble(col[3]), Double.parseDouble(col[5])});
-
-				line = in.readLine();
-			}
-			in.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return ssMap;
-
-	}
 
 	private static HashMap<String, String> loadProteinList(String proteinAnnotationFile){
 
@@ -149,8 +118,7 @@ public class SummarizeSignificantMotifs {
 		return proteinMap;	
 	}
 
-	private static List<ClusteredMotif> loadSignificantMotifs(String significantMotifsFile, HashMap<String, Integer> motifFamily, List<Double[]> fdrInfo, HashMap<String, Double[]> ssMap,
-			HashMap<String, String> proteinMap){
+	private static List<ClusteredMotif> loadSignificantMotifs(String significantMotifsFile, HashMap<String, Integer> motifFamily, List<Double[]> fdrInfo, HashMap<String, String> proteinMap){
 
 		List<ClusteredMotif> significantMotifs = new ArrayList<>();
 
@@ -171,7 +139,7 @@ public class SummarizeSignificantMotifs {
 				}
 
 				String[] col = line.split("\t");
-				significantMotifs.add(new ClusteredMotif(col, motifFamily, fdrInfo, ssMap, proteinMap));
+				significantMotifs.add(new ClusteredMotif(col, motifFamily, fdrInfo, proteinMap));
 
 				line = in.readLine();
 				motifCount++;
@@ -191,12 +159,12 @@ public class SummarizeSignificantMotifs {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile)));
 
 			/* header */
-			out.write("Motif\tFamilyNumber\tNumberOfCoreProteins\tClusteringMeasure\tp-value\tFDR\tStrandSpecificity\tStrandSpecificity(adj.pval)\tProteinList\n");
+			out.write("Motif\tFamilyNumber\tNumberOfCoreProteins\tClusteringMeasure\tp-value\tFDR\tProteinList\n");
 
 			/* table */
 			for(ClusteredMotif m: significantMotifs) {
 				out.write(m.getMotif() + "\t" + m.getFamily() + "\t" + m.getNumberOfProteins()+ "\t" + m.getClusteringMeasure() + "\t" 
-						+ m.getPval() + "\t" + m.getFDR() + "\t" + m.getStrandSpecificity() + "\t" + m.getStrandSpecificitySignificance()+ "\t" + m.getProteinList() +"\n");
+						+ m.getPval() + "\t" + m.getFDR() + "\t" + m.getProteinList() +"\n");
 				out.flush();
 			}
 
