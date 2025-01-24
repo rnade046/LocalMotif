@@ -1,3 +1,5 @@
+package ClusteredMotifs;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,6 +24,7 @@ public class MotifFamily {
 	public static void setMotifFamilyRepresentative(String motifFamilyFilePrefix, String significantMotifFile, File motifsDir, String motifsInfoFile, String height) {
 
 		int familyCount = getMotifFamilyFiles(motifsDir, height);
+		
  		for(int i=1; i<=familyCount; i++) {
 
 			String motifFamilyFile = motifFamilyFilePrefix + i + ".tsv";

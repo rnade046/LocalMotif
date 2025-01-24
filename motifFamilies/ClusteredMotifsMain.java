@@ -13,6 +13,8 @@ import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import ClusteredMotifs.*;
+
 public class ClusteredMotifsMain {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
