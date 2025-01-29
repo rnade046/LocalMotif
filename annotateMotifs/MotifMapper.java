@@ -34,9 +34,9 @@ public class MotifMapper {
 	public void mapMotifsToTheirAssociatedProteins(int file) {
 
 		/* iterate over list of motifs */
-		//		int fileCount = this.motifDirectory.list().length;
+		// int fileCount = this.motifDirectory.list().length;
 
-		//		for (int i = 0; i < fileCount; i++) {
+		// for (int i = 0; i < fileCount; i++) {
 		int i = file;
 		System.out.println("searching for motifs in file: " + i);
 
@@ -46,8 +46,7 @@ public class MotifMapper {
 		Set<String> refSeqIds = this.idToProteinMap.keySet();
 
 		try {
-			BufferedReader in = new BufferedReader(
-					new InputStreamReader(new FileInputStream(new File(this.seqFasta))));
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(this.seqFasta))));
 
 			String line = in.readLine();
 
@@ -110,8 +109,8 @@ public class MotifMapper {
 			e.printStackTrace();
 		}
 
-		printAnnotationFile(this.annotationFilePrefix + i, motifs);
-		//		}
+		printAnnotationFile(this.annotationFilePrefix + i + ".tsv", motifs);
+		// }
 	}
 
 	private ArrayList<Motif> initializeMotifs(String motifFile) {

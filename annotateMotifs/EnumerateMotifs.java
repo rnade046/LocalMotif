@@ -1,3 +1,4 @@
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -76,7 +77,7 @@ public class EnumerateMotifs {
 
 		BufferedWriter out;
 		try {
-			out = new BufferedWriter(new FileWriter(new File(outputFile + fileIdx)));
+			out = new BufferedWriter(new FileWriter(new File(outputFile + fileIdx + ".tsv")));
 
 			for (String motif : degenMotifs.keySet()) {
 

@@ -27,7 +27,7 @@ public class MapMotifsToProteins {
 			/* ----- Params file ----- */
 			System.out.println("Loading parameters file\n");
 			Properties params = new Properties();
-			params.load(new FileInputStream(cmd.getOptionValue("p")));	
+			params.load(new FileInputStream(cmd.getOptionValue("p")));
 
 			String wd = params.getProperty("annotation_directory");
 
@@ -35,14 +35,14 @@ public class MapMotifsToProteins {
 			createDir(wd + "/motif_enumeration/");
 			createDir(wd + "/motif_enumeration/annotations/");
 			createDir(wd + "/motif_enumeration/motifs/");
-			
+
 			String motifPrefixFile = wd + "/motif_enumeration/motifs/motifs_";
 
 			/* Get the step number */
 			int step = Integer.parseInt(cmd.getOptionValue("step"));
 
-			switch(step) {
-			case 1: 
+			switch (step) {
+			case 1:
 				/* ------- Step 1: Enumerate motifs ---------- */
 				int motifLength = 8;
 				int maxDegenThreshold = 7;
@@ -54,25 +54,30 @@ public class MapMotifsToProteins {
 				d1.generateAllPossibleMotifs(motifPrefixFile);
 				break;
 
-			case 2: 
+			case 2:
 				/* ---- Step 2: Generate annotation files ----- */
-				
+
 				/* required ARG */
 				if (!cmd.hasOption("n")) {
-					throw new MissingOptionException("The '--file_number' option is required for the motif mapping step");
+					throw new MissingOptionException(
+							"The '--file_number' option is required for the motif mapping step");
 				}
-				
+
 				/* i/o files */
 				String fastaFile = wd + params.getProperty("fastaFile");
 				String ids = wd + params.getProperty("geneIdsFile");
 				String annotationFile = wd + "/motif_enumeration/annotations/annotation_";
 
 				System.out.println("Running Step 2: Generating annotation file - " + cmd.getOptionValue("n"));
-				System.out.println("Annotation files will be stored under: " + wd + "motif_enumeration/annotations/ \n");
+				System.out
+						.println("Annotation files will be stored under: " + wd + "motif_enumeration/annotations/ \n");
 
 				String motifDir = wd + "/motif_enumeration/degenMotifSet/"; // unused
-				
-				/* finds motif lists generated in step 1 in seq.fasta and maps it to corresponding protein */
+
+				/*
+				 * finds motif lists generated in step 1 in seq.fasta and maps it to
+				 * corresponding protein
+				 */
 				MotifMapper m = new MotifMapper(ids, annotationFile, fastaFile, motifDir, motifPrefixFile);
 				m.mapMotifsToTheirAssociatedProteins(Integer.parseInt(cmd.getOptionValue("n")));
 				break;
