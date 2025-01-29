@@ -197,7 +197,7 @@ public class ClusteredMotifsMain {
 				String height = cmd.getOptionValue("c");
 				
 				String currentAnnotationFile = "";
-				if(mode == "all") {
+				if(mode.equals("all")) {
 					currentAnnotationFile = extractedAnnotationsFile;
 				} else {
 					currentAnnotationFile = corePorteinsFile;
@@ -239,6 +239,7 @@ public class ClusteredMotifsMain {
 				String motifInstancesPrefix = wd + "motifFamilies/" + condition + "pwm/" +  networkName + clusteringName + "_h" + height + "_motifInstances_motifFamily";
 				String motifPPMPrefix = wd +  "motifFamilies/" +  condition + "pwm/" + networkName + clusteringName+ "_h" + height + "_ppm_motifFamilyGroup";
 				motifInfoFile = wd +  "motifFamilies/" + condition + networkName + clusteringName + "_h" + height+ "_motifFamiliesInfo.tsv";
+				
 				MotifFamily.assessMotifFamilies(motifInfoFile, Integer.parseInt(cmd.getOptionValue("n")), proteinToRefSeqIdFile, motifInstancesPrefix, motifPPMPrefix, extractedAnnotationsFile, fastaFile);
 				System.out.println("\nPWM are stored : " + wd + "motifFamilies/" + condition + "pwm/");
 
