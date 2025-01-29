@@ -40,7 +40,7 @@ public class MotifFamily {
 			/* Identify representative motif from list */
 			String representativeMotif = getRepresentativeMotif(motifSignificantMap);
 
-			printMotifInfo(motifsInfoFile, i, representativeMotif);
+			printMotifInfo(motifsInfoFile, i, representativeMotif, motifSet);
 			motifs.add(new Family(representativeMotif, i, motifSet));
 		}
  		return motifs;
@@ -354,7 +354,7 @@ public class MotifFamily {
 
 	}
 
-	private static void printMotifInfo(String outputFile, int family, String repMotif) {
+	private static void printMotifInfo(String outputFile, int family, String repMotif, HashSet<String> motifSet) {
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(outputFile), true));
@@ -363,7 +363,13 @@ public class MotifFamily {
 				out.write("RepMotif\tFamilyNumber\tAllMotifs\n");
 			}
 
-			out.write(repMotif+ "\t" + family + "\n");
+			out.write(repMotif+ "\t" + family + "\t");
+			
+			for(String m : motifSet) {
+				out.write(m +"|");
+			}
+			
+			out.write("\n");
 			out.flush();
 			out.close();
 
