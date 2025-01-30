@@ -37,11 +37,9 @@ is a useful tool to generate this file.
 
 4. Parameters file - supplied *params.txt* file. It is passed to the program as command line argument. It is important to specify the working directory, file paths and the proper parameters. 
 
-
     
 # Pipeline
 ![graphical representation of pipeline](http://url/to/img.png) 
-
 
 
 ## 1. Motif annotation
@@ -58,8 +56,8 @@ Identifies motifs from the input sequences (.fasta) and generates an annotation 
 
 #### Compile instructions
 ```bash session
-cd path/to/directory/MotifLocal/annotateMotifs/
-javac -cp ".:commons-cli-1.9.0.jar" *.java
+cd path/to/directory/MotifLocal/
+javac -cp ".:commons-cli-1.9.0.jar" annotateMotifs/*.java
 ```
 
 #### Implementation
@@ -67,13 +65,14 @@ Note : given the size of motifs to test and time complexity of this algorithm, i
 
 ```bash session
 # step 1 = lists motifs
-java -cp ".:commons-cli-1.9.0.jar" MapMotifsToProteins -p path/to/motifLocal.properties -s 1
-
+java -cp ".:commons-cli-1.9.0.jar:annotateMotifs" MapMotifsToProteins -p path/to/motifLocal.properties -s 1
+```
+```bash
 # step 2 = generate annotation file
 # can be optimized with job parallelization
 for file in {0..999};
 do
-   java -Xmx4g -cp ".:commons-cli-1.9.0.jar" MapMotifsToProteins -p path/to/motifLocal.properties -s 2 -n $file
+   java -Xmx4g -cp ".:commons-cli-1.9.0.jar:annotateMotifs" MapMotifsToProteins -p path/to/motifLocal.properties -s 2 -n $file
 done
 ```
 
@@ -86,13 +85,12 @@ Shuffles sequences within non-overlapping windows. Randomized sequences are used
 
 #### Compile instructions
 ```bash session
-cd path/to/directory/randomizeSequences/
-javac *.java
+javac randomizeSeq/*.java
 ```
 
 #### Implementation
 ```bash
-java RandomSeqMain /path/to/sequences.fasta /path/to/geneIds.tsv
+java java -cp "randomizeSeq" RandomSeqMain /path/to/sequences.fasta /path/to/geneIds.tsv
 ```
 
 #### Output
@@ -113,49 +111,49 @@ Assesses the local enrichment of proteins associated with the same sequence moti
 
 #### Compiling
 ```bash
-cd path/to/directory/localEnrich
-javac -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" *.java graph/*.java utils/*.java sampling/*.java
+cd path/to/directory/MotifLocal
+javac -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:localEnrich" $(find localEnrich -name "*.java")
 ```
 
 #### Implementation
-Note : given the size of motifs to test and time complexity of this algorithm, it is recommended to execute this part of the program on a server with job parallelization capabilities.  
+Note : given the size of motifs to test and time complexity of this algorithm, it is recommended to execute this part of the program on a server with job parallelization capabilities.
 
 ```bash
 # step 0 - initialize network 
-java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" Main -p path/to/motifLocal.properties
+java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:localEnrich" Main -p path/to/motifLocal.properties
 ```
 ```bash
 # step 1 - create accessory files (note: can be optimized with job parallelization)
 for file in {0..999};
 do
-java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" Main -p path/to/motifLocal.properties -s 1 -a $file
+java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:localEnrich" Main -p path/to/motifLocal.properties -s 1 -a $file
 done
 ```
 ```bash
 # step 2 - combine protein frequencies
-java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" Main -p path/to/motifLocal.properties -s 2
+java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:localEnrich" Main -p path/to/motifLocal.properties -s 2
 ```
 ```bash
 # step 3 - perform Monte Carlo Sampling (note: can be optimized with job parallelization)
 for sampleSize in {20..2000}
 do
-java -Xmx4g -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" Main -p path/to/motifLocal.properties -s 3 -d $sampleSize
+java -Xmx4g -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:localEnrich" Main -p path/to/motifLocal.properties -s 3 -d $sampleSize
 done
 ```
 ```bash
 # step 4 - compute normal distribution parameters
-java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" Main -p path/to/motifLocal.properties -s 4
+java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:localEnrich" Main -p path/to/motifLocal.properties -s 4
 ```
 ```bash
 # step 5 - assess motif clustering and significance (note: can be optimized with job parallelization)
 for file in {0..999};
 do
-java -Xmx4g -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" Main -p path/to/motifLocal.properties -s 5 -a $file
+java -Xmx4g -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:localEnrich" Main -p path/to/motifLocal.properties -s 5 -a $file
 done
 ```
 ```bash
 # step 6 - combine signficance scores for FDR estimation
-java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" Main -p path/to/motifLocal.properties -s 6
+java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:localEnrich" Main -p path/to/motifLocal.properties -s 6
 ```
 
 ## 4. FDR estimation 
@@ -169,11 +167,11 @@ The algorithm false discovery rate is estimate by comparing the clustering perfo
 #### Compiling
 ```bash
 cd path/to/directory/fdr
-javac -cp ".:commons-math3-3.6.1.jar" *.java
+javac -cp ".:commons-math3-3.6.1.jar" fdr/*.java
 ```
 #### Implementation
 ```bash
-java -cp ".:commons-math3-3.6.1.jar" MainFDR working/directory/path/ significanceScores.tsv nullModel_significanceScores.tsv
+java -cp ".:commons-math3-3.6.1.jar:fdr" MainFDR working/directory/path/ significanceScores.tsv nullModel_significanceScores.tsv
 ```
 #### Output
 * Table file indicating the FDR estimated at given *p*-value thresholds and number of motifs significantly clustered at this threshold  (e.g.`FDRatThresholds_monotonicTransformation.tsv`). Note: this file should be moved to the default working-directory for this project for the next steps.
