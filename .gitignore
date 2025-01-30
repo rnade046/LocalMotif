@@ -6,3 +6,15 @@ dict
 .gitattributes
 .project
 .ipynb_checkpoints
+fdr/FormatOutput.java
+fdr/SetAnnotationFDR.java
+localEnrich/utils/Loader.java
+localEnrich/utils/Exporter.java
+localEnrich/utils/General.java
+localEnrich/utils/Modifier.java
+localEnrich/utils/NormalApproximation.java
+localEnrich/utils/RandomizeProteinAnnotations.java
+localEnrich/utils/SaintGraphLoader.java
+summarize/ClusteredMotif.java
+summarize/FindMotifScoresFromOtherMeasures.java
+summarize/SummarizeSignificantMotifs.java
