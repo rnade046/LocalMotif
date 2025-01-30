@@ -22,11 +22,10 @@ public class CorrelationGraphLoader {
 		
 		/* Load interactions with correlation score greater or equal to correlation threshold */
 		HashMap<String, Double> confidentInteractionsMap = getConfidentInteractions(inputRepository, threshold);
-		//HashSet<String> confidentProteinSet = getConfidentProteins(confidentInteractionsMap);
-		//printProteinsInNetwork(confidentProteinSet, proteinsInNetworkFile);
-		
+
 		/* Load RefSeq IDs for which we have a correspond FASTA sequence */
 		HashSet<String> possibleRefSeqIds = generateRefSeqSet(fastaFile);
+		
 		/* Load list of Proteins and their possible RefSeq IDs keeping only the IDs for which we have a sequence */
 		HashMap<String, ArrayList<String>> mapProtToRefSeqIds = getRefSeqIdsInNetwork(mapProtToRefSeqIdsFile, possibleRefSeqIds);
 		
