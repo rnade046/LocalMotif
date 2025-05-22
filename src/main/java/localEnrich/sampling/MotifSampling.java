@@ -1,4 +1,4 @@
-package sampling;
+package localEnrich.sampling;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ThreadLocalRandom;
 
-import graph.Protein;
-import utils.TopPercentPairwiseDistance;
+import localEnrich.graph.Protein;
+import localEnrich.utils.TopPercentPairwiseDistance;
 
 public class MotifSampling {
 	/**

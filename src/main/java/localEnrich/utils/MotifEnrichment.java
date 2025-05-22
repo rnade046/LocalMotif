@@ -1,4 +1,4 @@
-package utils;
+package localEnrich.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -14,7 +14,7 @@ import java.util.HashSet;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 
-import graph.Protein;
+import localEnrich.graph.Protein;
 
 public class MotifEnrichment {
 

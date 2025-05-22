@@ -1,9 +1,9 @@
-package summarizeMotifs;
+package families.summarizeMotifs;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import ClusteredMotifs.Family;
+import families.ClusteredMotifs.Family;
 
 public class ClusteredMotif {
 

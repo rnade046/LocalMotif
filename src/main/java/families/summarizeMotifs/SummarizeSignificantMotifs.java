@@ -1,4 +1,4 @@
-package summarizeMotifs;
+package families.summarizeMotifs;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import ClusteredMotifs.Family;
+import families.ClusteredMotifs.Family;
 
 public class SummarizeSignificantMotifs {
 

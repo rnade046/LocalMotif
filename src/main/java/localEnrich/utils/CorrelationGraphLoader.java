@@ -1,4 +1,5 @@
-package utils;
+package localEnrich.utils;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,7 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 
-import graph.Interaction;
+import localEnrich.graph.Interaction;
 
 
 public class CorrelationGraphLoader {

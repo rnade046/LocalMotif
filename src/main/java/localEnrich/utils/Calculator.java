@@ -1,14 +1,11 @@
-package utils;
+package localEnrich.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 
-import graph.Annotation;
-import graph.Interaction;
-import graph.Protein;
-import graph.Association;
+import localEnrich.graph.*;
 
 public class Calculator {
 

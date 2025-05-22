@@ -1,7 +1,7 @@
-package sampling;
+package localEnrich.sampling;
 
-import graph.Annotation;
-import utils.TopPercentPairwiseDistance;
+import localEnrich.graph.Annotation;
+import localEnrich.utils.TopPercentPairwiseDistance;
 
 import java.io.BufferedWriter;
 import java.io.File;

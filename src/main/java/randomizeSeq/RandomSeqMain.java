@@ -1,3 +1,4 @@
+package randomizeSeq;
 public class RandomSeqMain {
 	
 	public static void main(String[] args) {

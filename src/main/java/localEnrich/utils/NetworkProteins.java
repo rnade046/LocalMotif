@@ -1,4 +1,4 @@
-package utils;
+package localEnrich.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -8,8 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import graph.Interaction;
-import graph.Protein;
+import localEnrich.graph.*;
 
 public class NetworkProteins {
 

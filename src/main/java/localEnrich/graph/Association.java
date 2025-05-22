@@ -1,4 +1,5 @@
-package graph;
+package localEnrich.graph;
+
 
 public class Association {
 

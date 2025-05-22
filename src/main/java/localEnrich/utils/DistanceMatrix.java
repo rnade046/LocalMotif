@@ -1,4 +1,4 @@
-package utils;
+package localEnrich.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -10,8 +10,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import graph.Interaction;
-import graph.Protein;
+import localEnrich.graph.*;
 
 public class DistanceMatrix {
 

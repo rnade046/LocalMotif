@@ -1,4 +1,5 @@
-package sampling;
+package localEnrich.sampling;
+
 
 import java.io.BufferedReader;
 import java.io.File;

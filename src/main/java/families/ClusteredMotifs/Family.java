@@ -1,4 +1,5 @@
-package ClusteredMotifs;
+package families.ClusteredMotifs;
+
 
 import java.util.HashSet;
 

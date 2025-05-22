@@ -1,3 +1,5 @@
+package families;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,8 +16,8 @@ import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import ClusteredMotifs.*;
-import summarizeMotifs.SummarizeSignificantMotifs;
+import families.ClusteredMotifs.*;
+import families.summarizeMotifs.SummarizeSignificantMotifs;
 
 public class ClusteredMotifsMain {
 

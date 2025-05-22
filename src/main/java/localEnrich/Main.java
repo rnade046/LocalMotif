@@ -1,3 +1,5 @@
+package localEnrich;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,18 +18,9 @@ import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import graph.Interaction;
-import graph.Protein;
-import sampling.ApproximateNormalDistribuiton;
-import sampling.MotifSampling;
-import sampling.ProteinAnnotations;
-import utils.AnnotationCompanionFiles;
-import utils.AssessEnrichment;
-import utils.Calculator;
-import utils.CorrelationGraphLoader;
-import utils.DistanceMatrix;
-import utils.MotifEnrichment;
-import utils.NetworkProteins;
+import localEnrich.graph.*;
+import localEnrich.sampling.*;
+import localEnrich.utils.*;
 
 public class Main {
 
