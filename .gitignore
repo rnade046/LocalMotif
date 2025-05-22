@@ -21,3 +21,6 @@ summarize/SummarizeSignificantMotifs.java
 families/HierarchicalClustering_1.R
 families/HierarchicalClustering_3.R
 families/HierarchicalClustering_2.R
+src/main/java/families/HierarchicalClustering_3.R
+src/main/java/families/HierarchicalClustering_1.R
+src/main/java/families/HierarchicalClustering_2.R
