@@ -57,7 +57,7 @@ public class MotifMapper {
 
 			while (line != null) {
 
-				if (readSeq) {
+				if (readSeq && !line.startsWith(">")) {
 					seq += line;
 				}
 
