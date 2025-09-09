@@ -65,8 +65,8 @@ public class MotifMapper {
 					out.write("\n");
 					out.flush();
 				}
-				out.close();
 			}
+			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
