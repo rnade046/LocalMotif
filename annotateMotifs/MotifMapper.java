@@ -42,25 +42,29 @@ public class MotifMapper {
 		System.out.println("searching for motifs in file: " + i);
 
 		/* load motifs (in batches of 1000) to assess and determine their regular expression */
-		List<List<Motif>> motifs = initializeMotifsInBatches(motifFilePrefix + i + ".tsv");
+		List<List<String>> motifs = initializeMotifsInBatches(motifFilePrefix + i + ".tsv");
 
 		Set<String> refSeqIds = this.idToProteinMap.keySet();
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(this.annotationFilePrefix + i + ".tsv")));
 			
-			for(List<Motif> motifSubset : motifs) {
+			int batchCounter = 0;
+			for(List<String> motifSubList : motifs) {
+				
+				batchCounter++;
+				System.out.println("motif batch: " + batchCounter);
 				
 				/* find motif instances in FASTA sequences and attribute to corresponding protein */
-				List<Motif> motifSubsetFilled = matchMotifsInFastaToProteinIds(motifSubset, refSeqIds);
+				List<Motif> motifSubset = initializeMotifSubsetList(motifSubList);
+				motifSubset = matchMotifsInFastaToProteinIds(motifSubset, refSeqIds);
 				
 				/* print annotation info for motif subset */
-				for (Motif m : motifSubsetFilled) {
+				for (Motif m : motifSubset) {
 					
 					out.write(m.getMotifIUPAC() + "\t" + m.getProteins().size() + "\t");
 					for (String p : m.getProteins()) {
 						out.write(p + "|");
-						out.flush();
 					}
 					out.write("\n");
 					out.flush();
@@ -72,32 +76,28 @@ public class MotifMapper {
 		}
 	}
 
-	private List<List<Motif>> initializeMotifsInBatches(String motifFile) {
+	private List<List<String>> initializeMotifsInBatches(String motifFile) {
 
 		/* obtain original list of motifs */
-		ArrayList<Motif> motifList = new ArrayList<>();
+		List<String> motifList = new ArrayList<>();
 		try {
 			FileInputStream in = new FileInputStream(new File(motifFile));
 			BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
 			String motif = input.readLine();
 			while (motif != null) {
-
-				/* determine possible instances of motif */
-				String regexMotif = formatMotifWithRegularExpression(motif);
-				motifList.add(new Motif(motif, regexMotif));
-
+				
+				motifList.add(motif);
 				/* read next motif in file */
 				motif = input.readLine();
 			}
 			input.close();
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
 		/* batch motifs into chunks of 1000 for sequential annotations */
-		List<List<Motif>> motifListBatches = new ArrayList<>();
+		List<List<String>> motifListBatches = new ArrayList<>();
 		int batchSize=1000;
 
 		for(int i=0; i<motifList.size(); i+=batchSize) {
@@ -106,6 +106,17 @@ public class MotifMapper {
 		}
 
 		return motifListBatches;
+	}
+	
+	private List<Motif> initializeMotifSubsetList(List<String> motifs){
+		ArrayList<Motif> motifList = new ArrayList<>();
+		
+		for(String m: motifs) {
+			/* determine possible instances of motif */
+			String regexMotif = formatMotifWithRegularExpression(m);
+			motifList.add(new Motif(m, regexMotif));
+		}
+		return motifList;
 	}
 
 	private List<Motif> matchMotifsInFastaToProteinIds(List<Motif> motifList, Set<String> refSeqIds){
@@ -118,7 +129,6 @@ public class MotifMapper {
 			boolean readSeq = false;
 			String seq = "";
 			String id = "";
-			int seqCount = 1;
 
 			while (line != null) {
 
@@ -134,14 +144,6 @@ public class MotifMapper {
 					if (!seq.isEmpty() && refSeqIds.contains(id)) {
 
 						// System.out.println("sequence : " + id);
-
-						if (seqCount % 10 == 0) {
-							System.out.print(seqCount + ".");
-						}
-
-						if (seqCount % 100 == 0) {
-							System.out.println();
-						}
 
 						for (Motif m : motifList) {
 
@@ -163,7 +165,6 @@ public class MotifMapper {
 							// chromosomes
 							readSeq = true;
 							seq = "";
-							seqCount++;
 						}
 					}
 				}
