@@ -107,7 +107,7 @@ E.g. ~/Documents/project/
 All Java source code must be compiled before execution.
 ```bash 
 cd path/to/directory/LocalMotif/
-javac -cp ".:commons-cli-1.9.0.jar" annotateMotifs/*.java
+javac -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" annotateMotifs/*.java
 javac randomizeSeq/*.java
 javac -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar" $(find localEnrich -name "*.java")
 javac -cp ".:commons-math3-3.6.1.jar" fdr/*.java
@@ -140,14 +140,14 @@ Note : given the size of motifs to test and time complexity of this algorithm, i
 
 ```bash session
 # step 1 = lists motifs
-java -cp ".:commons-cli-1.9.0.jar:annotateMotifs" MapMotifsToProteins -p path/to/localMotif.properties -s 1
+java -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:annotateMotifs" MapMotifsToProteins -p path/to/localMotif.properties -s 1
 ```
 ```bash
 # step 2 = generate annotation file
 # can be optimized with job parallelization
 for file in {0..999};
 do
-   java -Xmx4g -cp ".:commons-cli-1.9.0.jar:annotateMotifs" MapMotifsToProteins -p path/to/localMotif.properties -s 2 -n $file
+   java -Xmx4g -cp ".:commons-cli-1.9.0.jar:commons-math3-3.6.1.jar:annotateMotifs" MapMotifsToProteins -p path/to/localMotif.properties -s 2 -n $file
 done
 ```
 ## 2. Shuffle sequences

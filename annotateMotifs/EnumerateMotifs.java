@@ -91,10 +91,8 @@ public class EnumerateMotifs {
 					}
 				}
 
-				/*
-				 * motif must pass max number of degenerate character threshold to be considered
-				 * in our approach
-				 */
+				/* motif must pass max number of degenerate character threshold to be considered
+				 * in our approach */
 				if (degenCount <= this.maxDegenThreshold) {
 					out.write(motif + "\n");
 					out.flush();
