@@ -29,27 +29,22 @@ public class AnnotationCompanionFiles {
 
 		//for(int i=0; i<numFiles; i++) {
 		for(int i=args1; i <= args2; i++) {
-			
-			System.out.print(i+ ".");
-			
-			if(i%10 == 0) {
-				System.out.println();
-			}
 
 			File f = new File(companionFilePrefix + i);
-			if(!f.exists()) { 
+			try {
+				InputStream in = new FileInputStream(new File(annotationPrefix + i + ".tsv"));
+				BufferedReader input = new BufferedReader(new InputStreamReader(in));
 
-				try {
-					InputStream in = new FileInputStream(new File(annotationPrefix + i + ".tsv"));
-					BufferedReader input = new BufferedReader(new InputStreamReader(in));
+				BufferedWriter out = new BufferedWriter(new FileWriter(f));
 
-					BufferedWriter out = new BufferedWriter(new FileWriter(new File(companionFilePrefix + i)));
+				String line = input.readLine(); // no header
 
-					String line = input.readLine(); // no header
+				while(line!= null) {
 
-					while(line!= null) {
-
-						String[] col = line.split("\t");
+					String[] col = line.split("\t");
+					
+					/* ignore motifs that didn't match to any proteins */
+					if(col.length > 2) {
 						String motif = col[0];
 						String[] proteins = col[2].split("\\|");
 
@@ -66,14 +61,13 @@ public class AnnotationCompanionFiles {
 							out.write(motif + "\t" + proteins.length + "\t" + protCount + "\n");
 							out.flush();
 						}
-
-						line = input.readLine();
 					}
-					input.close();
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+					line = input.readLine();
 				}
+				input.close();
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
