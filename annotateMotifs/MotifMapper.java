@@ -266,7 +266,7 @@ public class MotifMapper {
 		characterMap.put('Y', "[CT]");
 		characterMap.put('D', "[ATG]");
 		characterMap.put('B', "[TGC]");
-		characterMap.put('H', "[AUC]");
+		characterMap.put('H', "[ATC]");
 		characterMap.put('V', "[AGC]");
 		characterMap.put('*', ".");
 		return characterMap;
