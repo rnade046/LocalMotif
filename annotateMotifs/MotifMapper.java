@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,17 +18,17 @@ public class MotifMapper {
 	private HashMap<Character, String> characterMap;
 	private HashMap<String, String> idToProteinMap;
 	private String annotationFilePrefix;
-	//	private File motifDirectory;
+	private Set<String> refSeqIds;
 	private String seqFasta;
 	private String motifFilePrefix;
 
-	public MotifMapper(String ids, String a, String fasta, String dir, String motifs) {
+	public MotifMapper(String ids, String a, String fasta, String motifs) {
 
 		this.characterMap = setCharacterMapForRegularExpression();
 		this.idToProteinMap = loadProteinRefSeqIdMap(ids);
 
 		this.annotationFilePrefix = a;
-		//		this.motifDirectory = new File(dir);
+		this.refSeqIds = this.idToProteinMap.keySet();
 		this.seqFasta = fasta;
 		this.motifFilePrefix = motifs;
 	}
@@ -43,25 +44,25 @@ public class MotifMapper {
 
 		/* load motifs (in batches of 1000) to assess and determine their regular expression */
 		List<List<String>> motifs = initializeMotifsInBatches(motifFilePrefix + i + ".tsv");
-
-		Set<String> refSeqIds = this.idToProteinMap.keySet();
+		HashMap<String, String> fastaMap = loadFastaFile();
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(this.annotationFilePrefix + i + ".tsv")));
-			
+
 			int batchCounter = 0;
 			for(List<String> motifSubList : motifs) {
-				
+
 				batchCounter++;
 				System.out.println("motif batch: " + batchCounter);
-				
+
 				/* find motif instances in FASTA sequences and attribute to corresponding protein */
 				List<Motif> motifSubset = initializeMotifSubsetList(motifSubList);
-				motifSubset = matchMotifsInFastaToProteinIds(motifSubset, refSeqIds);
-				
+				//motifSubset = matchMotifsInFastaToProteinIds(motifSubset, refSeqIds);
+				motifSubset = searchFasta(fastaMap, motifSubset);
+
 				/* print annotation info for motif subset */
 				for (Motif m : motifSubset) {
-					
+
 					out.write(m.getMotifIUPAC() + "\t" + m.getProteins().size() + "\t");
 					for (String p : m.getProteins()) {
 						out.write(p + "|");
@@ -86,7 +87,7 @@ public class MotifMapper {
 
 			String motif = input.readLine();
 			while (motif != null) {
-				
+
 				motifList.add(motif);
 				/* read next motif in file */
 				motif = input.readLine();
@@ -107,10 +108,10 @@ public class MotifMapper {
 
 		return motifListBatches;
 	}
-	
+
 	private List<Motif> initializeMotifSubsetList(List<String> motifs){
 		ArrayList<Motif> motifList = new ArrayList<>();
-		
+
 		for(String m: motifs) {
 			/* determine possible instances of motif */
 			String regexMotif = formatMotifWithRegularExpression(m);
@@ -119,6 +120,7 @@ public class MotifMapper {
 		return motifList;
 	}
 
+	@SuppressWarnings("unused")
 	private List<Motif> matchMotifsInFastaToProteinIds(List<Motif> motifList, Set<String> refSeqIds){
 
 		try {
@@ -298,4 +300,72 @@ public class MotifMapper {
 		}
 		return proteinIdMap;
 	}
+
+	private HashMap<String, String> loadFastaFile() {
+
+		HashMap<String, String> fastaMap = new HashMap<>();
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File(this.seqFasta))));
+
+			StringBuilder fastaLines = null;
+			String line;
+
+			while((line = in.readLine()) != null) {
+				if(line.startsWith(">")) {
+					if(fastaLines !=null) {
+						/* format sequence - if passes checks */
+						fastaMap = storeFasta(fastaLines.toString(), fastaMap);
+					}
+					/* reset */
+					fastaLines = new StringBuilder(); 
+					fastaLines.append(line + "\n");
+
+				} else {
+					fastaLines.append(line);
+				}
+			}
+			fastaMap = storeFasta(fastaLines.toString(), fastaMap);
+
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return fastaMap;
+	}
+
+	private HashMap<String, String> storeFasta(String fastaLines, HashMap<String, String> fastaMap) {
+
+		String header = fastaLines.split("\n")[0];
+		if(!header.contains("alt") && !header.contains("_fix")) {
+
+			String id = formatRefSeqId(header);
+			if(this.refSeqIds.contains(id)) {
+				String sequence = fastaLines.split("\n")[1];
+				fastaMap.put(id, sequence);
+			}
+		}
+
+		return fastaMap;
+	}
+
+	private String formatRefSeqId(String header) {
+		String line = header;
+		String id = line.split("[\\_\\s++\\.]")[2] + "_" + line.split("[\\_\\s++\\.]")[3];
+		return id;
+	}
+
+	private List<Motif> searchFasta(HashMap<String, String> fastaMap, List<Motif> motifSubset) {
+
+		for(Motif m : motifSubset) {
+			for(Entry<String, String> fasta: fastaMap.entrySet()) {
+
+				boolean motifFound = searchSeqForMotif(m.getRegexMotif(), fasta.getValue());
+				if (motifFound) {
+					m.addProtein(this.idToProteinMap.get(fasta.getKey()));
+				}
+			}
+		}
+		return motifSubset;
+	}
+
 }

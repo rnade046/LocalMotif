@@ -69,16 +69,13 @@ public class MapMotifsToProteins {
 				String annotationFile = wd + "/motif_enumeration/annotations/annotation_";
 
 				System.out.println("Running Step 2: Generating annotation file - " + cmd.getOptionValue("n"));
-				System.out
-						.println("Annotation files will be stored under: " + wd + "motif_enumeration/annotations/ \n");
-
-				String motifDir = wd + "/motif_enumeration/degenMotifSet/"; // unused
+				System.out.println("Annotation files will be stored under: " + wd + "motif_enumeration/annotations/ \n");
 
 				/*
 				 * finds motif lists generated in step 1 in seq.fasta and maps it to
 				 * corresponding protein
 				 */
-				MotifMapper m = new MotifMapper(ids, annotationFile, fastaFile, motifDir, motifPrefixFile);
+				MotifMapper m = new MotifMapper(ids, annotationFile, fastaFile, motifPrefixFile);
 				m.mapMotifsToTheirAssociatedProteins(Integer.parseInt(cmd.getOptionValue("n")));
 				break;
 			}
