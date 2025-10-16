@@ -6,12 +6,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class CompareMotifAnnotations {
 
@@ -27,9 +29,14 @@ public class CompareMotifAnnotations {
 		String annotationFile2 = args[1] + "annotation_" + File + ".tsv";
 		String annotatedProteinsFile = args[2];
 		String wd = args[3];
+		
+		String degreeFile = wd + "corrNetTop2-400_degreesInNetwork.tsv";
+		String proteinChangesFile = wd + "annotationChanges/ProteinAnnotationChanges_" + File;
 
 		HashSet<String> proteinSet = loadProteinsInNetwork(annotatedProteinsFile);
 		List<HashSet<String>> motifSets = initializeMotifsInBatches(annotationFile1);
+		HashMap<String, int[]> proteinModifications = initializeProteinModsMap(proteinSet);
+		
 		List<String> output = new ArrayList<>();
 
 		for(HashSet<String> motifs : motifSets) {
@@ -39,15 +46,22 @@ public class CompareMotifAnnotations {
 			HashMap<String, HashSet<String>> annotations2 = getAnnotationsFromSet1(annotationFile2, proteinSet, motifs);
 
 			for(Entry<String, HashSet<String>> currentMotif : annotations1.entrySet()) {
-				if(annotations2.containsKey(currentMotif.getKey())){
-					double overlap = measureProteinOverlap(currentMotif.getValue(), annotations2.get(currentMotif.getKey()));
-					double diff = currentMotif.getValue().size() - annotations2.get(currentMotif.getKey()).size();
 
+				String motif = currentMotif.getKey();
+				if(annotations2.containsKey(motif)){
+					
+					HashSet<String> annotatedProteins1 = currentMotif.getValue();
+					HashSet<String> annotatedProteins2 = annotations2.get(motif);
+					
+					double overlap = measureProteinOverlap(annotatedProteins1, annotatedProteins2);
+					double diff = annotatedProteins1.size() - annotatedProteins2.size();
+					proteinModifications = evaluateProteinChanges(annotatedProteins1, annotatedProteins2, proteinModifications);
+					
 					output.add(currentMotif.getKey() + "\t" + currentMotif.getValue().size() + "\t" + annotations2.get(currentMotif.getKey()).size() + "\t" + overlap + "\t" + diff + "\n");
 				}
 			}
 		}
-
+		printProteinChanges(proteinModifications, degreeFile, proteinChangesFile);
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(new File(wd + "/compareAnnotations/comparedAnnotations_" + File)));
 
@@ -155,7 +169,6 @@ public class CompareMotifAnnotations {
 	private static double measureProteinOverlap(HashSet<String> annotations1, HashSet<String> annotations2) {
 
 		int overlap = 0;
-
 		for(String protein: annotations1) {
 			if(annotations2.contains(protein)) {
 				overlap++;
@@ -166,4 +179,87 @@ public class CompareMotifAnnotations {
 		return overlap_norm;
 	}
 
+	private static HashMap<String, Integer> loadMap(String inputFile) {
+
+		HashMap<String, Integer> map = new HashMap<>();
+
+		InputStream in;
+		try {
+			in = new FileInputStream(new File(inputFile));
+			BufferedReader input = new BufferedReader(new InputStreamReader(in));
+
+			String line = input.readLine(); // header
+			line = input.readLine();
+			while(line!=null) {
+
+				String[] col = line.split("\t"); // [0] = protein Name, [1] = integer (#degrees or #motif)
+				map.put(col[0], Integer.parseInt(col[1]));
+
+				line = input.readLine();
+			}
+
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return map;
+	}
+
+	private static HashMap<String, int[]> initializeProteinModsMap(Set<String> proteinNames){
+		
+		HashMap<String, int[]> proteinModifications = new HashMap<>();
+
+		for(String p: proteinNames) {
+			proteinModifications.put(p, new int[2]);
+		}
+		return proteinModifications;
+	}
+	
+	private static HashMap<String, int[]> evaluateProteinChanges(Set<String> annotatedProteins1, Set<String> annotatedProteins2, HashMap<String, int[]> proteinModifications){
+		
+		// removed proteins in Set2
+		for(String p: annotatedProteins1) {
+			if(!annotatedProteins2.contains(p)) {
+				int[] mods = proteinModifications.get(p);
+				mods[0]++;
+				proteinModifications.put(p, mods); 
+			}
+		}
+		
+		// added proteins in Set2
+		for(String p: annotatedProteins2) { 
+			if(!annotatedProteins1.contains(p)) {
+				int[] mods = proteinModifications.get(p);
+				mods[1]++;
+				proteinModifications.put(p, mods); 
+			}
+		}
+		return proteinModifications;
+	}
+	
+	private static void printProteinChanges(HashMap<String, int[]> proteinModifications, String degreeFile, String output) {
+		
+		HashMap<String, Integer> proteinDegreeMap = loadMap(degreeFile);
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(output)));
+			out.write("ProteinName\t#Degrees\t#ProteinsRemoved\t#ProteinsAdded");
+			
+			for(Entry<String, int[]> proteinEntry : proteinModifications.entrySet()) {
+				
+				out.write(proteinEntry.getKey() + "\t");
+				
+				if(proteinDegreeMap.containsKey(proteinEntry.getKey())){
+					out.write(proteinDegreeMap.get(proteinEntry.getKey()) + "\t");
+				} else {
+					out.write("NA\t");
+				}
+				out.write(proteinEntry.getValue()[0] + "\t" + proteinEntry.getValue()[1] + "\n");
+				out.flush();
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
